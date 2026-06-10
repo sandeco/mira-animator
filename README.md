@@ -49,11 +49,14 @@ mira-planner      plano de slides + aprovação do usuário
 mira-copywriter   refinamento de texto e imagens
 mira-builder      montagem do HTML (glass-cards)
 mira-animator     animações D3 com loop interno (inclui diretrizes D3 em references/)
+mira-size-animator ajusta a percepção de tamanho das animações numa escala de 1 a 10 (base 3/10)
 mira-visuals      imagens estáticas: painéis, diagramas, gráficos e infográficos
 mira-validator    relatório de conformidade final
 ```
 
 Apoio: `mira-image-prompt` (prompts JSON para foto realista) e `mira-img-animator` (anima imagens existentes). Regra de idioma compartilhada em `agents/_shared/idioma.md`.
+
+O `mira-size-animator` lê o marcador `<!-- @MIRA:SIZE N/10 -->` que o `mira-animator` estampa em cada animação (sempre 3/10 ao gerar) e escala a composição dentro do SVG para preencher mais ou menos o palco, sem alterar a altura do palco nem o loop interno. "Coloca as animações em 6/10" sobe o nível; "esse slide em 2/10" desce.
 
 ## Templates
 

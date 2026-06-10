@@ -93,6 +93,7 @@ Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o de
         </div>
 
         <!-- Palco da animação -->
+        <!-- @MIRA:SIZE 3/10 -->
         <div class="anim-stage" id="SLUG-stage">
             <svg id="SLUG-svg" viewBox="0 0 1280 760" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
@@ -126,6 +127,17 @@ Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o de
     margin-bottom: 0.25rem;
 }
 ```
+
+## Marcador de Tamanho (@MIRA:SIZE)
+
+Toda animação nasce no nível de tamanho **3/10**. Por isso, na linha imediatamente acima do `.anim-stage`, estampe sempre o marcador:
+
+```html
+<!-- @MIRA:SIZE 3/10 -->
+<div class="anim-stage" id="SLUG-stage"> ... </div>
+```
+
+Esse comentário é a memória do tamanho da animação. A skill `mira-size-animator` lê esse marcador para reportar e ajustar a percepção de tamanho (escalar a composição para cima ou para baixo) sem precisar adivinhar o nível atual. Gere uma animação por vez já com o marcador 3/10; não invente outro valor.
 
 ## Trigger System Obrigatório
 
@@ -259,6 +271,7 @@ Loop interno: partícula viajando de A para B em cada linha (com `animation-dela
 
 ## Checklist Antes de Entregar
 
+- [ ] Marcador `<!-- @MIRA:SIZE 3/10 -->` na linha acima do `.anim-stage`.
 - [ ] CSS do `#SLUG-stage` adicionado com height clamp.
 - [ ] HTML do card está dentro de `<main>` na posição lógica.
 - [ ] Função JS implementada com generation counter.
