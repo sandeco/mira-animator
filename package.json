@@ -1,6 +1,6 @@
 {
   "name": "mira-animator",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Agentes e templates para criação de slides animados com D3.js em HTML",
   "bin": {
     "mira": "bin/mira.js"
@@ -18,6 +18,7 @@
   ],
   "files": [
     "agents/_shared",
+    "agents/mira-new",
     "agents/mira-animator",
     "agents/mira-size-animator",
     "agents/mira-animated-metaphor",
