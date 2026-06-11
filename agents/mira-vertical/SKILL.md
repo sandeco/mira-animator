@@ -30,6 +30,14 @@ Antes de entregar, olhe o resultado e responda: **a animação está maximizada,
 
 Siga `agents/_shared/idioma.md`. Texto visível em português correto. Proibido travessão (—): use vírgula ou dois-pontos.
 
+## REGRA DE FONTE MÍNIMA: 13px RENDERIZADOS (IMPERATIVO, INEGOCIÁVEL)
+
+Validado empiricamente pelo usuário (teste de legibilidade em 2026-06-11): abaixo de 13px renderizados na tela, o texto fica ilegível no vertical. **Nenhum texto visível pode renderizar com menos de 13px.** Sem exceção: rótulos de nós, legendas de eixo, pílulas, subtítulos, tudo.
+
+- **Texto HTML:** `font-size` computado >= 13px. No Tailwind, `text-xs` (12px) está **PROIBIDO**; o menor permitido é `text-sm` (14px).
+- **Texto SVG (a pegadinha):** o `font-size` no SVG é em unidades do viewBox, não pixels de tela. No setup padrão desta skill (palco 4:5 na coluna de 1/3 da tela, `viewBox` com `H = 1200`), o mínimo validado empiricamente pelo usuário (teste lado a lado em 2026-06-11, `decks/teste-fonte-svg/`) é **`font-size >= 24`** (24 unidades renderizam ~12,9px na tela). Um `font-size: 13` no SVG renderiza ~8px e VIOLA a regra. Se o `viewBox` de um slide tiver outra altura, escale o mínimo na proporção: `font-size_minimo = 24 * H_viewBox / 1200`.
+- **Se o texto não couber com 13px:** encurte o texto ou recomponha o layout (grade, serpentina, rótulo ao lado). **Nunca** resolva diminuindo a fonte abaixo do mínimo.
+
 ## Regra de Ouro: nunca destrua o original
 
 - O deck 16:9 (`index.html`) **permanece intacto**. Você nunca edita o arquivo de origem.
@@ -54,7 +62,7 @@ A reformulação inteira gira em torno de uma regra simples e mecânica:
 2. **viewBox retrato casando com o palco.** No JS de cada animação, deixe o `viewBox` na mesma proporção do palco (4:5). Na prática, **aumente a altura**: de `W = 960, H = 540` para `W = 960, H = 1200` (proporção 4:5). Como `cx = W/2` e `cy = H/2` derivam de `W` e `H`, o centro se reposiciona sozinho. Esses são valores do `viewBox` (unidades do SVG), independentes da resolução da tela.
 3. **Gire o eixo E cresça a escala (as duas coisas, sempre).** Aqui mora o impacto, e é o passo que mais falha:
    - **Girar o eixo.** Identifique o eixo dominante (onde os elementos se espalham). Se é horizontal, vira vertical: o `range` que ia `[120, W-120]` no X passa a `[H*0.10, H*0.90]` no Y, com o X fixo em `cx`. Lado a lado vira empilhado.
-   - **Crescer para preencher.** Recalcule TODA medida derivada das dimensões antigas contra o `H` novo (≈ 2,2× maior): raios, `stepH`, distâncias de força, comprimento de linha, raio orbital, fontes dos rótulos. Só trocar `H` de 540 para 1200 sem crescer as escalas deixa a animação minúscula no topo, com o resto do palco preto. Isso é falha.
+   - **Crescer para preencher.** Recalcule TODA medida derivada das dimensões antigas contra o `H` novo (≈ 2,2× maior): raios, `stepH`, distâncias de força, comprimento de linha, raio orbital, fontes dos rótulos (respeitando a REGRA DE FONTE MÍNIMA: 13px renderizados). Só trocar `H` de 540 para 1200 sem crescer as escalas deixa a animação minúscula no topo, com o resto do palco preto. Isso é falha.
    - **Quando girar não basta, recomponha.** Girar o eixo é a ferramenta mais comum, não o objetivo: o objetivo é **aproveitar o espaço do palco**. Se depois do giro ainda sobrar área vazia (ou se empilhar tudo numa coluna ficar espremido e ilegível), reorganize a disposição dos elementos para o retrato: uma fileira de muitos itens vira grade de 2 colunas, satélites se redistribuem ao redor de um núcleo maior, o objeto principal cresce e os secundários se reacomodam. A composição pode mudar; o critério é o palco bem aproveitado.
 
 Sem o passo 3 completo (girar **e** crescer), os elementos ficam apertados numa faixa, com a metade de cima e de baixo do palco vazias. O passo 3 é o que faz a animação **preencher a vertical**.
@@ -166,7 +174,8 @@ sim.force('center', d3.forceCenter(W / 2, H / 2))            // centro no H NOVO
 
 ## Checklist
 
-**Os três que mais falham (cheque primeiro, são para tela de smartphone):**
+**Os que mais falham (cheque primeiro, são para tela de smartphone):**
+- [ ] Nenhum texto renderiza abaixo de 13px: HTML sem `text-xs`, SVG com `font-size >= 24` no viewBox padrão H=1200 (outro H: `24 * H_viewBox / 1200`).
 - [ ] Nenhuma animação ficou horizontal: todo eixo que corria na largura agora corre na altura; nada de blocos lado a lado encolhidos.
 - [ ] A animação está MAXIMIZADA: ocupa 80 a 90% da ALTURA do palco e quase toda a largura útil, sem faixa preta em cima ou embaixo (escalas, raios e forças crescidos contra o H novo, não só o viewBox).
 - [ ] Nada cortado nem sobreposto: todo elemento dentro de `[margem, H - margem]`, rótulos sem colisão.

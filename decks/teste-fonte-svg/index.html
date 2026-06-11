@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste: fonte HTML 13px vs SVG (formato vertical)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background: #000000;
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* Mesma coluna do mira-vertical: largura da tela / 3 */
+        .coluna {
+            width: calc(100vw / 3);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 16px 0;
+            box-sizing: border-box;
+        }
+
+        .referencia {
+            font-size: 13px;
+            font-weight: 700;
+            margin: 6px 0;
+        }
+
+        .referencia .tag {
+            color: #FF904D;
+            font-weight: 400;
+        }
+
+        /* Mesmo palco do mira-vertical: 4:5, largura cheia da coluna */
+        .anim-stage {
+            aspect-ratio: 4 / 5;
+            width: 100%;
+            border: 1px dashed rgba(255, 144, 77, 0.35);
+            box-sizing: border-box;
+        }
+
+        .anim-stage svg {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="coluna">
+        <p class="referencia"><span class="tag">HTML 13px →</span> Sandeco é o cara</p>
+
+        <div class="anim-stage">
+            <svg id="palco" viewBox="0 0 960 1200" preserveAspectRatio="xMidYMid meet"></svg>
+        </div>
+
+        <p class="referencia"><span class="tag">HTML 13px →</span> Sandeco é o cara</p>
+    </div>
+
+    <script>
+        // Mesmas condições do mira-vertical: viewBox 960x1200 num palco 4:5.
+        // Cada linha mostra o font-size nominal do SVG e o tamanho REAL
+        // renderizado na tela (medido, não calculado de cabeça).
+        const TAMANHOS = [13, 16, 18, 20, 22, 24, 26, 28, 32, 36];
+        const svg = document.getElementById('palco');
+        const NS = 'http://www.w3.org/2000/svg';
+        const H = 1200, W = 960;
+        const passo = H / (TAMANHOS.length + 1);
+
+        TAMANHOS.forEach((tam, i) => {
+            const y = passo * (i + 1);
+
+            const rotulo = document.createElementNS(NS, 'text');
+            rotulo.setAttribute('x', 40);
+            rotulo.setAttribute('y', y);
+            rotulo.setAttribute('fill', '#FF904D');
+            rotulo.setAttribute('font-size', 26);
+            rotulo.setAttribute('font-family', 'Inter, sans-serif');
+            rotulo.dataset.tam = tam;
+            rotulo.textContent = 'svg ' + tam;
+            svg.appendChild(rotulo);
+
+            const amostra = document.createElementNS(NS, 'text');
+            amostra.setAttribute('x', 330);
+            amostra.setAttribute('y', y);
+            amostra.setAttribute('fill', '#ffffff');
+            amostra.setAttribute('font-size', tam);
+            amostra.setAttribute('font-weight', '700');
+            amostra.setAttribute('font-family', 'Inter, sans-serif');
+            amostra.textContent = 'Sandeco é o cara';
+            svg.appendChild(amostra);
+        });
+
+        // Mede a escala real do palco e escreve o px renderizado em cada rótulo
+        function medir() {
+            const escala = svg.getBoundingClientRect().height / H;
+            svg.querySelectorAll('text[data-tam]').forEach(t => {
+                const px = (parseFloat(t.dataset.tam) * escala).toFixed(1);
+                t.textContent = 'svg ' + t.dataset.tam + ' = ' + px + 'px';
+            });
+        }
+        medir();
+        window.addEventListener('resize', medir);
+    </script>
+</body>
+
+</html>
