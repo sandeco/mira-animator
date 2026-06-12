@@ -76,6 +76,10 @@ E uma variante de **composição** (não muda a proporção):
 
 - `mira-thirds` cria `index-thirds.html`, regra dos terços: empurra o conteúdo do slide para as colunas 1+2 (dois terços da esquerda) e deixa a coluna da direita livre, para você sobrepor texto, lower-third ou o vídeo do apresentador na edição. Combina por cima do 16:9, do 1:1 ou do 9:16.
 
+E uma variante de **transição**:
+
+- `mira-transition-dissolve` cria `index-dissolve.html`: troca o scroll entre slides por um crossfade real (dissolve, estilo Canva), via View Transitions API. Funciona com clique duplo no arquivo (Chrome/Edge), sem servidor; navegadores sem a API navegam normal.
+
 ## Templates
 
 Três camadas em `templates/`:
