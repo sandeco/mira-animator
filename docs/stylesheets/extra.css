@@ -1,0 +1,22 @@
+:root {
+  --md-primary-fg-color: #7c3aed;
+  --md-primary-fg-color--light: #a78bfa;
+  --md-primary-fg-color--dark: #5b21b6;
+  --md-accent-fg-color: #a855f7;
+}
+
+/* Gentle gradient on the hero title of the home page */
+.md-typeset h1 {
+  font-weight: 700;
+}
+
+/* Tables a touch more compact */
+.md-typeset table:not([class]) th {
+  background-color: var(--md-primary-fg-color--dark);
+  color: #fff;
+}
+
+/* Inline code in a softer purple */
+.md-typeset code {
+  border-radius: 4px;
+}

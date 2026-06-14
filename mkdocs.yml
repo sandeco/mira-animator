@@ -1,0 +1,116 @@
+site_name: Mira
+site_url: https://sandeco.github.io/mira-animator
+site_description: Turn your projects, books and PDFs into animated HTML presentations, built by a team of AI agents.
+site_author: sandeco
+repo_url: https://github.com/sandeco/mira-animator
+repo_name: sandeco/mira-animator
+edit_uri: edit/main/docs/
+copyright: '"Mira" by sandeco'
+
+theme:
+  name: material
+  language: en
+  palette:
+    - scheme: slate
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+    - scheme: default
+      primary: deep purple
+      accent: purple
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+  features:
+    - navigation.sections
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.tabs.link
+    - content.tooltips
+  icon:
+    repo: fontawesome/brands/github
+    logo: material/magnify
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.inlinehilite
+  - tables
+  - attr_list
+  - md_in_html
+  - toc:
+      permalink: true
+
+extra_css:
+  - stylesheets/extra.css
+
+plugins:
+  - search:
+      lang:
+        - en
+        - pt
+  - i18n:
+      docs_structure: suffix
+      languages:
+        - locale: en
+          default: true
+          name: English
+        - locale: pt
+          name: Português
+          build: true
+          nav_translations:
+            Home: Início
+            Why Mira: Por que o Mira
+            Installation: Instalação
+            Linked sources: Fontes vinculadas
+            How to use: Como usar
+            CLI: CLI
+            Agent pipeline: Pipeline de agentes
+            Agents: Agentes
+            Video formats: Formatos de vídeo
+            Themes and templates: Temas e templates
+            Contributing: Contribuindo
+        - locale: es
+          name: Español
+          build: true
+          nav_translations:
+            Home: Inicio
+            Why Mira: Por qué Mira
+            Installation: Instalación
+            Linked sources: Fuentes vinculadas
+            How to use: Cómo usar
+            CLI: CLI
+            Agent pipeline: Pipeline de agentes
+            Agents: Agentes
+            Video formats: Formatos de vídeo
+            Themes and templates: Temas y plantillas
+            Contributing: Contribuir
+
+nav:
+  - Home: index.md
+  - Why Mira: por-que-mira.md
+  - Installation: instalacao.md
+  - Linked sources: fontes.md
+  - How to use: uso.md
+  - CLI: cli.md
+  - Agent pipeline: pipeline.md
+  - Agents: agentes.md
+  - Video formats: formatos.md
+  - Themes and templates: temas.md
+  - Contributing: contribuindo.md
