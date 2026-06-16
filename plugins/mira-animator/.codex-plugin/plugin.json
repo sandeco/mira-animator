@@ -1,0 +1,39 @@
+{
+  "name": "mira-animator",
+  "version": "0.1.0",
+  "description": "Use Mira to turn projects, books, PDFs, and notes into animated HTML presentations from Codex.",
+  "author": {
+    "name": "sandeco and Mario Mayerle",
+    "url": "https://mariomayerle.com"
+  },
+  "homepage": "https://sandeco.github.io/mira-animator/",
+  "repository": "https://github.com/sandeco/mira-animator",
+  "license": "MIT",
+  "keywords": [
+    "slides",
+    "presentations",
+    "animation",
+    "html",
+    "d3",
+    "codex"
+  ],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Mira Animator",
+    "shortDescription": "Create animated HTML slide decks with Mira.",
+    "longDescription": "Mira Animator helps Codex bootstrap and operate Mira in a dedicated slides workspace, link source projects or documents read-only, and generate animated HTML decks with the Mira workflow.",
+    "developerName": "sandeco, Mario Mayerle",
+    "category": "Productivity",
+    "capabilities": [
+      "Interactive",
+      "Write"
+    ],
+    "websiteURL": "https://sandeco.github.io/mira-animator/",
+    "defaultPrompt": [
+      "Set up a Mira slides workspace for this project.",
+      "Create an animated Mira deck from this PDF.",
+      "Link a source folder and start a Mira deck."
+    ],
+    "brandColor": "#FF904D"
+  }
+}

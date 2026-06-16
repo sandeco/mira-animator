@@ -1,0 +1,20 @@
+{
+  "name": "mira-animator",
+  "interface": {
+    "displayName": "Mira Animator"
+  },
+  "plugins": [
+    {
+      "name": "mira-animator",
+      "source": {
+        "source": "local",
+        "path": "./plugins/mira-animator"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
