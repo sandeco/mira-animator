@@ -91,6 +91,7 @@ plugins:
             Transitions: Agentes transições
             Video formats: Formatos de vídeo
             Themes and templates: Temas e templates
+            Codex plugin: Plugin do Codex
             Contributing: Contribuindo
         - locale: es
           name: Español
@@ -111,6 +112,7 @@ plugins:
             Transitions: Agentes transiciones
             Video formats: Formatos de vídeo
             Themes and templates: Temas y plantillas
+            Codex plugin: Plugin de Codex
             Contributing: Contribuir
 
 nav:
@@ -128,4 +130,5 @@ nav:
   - CLI: cli.md
   - Video formats: formatos.md
   - Themes and templates: temas.md
+  - Codex plugin: codex-plugin.md
   - Contributing: contribuindo.md

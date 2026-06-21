@@ -152,6 +152,19 @@ npx mira-animator uninstall          # remove Mira from the current folder
 
 ---
 
+## Codex plugin
+
+Mira also includes a local Codex plugin wrapper in `plugins/mira-animator/`. To install it from a clone of this repository:
+
+```bash
+codex plugin marketplace add .
+codex plugin add mira-animator@mira-animator
+```
+
+After installing, start a new Codex thread and ask Codex to use the `mira-animator` plugin. Full instructions are in the [Codex plugin docs](docs/codex-plugin.md).
+
+---
+
 ## Contributing
 
 Contributions are welcome. Open an issue to discuss before submitting a PR.
