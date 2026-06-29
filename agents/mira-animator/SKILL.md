@@ -63,6 +63,17 @@ Textos visíveis em português brasileiro, acentuação 100% correta, UTF-8 dire
 
 Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o deck ainda não existir, crie a partir de um esqueleto em `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica ou sandeco-just-animation-template), respeitando a estrutura do template escolhido.
 
+## Variante: sandeco-just-animation-template (animação pura, multi-slide)
+
+Quando o deck usa este template, ele NÃO é feito de cards. As regras de card desta skill (título, subtítulo, pílulas, glass-card, icon-hero, .anim-stage) ficam SUSPENSAS e valem estas:
+
+- **Sem texto sobreposto.** Nada de título, subtítulo ou pílulas. Cada slide é só a animação de tela cheia sobre fundo preto. Labels mínimos DENTRO do SVG (parte da metáfora) são permitidos; título de slide, não.
+- **Cada slide é uma `<section class="slide">`** filha direta do `<body>`, com um `<svg class="stage">` full-bleed (`position: absolute; inset: 0`).
+- **Tamanho e enquadramento fixos:** `viewBox="155.15 87.27 969.70 545.45"` (nível 5/10) com `preserveAspectRatio="xMidYMid slice"`, e o marcador `<!-- @MIRA:SIZE 5/10 -->` na linha acima do svg. Componha o conteúdo centrado em (640, 360) ocupando o palco inteiro; não reserve espaço no topo, porque não há título.
+- **Cor: paleta LIVRE multicor**, alto contraste com o preto, NENHUMA cor predominante. NÃO trave em `var(--mira-primary)` nem no laranja do tema. Distribua a paleta (`#00E5FF`, `#7CFF6B`, `#FFD166`, `#FF5C8A`, `#B388FF`, `#FF904D`, mais branco para neutros) entre os elementos.
+- **Mantém** o loop interno perpétuo, o anti-vazamento por geração (`window.__slugGen`), o trigger por `IntersectionObserver` e o botão Replay.
+- Para adicionar um slide, duplique uma `<section class="slide">` e registre a função em `ANIM.sN`.
+
 ## Estrutura Obrigatória do Card
 
 ```html

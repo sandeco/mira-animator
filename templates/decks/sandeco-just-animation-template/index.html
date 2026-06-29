@@ -8,21 +8,16 @@
     <script src="https://d3js.org/d3.v7.min.js"></script>
     <style>
         /* @MIRA:THEME:START */
+/* Tema NEUTRO e theme-agnóstico do template de animação pura.
+   Este template é multicor: a cor vive na paleta do bloco JS, nunca numa
+   cor única do tema. Por isso o "new" do Mira NÃO injeta tema aqui (mira-dark,
+   etc.); mantém este bloco. Não introduza uma cor primária predominante. */
 :root {
     --mira-primary: #ffffff;
     --mira-bg: #000000;
     --mira-text: #ffffff;
     --mira-text-soft: rgba(255, 255, 255, 0.72);
     --mira-text-softer: rgba(255, 255, 255, 0.50);
-    --mira-card-bg: transparent;
-    --mira-card-border: transparent;
-    --mira-glow-soft: rgba(255, 255, 255, 0.12);
-    --mira-glow-strong: rgba(255, 255, 255, 0.22);
-    --mira-icon-bg: transparent;
-    --mira-icon-border: transparent;
-    --mira-pill-bg: transparent;
-    --mira-pill-border: transparent;
-    --mira-stage-glow: transparent;
     --mira-accent-2: #d7e3ff;
 }
 
@@ -34,158 +29,222 @@ body {
 }
         /* @MIRA:THEME:END */
 
-        * {
-            box-sizing: border-box;
-        }
+        * { box-sizing: border-box; }
+        html, body { margin: 0; padding: 0; width: 100%; background: #000; }
+        html { scroll-behavior: smooth; }
+        body { color: #fff; overflow-x: hidden; }
 
-        html,
-        body {
+        /* ============================================================
+           TEMPLATE DE ANIMAÇÃO PURA (multi-slide)
+           Regras (não quebrar ao preencher com o mira-animator):
+           1. SEM título, subtítulo, pílulas ou qualquer texto sobreposto.
+              Cada slide é só a animação de tela cheia sobre fundo preto.
+              Labels mínimos DENTRO do SVG (parte da metáfora) são ok.
+           2. Paleta LIVRE multicor, alto contraste com o preto, NENHUMA cor
+              predominante. Não travar em var(--mira-primary)/laranja do tema.
+           3. Cada palco usa viewBox 5/10 centrado e preserveAspectRatio slice;
+              componha o conteúdo centrado em (640,360) ocupando o palco inteiro.
+           4. Loop interno perpétuo + anti-vazamento por geração + Replay.
+           Para um novo slide: duplique uma <section class="slide"> e registre
+           a função em ANIM.sN (o trigger e o replay já acham pelo data-anim).
+           ============================================================ */
+        .slide {
+            position: relative;
             width: 100%;
-            min-height: 100%;
-            margin: 0;
-            overflow: hidden;
-            background: #000000;
-        }
-
-        body {
-            color: #ffffff;
-        }
-
-        .mira-animation-only {
-            position: fixed;
-            inset: 0;
-            width: 100vw;
             height: 100vh;
             overflow: hidden;
-            background: #000000;
+            background: #000;
         }
-
-        .mira-animation-only svg {
-            display: block;
+        .stage {
+            position: absolute;
+            inset: 0;
             width: 100%;
             height: 100%;
+            display: block;
         }
+
+        .replay-btn {
+            position: absolute;
+            bottom: 22px; right: 22px;
+            z-index: 6;
+            background: rgba(255, 255, 255, 0.06);
+            border: 1px solid rgba(255, 255, 255, 0.14);
+            color: rgba(255, 255, 255, 0.7);
+            border-radius: 9999px;
+            padding: 6px 14px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            opacity: 0.5;
+        }
+        .replay-btn:hover { opacity: 1; color: #fff; }
+
+        /* Passagem de slides: barra de progresso + botão + teclado */
+        #mira-progress {
+            position: fixed; top: 0; left: 0; height: 3px; width: 0%;
+            background: linear-gradient(90deg, #00E5FF, #7CFF6B, #FFD166, #FF5C8A, #B388FF);
+            background-size: 200% 100%;
+            animation: mira-shimmer 3s linear infinite;
+            z-index: 9999; transition: width 0.1s linear;
+        }
+        @keyframes mira-shimmer {
+            0% { background-position: -200% center; }
+            100% { background-position: 200% center; }
+        }
+        #mira-next {
+            position: fixed; bottom: 32px; left: 32px;
+            width: 46px; height: 46px; border-radius: 50%;
+            background: rgba(255, 255, 255, 0.12); color: #fff;
+            display: flex; align-items: center; justify-content: center;
+            cursor: pointer; border: 1px solid rgba(255, 255, 255, 0.2);
+            opacity: 0; transform: translateY(20px);
+            transition: all 0.3s ease; z-index: 9998;
+        }
+        #mira-next.visible { opacity: 0.55; transform: translateY(0); }
+        #mira-next.visible:hover { opacity: 1; transform: translateY(-3px) scale(1.08); }
+        #mira-next svg { transition: transform 0.3s ease; }
+        #mira-next.up svg { transform: rotate(180deg); }
     </style>
 </head>
 
 <body>
-    <!-- @MIRA:SIZE 3/10 -->
-    <!-- Template sem conteudo textual: use apenas animacao sobre fundo #000000. -->
-    <!-- Cores livres, desde que tenham alto contraste com #000000 e nenhuma seja obrigatoria ou predominante. -->
-    <main id="mira-animation-stage" class="mira-animation-only" aria-label="Animacao Mira"></main>
+    <div id="mira-progress"></div>
+    <button id="mira-next" aria-label="Próximo slide">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+    </button>
+
+    <!-- SLIDE EXEMPLO 1: campo multicor (substitua pela sua animação) -->
+    <section class="slide" data-anim="s1">
+        <!-- @MIRA:SIZE 5/10 -->
+        <svg class="stage" id="s1-svg" viewBox="155.15 87.27 969.70 545.45" preserveAspectRatio="xMidYMid slice"></svg>
+        <button class="replay-btn" data-replay="s1">↻ replay</button>
+    </section>
+
+    <!-- SLIDE EXEMPLO 2: órbita pulsante (substitua pela sua animação) -->
+    <section class="slide" data-anim="s2">
+        <!-- @MIRA:SIZE 5/10 -->
+        <svg class="stage" id="s2-svg" viewBox="155.15 87.27 969.70 545.45" preserveAspectRatio="xMidYMid slice"></svg>
+        <button class="replay-btn" data-replay="s2">↻ replay</button>
+    </section>
 
     <script>
+        // Paleta LIVRE multicor (alto contraste com preto, nenhuma cor predominante).
+        // A cor do template vive aqui, não no tema. Distribua estas cores entre os elementos.
+        const CY = '#00E5FF', GR = '#7CFF6B', YE = '#FFD166', PK = '#FF5C8A', PU = '#B388FF', OR = '#FF904D', WHITE = '#ffffff';
+        const PAL = [CY, GR, YE, PK, PU, OR];
+        function rgba(hex, a) {
+            const c = hex.replace('#', '');
+            return `rgba(${parseInt(c.substr(0,2),16)},${parseInt(c.substr(2,2),16)},${parseInt(c.substr(4,2),16)},${a})`;
+        }
+
+        // ===== Infraestrutura: gerações + timers (anti-vazamento de loop) =====
+        const ANIM = {};
+        const TIMERS = {};
+        const GEN = {};
+        function stop(key) { (TIMERS[key] || []).forEach(t => t && t.stop && t.stop()); TIMERS[key] = []; }
+        function track(key, t) { (TIMERS[key] = TIMERS[key] || []).push(t); return t; }
+        function play(key) {
+            if (!ANIM[key]) return;
+            GEN[key] = (GEN[key] || 0) + 1;
+            const svg = d3.select('#' + key + '-svg');
+            svg.selectAll('*').interrupt();
+            svg.selectAll('*').remove();
+            stop(key);
+            ANIM[key](svg, GEN[key]);
+        }
+
+        // ===== EXEMPLO 1: campo multicor centrado (entrada + órbita perpétua) =====
+        ANIM.s1 = function (svg, gen) {
+            const cx = 640, cy = 360, N = 46;
+            const nodes = d3.range(N).map((d, i) => {
+                const ang = (i / N) * Math.PI * 2, rad = 120 + Math.random() * 230;
+                return { baseX: cx + Math.cos(ang) * rad, baseY: cy + Math.sin(ang) * rad * 0.62, orbit: 14 + Math.random() * 70, speed: 0.0006 + Math.random() * 0.0018, phase: Math.random() * Math.PI * 2, r: 2.2 + Math.random() * 4.6, c: PAL[i % PAL.length] };
+            });
+            const links = d3.range(N).map(i => ({ s: nodes[i], t: nodes[(i + 5) % N], c: PAL[(i + 2) % PAL.length] }));
+            const lg = svg.append('g').selectAll('line').data(links).join('line').attr('stroke', d => d.c).attr('stroke-width', 1).attr('stroke-opacity', 0.3);
+            const fg = svg.append('g').selectAll('circle').data(nodes).join('circle').attr('r', d => d.r).attr('fill', d => d.c).attr('fill-opacity', 0).style('filter', d => `drop-shadow(0 0 8px ${d.c})`);
+            fg.transition().duration(900).attr('fill-opacity', 0.9);
+            track('s1', d3.timer((el) => {
+                if (gen !== GEN.s1) return;
+                nodes.forEach((node, i) => {
+                    const a = node.phase + el * node.speed, drift = Math.sin(el * 0.00045 + i) * 16;
+                    node.x = node.baseX + Math.cos(a) * node.orbit + drift;
+                    node.y = node.baseY + Math.sin(a * 1.4) * node.orbit * 0.72;
+                });
+                fg.attr('cx', d => d.x).attr('cy', d => d.y).attr('r', (d, i) => d.r * (1 + Math.sin(el * 0.003 + i) * 0.22));
+                lg.attr('x1', d => d.s.x).attr('y1', d => d.s.y).attr('x2', d => d.t.x).attr('y2', d => d.t.y)
+                  .attr('stroke-opacity', (d, i) => 0.16 + Math.sin(el * 0.001 + i) * 0.12);
+            }));
+        };
+
+        // ===== EXEMPLO 2: órbita pulsante centrada (satélites multicor + pulsos) =====
+        ANIM.s2 = function (svg, gen) {
+            const cx = 640, cy = 360, R = 210, n = 6;
+            svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', R).attr('fill', 'none').attr('stroke', 'rgba(255,255,255,0.12)').attr('stroke-dasharray', '4 8');
+            svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 0).attr('fill', 'rgba(255,255,255,0.06)').attr('stroke', WHITE).attr('stroke-width', 2.5)
+                .transition().duration(700).ease(d3.easeBackOut).attr('r', 46);
+            const sats = d3.range(n).map(i => ({ c: PAL[i], phase: (i / n) * Math.PI * 2 }));
+            const sel = svg.append('g').selectAll('circle').data(sats).join('circle').attr('r', 0).attr('fill', d => d.c).style('filter', d => `drop-shadow(0 0 10px ${d.c})`);
+            sel.transition().delay((d, i) => 300 + i * 110).duration(450).ease(d3.easeBackOut).attr('r', 13);
+            let bi = 0;
+            track('s2', d3.interval(() => {
+                if (gen !== GEN.s2) return;
+                const c = PAL[bi % n]; bi++;
+                svg.append('circle').attr('cx', cx).attr('cy', cy).attr('r', 46).attr('fill', 'none').attr('stroke', c).attr('stroke-width', 3).attr('opacity', 0.7)
+                    .transition().duration(1400).ease(d3.easeCubicOut).attr('r', R).attr('opacity', 0).remove();
+            }, 1500));
+            const per = 9000;
+            track('s2', d3.timer((el) => {
+                if (gen !== GEN.s2) return;
+                const base = el / per * Math.PI * 2;
+                sel.attr('cx', d => cx + Math.cos(d.phase + base) * R).attr('cy', d => cy + Math.sin(d.phase + base) * R * 0.62);
+            }));
+        };
+
+        // ===== Disparo por viewport + Replay =====
+        Object.keys(ANIM).forEach(k => GEN[k] = 0);
+        const io = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                const k = e.target.getAttribute('data-anim');
+                if (e.isIntersecting && k) play(k);
+            });
+        }, { threshold: 0.4 });
+        document.querySelectorAll('section[data-anim]').forEach(s => io.observe(s));
+        document.querySelectorAll('[data-replay]').forEach(b => b.addEventListener('click', () => play(b.getAttribute('data-replay'))));
+
+        // ===== Navegação seção a seção (progresso + botão + teclado) =====
         (function () {
-            const stage = document.getElementById('mira-animation-stage');
-            const palette = [
-                '#ffffff',
-                '#00E5FF',
-                '#7CFF6B',
-                '#FFD166',
-                '#FF5C8A',
-                '#B388FF'
-            ];
-
-            const svg = d3.select(stage)
-                .append('svg')
-                .attr('role', 'img')
-                .attr('preserveAspectRatio', 'xMidYMid slice');
-
-            const root = svg.append('g');
-            const background = root.append('rect').attr('fill', '#000000');
-            const aura = root.append('g').attr('opacity', 0.62);
-            const field = root.append('g');
-            const lattice = root.append('g').attr('opacity', 0.42);
-
-            let width = 0;
-            let height = 0;
-            let nodes = [];
-            let links = [];
-
-            function buildScene() {
-                width = window.innerWidth;
-                height = window.innerHeight;
-                svg.attr('viewBox', `0 0 ${width} ${height}`);
-                background.attr('width', width).attr('height', height);
-
-                const diagonal = Math.hypot(width, height);
-                const count = Math.max(42, Math.round((width * height) / 24500));
-                nodes = d3.range(count).map((_, index) => {
-                    const angle = (index / count) * Math.PI * 2;
-                    const radius = diagonal * (0.08 + Math.random() * 0.34);
-                    return {
-                        x: width / 2 + Math.cos(angle) * radius * (0.58 + Math.random() * 0.5),
-                        y: height / 2 + Math.sin(angle) * radius * (0.46 + Math.random() * 0.42),
-                        baseX: width / 2 + Math.cos(angle) * radius,
-                        baseY: height / 2 + Math.sin(angle) * radius * 0.58,
-                        radius: 2.2 + Math.random() * 4.8,
-                        orbit: 18 + Math.random() * 84,
-                        speed: 0.00055 + Math.random() * 0.0018,
-                        phase: Math.random() * Math.PI * 2,
-                        color: palette[index % palette.length]
-                    };
-                });
-
-                links = d3.range(count).map(i => ({
-                    source: nodes[i],
-                    target: nodes[(i + 5) % count],
-                    color: palette[(i + 2) % palette.length]
-                }));
-
-                aura.selectAll('circle')
-                    .data(palette)
-                    .join('circle')
-                    .attr('cx', (d, i) => width / 2 + Math.cos((i / palette.length) * Math.PI * 2) * width * 0.16)
-                    .attr('cy', (d, i) => height / 2 + Math.sin((i / palette.length) * Math.PI * 2) * height * 0.11)
-                    .attr('r', Math.min(width, height) * 0.18)
-                    .attr('fill', d => d)
-                    .attr('opacity', 0.11)
-                    .style('filter', 'blur(38px)');
-
-                lattice.selectAll('line')
-                    .data(links)
-                    .join('line')
-                    .attr('stroke', d => d.color)
-                    .attr('stroke-width', 1)
-                    .attr('stroke-opacity', 0.32);
-
-                field.selectAll('circle')
-                    .data(nodes)
-                    .join('circle')
-                    .attr('r', d => d.radius)
-                    .attr('fill', d => d.color)
-                    .attr('fill-opacity', 0.9)
-                    .style('filter', d => `drop-shadow(0 0 10px ${d.color})`);
+            const sections = Array.from(document.querySelectorAll('body > section'));
+            if (!sections.length) return;
+            const progress = document.getElementById('mira-progress');
+            const nextBtn = document.getElementById('mira-next');
+            const atBottom = () => (window.scrollY + window.innerHeight) >= (document.documentElement.scrollHeight - 100);
+            function currentIndex() {
+                const y = window.scrollY + window.innerHeight * 0.4;
+                let idx = 0;
+                for (let i = 0; i < sections.length; i++) if (sections[i].offsetTop <= y) idx = i;
+                return idx;
             }
-
-            buildScene();
-            window.addEventListener('resize', buildScene);
-
-            d3.timer(elapsed => {
-                aura.selectAll('circle')
-                    .attr('transform', (d, i) => {
-                        const a = elapsed * 0.00018 + i;
-                        return `translate(${Math.cos(a) * 28},${Math.sin(a * 1.3) * 22})`;
-                    });
-
-                nodes.forEach((node, index) => {
-                    const angle = node.phase + elapsed * node.speed;
-                    const drift = Math.sin(elapsed * 0.00045 + index) * 18;
-                    node.x = node.baseX + Math.cos(angle) * node.orbit + drift;
-                    node.y = node.baseY + Math.sin(angle * 1.4) * node.orbit * 0.72;
-                });
-
-                lattice.selectAll('line')
-                    .attr('x1', d => d.source.x)
-                    .attr('y1', d => d.source.y)
-                    .attr('x2', d => d.target.x)
-                    .attr('y2', d => d.target.y)
-                    .attr('stroke-opacity', (_, i) => 0.16 + Math.sin(elapsed * 0.001 + i) * 0.12);
-
-                field.selectAll('circle')
-                    .attr('cx', d => d.x)
-                    .attr('cy', d => d.y)
-                    .attr('r', (d, i) => d.radius * (1 + Math.sin(elapsed * 0.003 + i) * 0.24));
+            function goTo(i) {
+                const idx = Math.max(0, Math.min(sections.length - 1, i));
+                sections[idx].scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+            window.addEventListener('scroll', () => {
+                const docH = document.documentElement.scrollHeight - window.innerHeight;
+                progress.style.width = (docH > 0 ? (window.scrollY / docH) * 100 : 0) + '%';
+                nextBtn.classList.toggle('visible', window.scrollY > 200);
+                nextBtn.classList.toggle('up', atBottom());
+            });
+            nextBtn.addEventListener('click', () => {
+                if (atBottom()) { window.scrollTo({ top: 0, behavior: 'smooth' }); return; }
+                goTo(currentIndex() + 1);
+            });
+            document.addEventListener('keydown', (e) => {
+                if (['ArrowRight', 'ArrowDown', 'PageDown', ' '].includes(e.key)) { e.preventDefault(); goTo(currentIndex() + 1); }
+                else if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); goTo(currentIndex() - 1); }
+                else if (e.key === 'Home') { e.preventDefault(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+                else if (e.key === 'End') { e.preventDefault(); goTo(sections.length - 1); }
+                else if (e.key.toLowerCase() === 'f') { if (!document.fullscreenElement) document.documentElement.requestFullscreen(); else document.exitFullscreen(); }
             });
         })();
     </script>
