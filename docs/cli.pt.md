@@ -65,7 +65,7 @@ Ela monta `decks/<nome>/` a partir de um template e registra o deck. Você pode 
 
 | Escolha | Valores |
 |---|---|
-| Template | `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `animacao-livre` |
+| Template | `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `sandeco-just-animation-template` |
 | Tema | `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald` |
 
 ## `status`

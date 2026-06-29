@@ -61,7 +61,7 @@ Textos visíveis em português brasileiro, acentuação 100% correta, UTF-8 dire
 
 ## Onde o Slide é Inserido
 
-Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o deck ainda não existir, crie a partir de um esqueleto em `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica ou animacao-livre), respeitando a estrutura do template escolhido.
+Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o deck ainda não existir, crie a partir de um esqueleto em `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica ou sandeco-just-animation-template), respeitando a estrutura do template escolhido.
 
 ## Estrutura Obrigatória do Card
 

@@ -32,7 +32,7 @@ if (!command || command === '--help' || command === '-h') {
                          Opções: --name=<apelido>  --type=projeto|pdf|latex|texto
     sources              Lista as fontes vinculadas
     new <nome>           Cria um novo deck a partir de um template
-                         Opções: --deck=aula-capitulo|pitch-projeto|demo-tecnica|animacao-livre
+                         Opções: --deck=aula-capitulo|pitch-projeto|demo-tecnica|sandeco-just-animation-template
                                  --theme=mira-dark|light-minimal|corporate-blue|neon-emerald
     status               Mostra o estado da instalação e dos decks
     update               Atualiza agents e templates para a última versão
