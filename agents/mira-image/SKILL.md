@@ -1,7 +1,20 @@
 ---
 name: mira-image
-description: Coloca uma imagem que o usuário JÁ TEM (um arquivo local ou uma URL) dentro de um slide do Mira, novo ou existente, num card limpo onde a imagem fica grande e bem enquadrada. Copia a imagem para a pasta assets/ do deck e referencia por caminho relativo, então o slide continua autossuficiente e abre direto por file:// sem servidor (img comum não sofre o bloqueio de CORS que afeta .glb). Card limpo no mesmo padrão do mira-3d e do mira-qrcode: só o título do slide (sem ícone, máximo 6 palavras) e a imagem maximizada, sem legenda poluindo embaixo. A imagem fica ESTÁTICA; o loop interno da Regra Zero vai na moldura (brilho respirando), nunca distorcendo a imagem. NÃO confunda: para GERAR uma imagem nova use mira-visuals ou mira-image-prompt; para ANIMAR a imagem em si use mira-img-animator; este aqui só POSICIONA uma imagem pronta. Use SEMPRE que o usuário disser "/mira-image", "coloca essa imagem no slide", "põe essa foto no slide", "insere essa imagem", "adiciona essa figura ao deck", "slide com essa imagem", "mostra esse print/screenshot no slide", "essa logo num slide", ou fornecer um arquivo de imagem/URL pedindo para exibir num slide.
-
+description: >-
+  Coloca uma imagem que o usuário JÁ TEM (arquivo local ou URL) dentro de um
+  slide do Mira, novo ou existente, num card limpo onde a imagem fica grande e
+  bem enquadrada. Copia a imagem para assets/ do deck e referencia por caminho
+  relativo, então o slide continua autossuficiente e abre por file:// sem
+  servidor (img comum não sofre o bloqueio de CORS que afeta .glb). Card limpo
+  no padrão do mira-3d e do mira-qrcode: só o título (sem ícone, no máximo 6
+  palavras) e a imagem maximizada, sem legenda embaixo. A imagem fica ESTÁTICA;
+  o loop interno da Regra Zero vai na moldura (brilho respirando). NÃO confunda:
+  para GERAR uma imagem nova use mira-visuals ou mira-image-prompt; para ANIMAR
+  a imagem use mira-img-animator; este só POSICIONA uma imagem pronta. Use
+  SEMPRE que o usuário disser /mira-image, coloca essa imagem no slide, põe essa
+  foto no slide, insere essa imagem, adiciona essa figura ao deck, slide com
+  essa imagem, mostra esse print no slide, ou fornecer um arquivo de imagem ou
+  URL pedindo para exibir.
 ---
 
 # Skill: Imagem pronta no slide

@@ -1,23 +1,20 @@
 ---
 name: mira-survey
 description: >-
-  Cria um slide de ENQUETE AO VIVO no Mira, com QR-code para a plateia votar e
-  um gráfico que se atualiza em TEMPO REAL conforme os votos chegam. Recebe dois
-  links de um Google Forms, o link de VOTAÇÃO (forms.gle/...) que vira o QR-code,
-  e o link da PLANILHA de respostas (docs.google.com/spreadsheets/...) de onde o
-  slide lê a contagem. O gráfico pode ser um DONUT 3D girando (padrão) ou um
-  GRÁFICO DE BARRAS. O slide lê a planilha a cada poucos segundos via endpoint
-  gviz por JSONP (funciona até aberto por file://, sem erro de CORS) e anima as
-  fatias/barras com a contagem nova. A disposição é fixa e validada: pergunta
-  centralizada no topo da esquerda, gráfico grande no centro-esquerda, e o painel
-  direito com "Vote agora" + QR grande. Se o usuário não fornecer um ou ambos os
-  links, o agente PEDE antes de gerar. O QR é gerado localmente como SVG inline
-  (mesmo jeito do /mira-qrcode), sem chamada externa. Use SEMPRE que o usuário
-  disser "/mira-survey", "enquete", "enquete ao vivo", "votação em tempo real",
-  "poll", "resultado ao vivo no slide", "QR de enquete", "a plateia vota e o
-  slide atualiza", "tipo Mentimeter", "tipo Slido", "gráfico ao vivo de votos",
-  ou pedir um slide que mostra votação acontecendo em tempo real. Para um QR sem
-  votação use /mira-qrcode; para um gráfico de dados estáticos use /mira-chart.
+  Cria um slide de ENQUETE AO VIVO no Mira: a plateia escaneia um QR-code, vota
+  num Google Forms, e o resultado se atualiza em TEMPO REAL no slide (donut 3D
+  girando, padrão, ou gráfico de barras). Recebe dois links: o de VOTAÇÃO
+  (forms.gle/...), que vira o QR gerado localmente como SVG inline, e o da
+  PLANILHA de respostas (docs.google.com/spreadsheets/...), de onde o slide lê a
+  contagem. A leitura é pelo endpoint gviz por JSONP a cada poucos segundos,
+  então funciona até por file:// sem erro de CORS; nunca usa o Publicar na web
+  CSV (cacheado por minutos). A planilha precisa estar pública. Se faltar um dos
+  links, o agente pede antes de gerar. Use SEMPRE que o usuário disser
+  /mira-survey, enquete, enquete ao vivo, votação em tempo real, poll, resultado
+  ao vivo no slide, QR de enquete, a plateia vota e o slide atualiza, tipo
+  Mentimeter, tipo Slido, ou pedir um slide que mostra votação em tempo real.
+  Para um QR sem votação use /mira-qrcode; para um gráfico estático use
+  /mira-chart.
 ---
 
 # Skill: Enquete ao vivo no slide (QR + resultado em tempo real)

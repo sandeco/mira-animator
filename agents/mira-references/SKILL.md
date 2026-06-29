@@ -1,6 +1,16 @@
 ---
 name: mira-references
-description: Cria e organiza a pasta de referências de um tema de slides, em slides/<tema>/references/, e inclui automaticamente o material que já estiver lá. É a forma de informar a fonte de conteúdo de cada apresentação, sempre por tema e local ao tema, nunca perguntada na instalação. Use SEMPRE que o usuário disser "/mira-references", "adicionar referência", "adicionar referencias", "onde coloco o material", "onde ponho a fonte", "preparar as fontes do slide", "referências para o tema", "vincular conteúdo para os slides", "criar pasta de referências", "quais referências esse slide vai usar", ou pedir para apontar PDF, imagem, diagrama, livro, artigo ou print como base de um slide. Use também antes de criar um slide quando o tema ainda não tiver uma pasta de referências.
+description: >-
+  Cria e organiza a pasta de referências de um tema de slides, em references/
+  dentro do tema, e inclui automaticamente o material que já estiver lá. É a
+  forma de informar a fonte de conteúdo de cada apresentação, sempre por tema e
+  local ao tema, nunca perguntada na instalação. Use SEMPRE que o usuário disser
+  /mira-references, adicionar referência, adicionar referencias, onde coloco o
+  material, onde ponho a fonte, preparar as fontes do slide, referências para o
+  tema, vincular conteúdo para os slides, criar pasta de referências, quais
+  referências esse slide vai usar, ou pedir para apontar PDF, imagem, diagrama,
+  livro, artigo ou print como base de um slide. Use também antes de criar um
+  slide quando o tema ainda não tiver uma pasta de referências.
 ---
 
 # Skill: Referências por Tema

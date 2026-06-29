@@ -1,6 +1,20 @@
 ---
 name: mira-svg-morph
-description: Gera num slide do Mira (novo ou existente) uma forma SVG que MORFA em outra(s) em loop contínuo, usando GSAP + MorphSVGPlugin vendorados localmente (deck roda offline, file://). O usuário aponta 2 ou mais arquivos .svg da pasta assets/ do deck, na ordem do morph: 2 SVGs fazem ida e volta (A vira B vira A), N SVGs encadeiam (A vira B vira C ... vira A). A skill lê os arquivos, cola os <path> inline com ids únicos (sem colidir entre vários SVGs no mesmo documento), roda MorphSVGPlugin.convertToPath em formas que não são path (circle, rect, ellipse, polygon, polyline, line), e monta a timeline em loop. Card limpo no padrão do mira-animator: título sem ícone (máximo 6 palavras) e a forma morfando grande e central, laranja #FF904D. Herda a Regra Zero (loop interno obrigatório) e respeita prefers-reduced-motion (mostra a forma final estática). MorphSVG morfa path em path, não SVG inteiro em SVG inteiro: multi-path morfa par a par, morfa só a silhueta (cor anima à parte), não morfa raster nem texto sem converter, e o resultado é mais limpo quando os SVGs têm o mesmo viewBox. Use SEMPRE que o usuário disser "/mira-svg-morph", "morfa esse svg no outro", "uma forma virando outra", "morphing de svg", "transição de forma", "faz um ícone virar outro", "morpha esses arquivos", ou der dois ou mais SVGs pedindo um virar o outro. Para quando o usuário NÃO tem o arquivo e só descreve a ideia em palavras, use mira-icon-morph. Para metáfora densa/emergente (partículas, chuva, explosão, órbita de muitos elementos), use mira-animator (D3), não esta skill.
+description: >-
+  Gera num slide do Mira (novo ou existente) uma forma SVG que MORFA em outra(s)
+  em loop contínuo, com GSAP e MorphSVGPlugin vendorados localmente (deck
+  offline, file://). O usuário aponta 2 ou mais arquivos .svg da pasta assets/
+  do deck, na ordem do morph: 2 SVGs fazem ida e volta, N SVGs encadeiam (A vira
+  B vira C ... vira A). A skill cola os paths inline com ids únicos, roda
+  MorphSVGPlugin.convertToPath em formas que não são path (circle, rect,
+  polygon) e monta a timeline em loop. Card limpo: título sem ícone, forma
+  morfando grande e central, laranja FF904D. Herda a Regra Zero e respeita
+  prefers-reduced-motion. MorphSVG morfa path em path: multi-path morfa par a
+  par, só a silhueta, melhor quando os SVGs têm o mesmo viewBox. Use SEMPRE que
+  o usuário disser /mira-svg-morph, morfa esse svg no outro, uma forma virando
+  outra, morphing de svg, transição de forma, faz um ícone virar outro, ou der
+  dois ou mais SVGs pedindo um virar o outro. Quando o usuário só descreve em
+  palavras, use mira-icon-morph.
 ---
 
 # Skill: SVG que morfa em outro, em loop

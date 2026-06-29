@@ -1,6 +1,19 @@
 ---
 name: mira-3d
-description: Adiciona elementos VERDADEIRAMENTE 3D (com profundidade real, rotação contínua e interação de arrastar/zoom) ao canvas de um slide do Mira, num card limpo onde o elemento 3D é maximizado. Escolhe sozinha entre três camadas conforme o pedido, CSS 3D puro (formas simples), Three.js procedural (abstratos como esfera de partículas e rede de nós, ou objetos low-poly montados de primitivas) e glTF (quando o usuário fornece um .glb ou aceita buscar um modelo gratuito na web). Herda a Regra Zero do mira-animator (loop interno obrigatório: o 3D sempre gira sozinho, pausa no arrasto e retoma) e as regras transversais (idioma pt-BR, sem travessão, título sem ícone e com no máximo 6 palavras). ATENÇÃO ao servidor: um slide que carrega um arquivo .glb local NÃO abre por file:// (o navegador bloqueia o fetch do modelo), só por servidor HTTP; nesse caso a skill sobe um servidor local, devolve o link http://localhost ao usuário e gera um launcher de duplo-clique para apresentar depois. As camadas CSS 3D e procedural não usam asset local e abrem direto. Use SEMPRE que o usuário disser "/mira-3d", "elemento 3D", "modelo 3D", "objeto 3D no slide", "coloca um cérebro/robô/cubo 3D", "esfera de partículas", "rede de nós em 3D", "carrega esse .glb", "modelo glTF", "quero 3D de verdade no card", ou pedir um slide com profundidade real e rotação.
+description: >-
+  Adiciona elementos VERDADEIRAMENTE 3D (profundidade real, rotação contínua,
+  arrastar e zoom) ao canvas de um slide do Mira, num card limpo onde o 3D é
+  maximizado. Escolhe sozinha entre três camadas: CSS 3D puro (formas simples),
+  Three.js procedural (esfera de partículas, rede de nós, low-poly de
+  primitivas) e glTF (.glb fornecido ou modelo gratuito buscado na web). Herda a
+  Regra Zero do mira-animator: o 3D sempre gira sozinho, pausa no arrasto e
+  retoma. Atenção ao servidor: um slide que carrega um .glb local NÃO abre por
+  file:// (o navegador bloqueia o fetch), só por HTTP; nesse caso a skill sobe
+  um servidor local, devolve o link http://localhost e gera um launcher de
+  duplo-clique. As camadas CSS 3D e procedural abrem direto. Use SEMPRE que o
+  usuário disser /mira-3d, elemento 3D, objeto 3D no slide, coloca um cérebro ou
+  robô 3D, esfera de partículas, rede de nós em 3D, carrega esse .glb, modelo
+  glTF, ou pedir um slide com profundidade real e rotação.
 ---
 
 # Skill: Elemento 3D no canvas do slide

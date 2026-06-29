@@ -1,7 +1,17 @@
 ---
 name: mira-squared
-description: Gera uma versão QUADRADA (1:1, 1080x1080) de um deck do Mira, a partir do deck 16:9 original, OU cria slides quadrados DO ZERO na geometria nativa quando não há deck de origem, para vídeo em formato quadrado (feed do Instagram, LinkedIn, etc.). Na conversão, não toca no arquivo original: cria um novo arquivo index-1x1.html ao lado, fixando cada slide em 1080x1080 e reduzindo os espaços laterais, com moldura fixa e ajuste leve. O slide fica centralizado por padrão, com opção de alinhar à esquerda ou à direita. Use SEMPRE que o usuário disser "/mira-squared", "versão quadrada", "deixa quadrado", "formato 1:1", "1080x1080", "apresentação quadrada", "corta os lados", "reduz os espaços laterais", "vídeo quadrado", "cria um slide quadrado", "novo slide 1:1", ou pedir o deck ou um slide novo num formato quadrado.
-
+description: >-
+  Gera uma versão QUADRADA (1:1, 1080x1080) de um deck do Mira, a partir do deck
+  16:9 original, OU cria slides quadrados DO ZERO na geometria nativa quando não
+  há deck de origem, para vídeo em formato quadrado (feed do Instagram,
+  LinkedIn, etc.). Na conversão, não toca no arquivo original: cria um novo
+  arquivo index-1x1.html ao lado, fixando cada slide em 1080x1080 e reduzindo os
+  espaços laterais, com moldura fixa e ajuste leve. O slide fica centralizado
+  por padrão, com opção de alinhar à esquerda ou à direita. Use SEMPRE que o
+  usuário disser /mira-squared, versão quadrada, deixa quadrado, formato 1:1,
+  1080x1080, apresentação quadrada, corta os lados, reduz os espaços laterais,
+  vídeo quadrado, cria um slide quadrado, novo slide 1:1, ou pedir o deck ou um
+  slide novo num formato quadrado.
 ---
 
 # Skill: Versão Quadrada do Deck (1:1, 1080x1080)

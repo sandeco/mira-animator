@@ -1,6 +1,20 @@
 ---
 name: mira-qrcode
-description: Insere num slide do Mira (novo ou existente) um QR code escaneável, grande e centralizado, gerado a partir de um link ou texto fornecido pelo usuário. O QR é gerado LOCALMENTE na hora de criar o slide (pacote npm qrcode) e embutido como SVG inline no HTML, sem nenhuma dependência em tempo de apresentação: o slide funciona até aberto por file://, e não chama API externa nem biblioteca por CDN. Card limpo no padrão do mira-3d: só o título do slide (sem ícone, máximo 6 palavras) e o QR grande no centro, sem legenda com o link por extenso embaixo. Escaneabilidade manda no estilo: módulos escuros sobre cartão branco, zona de silêncio respeitada, laranja só na moldura e no título, nunca dentro dos módulos. Herda a Regra Zero do mira-animator, mas o QR fica ESTÁTICO (não se anima por cima dos módulos); o loop interno vai na moldura (pulso de brilho, cantos respirando). Use SEMPRE que o usuário disser "/mira-qrcode", "QR code", "qrcode", "código QR", "gera um QR", "coloca um QR no slide", "QR do link", "QR de inscrição", "QR de CTA", "código para escanear", ou pedir um slide com um link escaneável.
+description: >-
+  Insere num slide do Mira (novo ou existente) um QR code escaneável, grande e
+  centralizado, gerado de um link ou texto fornecido pelo usuário. O QR é gerado
+  LOCALMENTE na hora de criar o slide (pacote npm qrcode) e embutido como SVG
+  inline, sem dependência em tempo de apresentação: funciona até aberto por
+  file://, sem API externa nem CDN. Card limpo no padrão do mira-3d: só o título
+  do slide (sem ícone, no máximo 6 palavras) e o QR grande no centro, sem
+  legenda com o link embaixo. Escaneabilidade manda no estilo: módulos escuros
+  sobre cartão branco, zona de silêncio respeitada, laranja só na moldura e no
+  título, nunca dentro dos módulos. Herda a Regra Zero do mira-animator, mas o
+  QR fica ESTÁTICO (nada animado por cima dos módulos); o loop interno vai na
+  moldura (pulso de brilho, cantos respirando). Use SEMPRE que o usuário disser
+  /mira-qrcode, QR code, qrcode, código QR, gera um QR, coloca um QR no slide,
+  QR do link, QR de inscrição, QR de CTA, código para escanear, ou pedir um
+  slide com um link escaneável.
 ---
 
 # Skill: QR code grande e central no slide

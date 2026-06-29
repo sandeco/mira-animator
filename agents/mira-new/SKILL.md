@@ -1,6 +1,15 @@
 ---
 name: mira-new
-description: Porta de entrada para um novo deck de slides do Mira. Coleta os requisitos de uma nova apresentação de forma conversacional (nome do tema, template do deck, tema base, cor principal e referências) e monta a pasta decks/<tema>/ pronta para o pipeline preencher. NÃO gera os slides, apenas prepara o terreno e, ao final, oferece acionar o pipeline. Use SEMPRE que o usuário disser "/mira-new", "novo deck", "nova apresentação", "criar deck", "começar slides sobre", "quero fazer slides de", "novo tema de slides", "iniciar uma apresentação", "cria uma pasta de slides", ou pedir para começar uma apresentação do zero sobre algum assunto.
+description: >-
+  Porta de entrada para um novo deck de slides do Mira. Coleta os requisitos de
+  uma nova apresentação de forma conversacional (nome do tema, template do deck,
+  tema base, cor principal e referências) e monta a pasta do tema em decks/
+  pronta para o pipeline preencher. NÃO gera os slides, apenas prepara o terreno
+  e, ao final, oferece acionar o pipeline. Use SEMPRE que o usuário disser
+  /mira-new, novo deck, nova apresentação, criar deck, começar slides sobre,
+  quero fazer slides de, novo tema de slides, iniciar uma apresentação, cria uma
+  pasta de slides, ou pedir para começar uma apresentação do zero sobre algum
+  assunto.
 ---
 
 # Skill: Novo Deck (Mira)

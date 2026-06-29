@@ -1,6 +1,20 @@
 ---
 name: mira-svg-animator
-description: Anima num slide do Mira um SVG que o usuário FORNECE, dando movimento próprio à forma (não troca uma forma por outra, isso é morph). O usuário passa 1 arquivo .svg e descreve o movimento em palavras: bater asas, girar uma roda, deslizar, pulsar, ter o contorno desenhado, percorrer uma curva. Usa GSAP vendorado localmente (offline, file://) e escolhe a técnica conforme o movimento: transform (rotate/scale/scaleX/translate/skew), DrawSVGPlugin (o traço se desenha) ou MotionPathPlugin (movimento por curva). Ponto técnico central: para animar uma PARTE (uma asa, uma engrenagem), a parte precisa ser um elemento separado; se o SVG vier como path único fundido, a skill separa a parte, cortando a silhueta por um eixo com clipPath, ou editando o path para isolar/remover trechos (ex.: remover as antenas de dentro do path da asa para elas não se moverem em cópia). A skill também remove fundo opaco (ex.: <rect> branco) e define a origem do movimento no ponto certo (svgOrigin: eixo da dobradiça ou centro de rotação). Herda a Regra Zero (loop interno obrigatório) e respeita prefers-reduced-motion (estado final estático). Card limpo no padrão mira-animator: título sem ícone (máximo 6 palavras), laranja #FF904D. Use SEMPRE que o usuário disser "/mira-svg-animator", "anima esse svg", "faz a borboleta bater asas", "gira essa roda/engrenagem", "faz esse desenho se mexer", "desliza esse svg", "faz pulsar", "o traço/contorno se desenha sozinho", ou passar um SVG pedindo movimento. Se o usuário quer uma forma virando OUTRA, use mira-svg-morph (arquivo) ou mira-icon-morph (Iconify). Para metáfora densa/emergente (partículas, explosão), use mira-animator (D3).
+description: >-
+  Anima num slide do Mira um SVG que o usuário FORNECE, dando movimento próprio
+  à forma (não troca uma forma por outra, isso é morph). O usuário passa 1
+  arquivo .svg e descreve o movimento em palavras: bater asas, girar uma roda,
+  deslizar, pulsar, desenhar o contorno, percorrer uma curva. Usa GSAP vendorado
+  localmente (offline, file://) e escolhe a técnica: transform, DrawSVGPlugin (o
+  traço se desenha) ou MotionPathPlugin (curva). Ponto central: para animar uma
+  PARTE ela precisa ser um elemento separado; se o SVG vier como path único
+  fundido, a skill separa a parte por clipPath ou editando o path. Também remove
+  fundo opaco e define a origem do movimento. Herda a Regra Zero e respeita
+  prefers-reduced-motion. Use SEMPRE que o usuário disser /mira-svg-animator,
+  anima esse svg, faz a borboleta bater asas, gira essa roda, faz esse desenho
+  se mexer, desliza esse svg, faz pulsar, o traço se desenha sozinho, ou passar
+  um SVG pedindo movimento. Para uma forma virando OUTRA use mira-svg-morph ou
+  mira-icon-morph.
 ---
 
 # Skill: animar um SVG que o usuário fornece

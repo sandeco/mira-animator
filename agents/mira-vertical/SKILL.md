@@ -1,7 +1,19 @@
 ---
 name: mira-vertical
-description: Gera uma versão VERTICAL (9:16, generalista para a tela atual: largura da tela dividida por 3 por altura cheia, ex. 640x1080 numa tela 1080p) de um deck do Mira, a partir do deck 16:9 original, OU cria slides verticais DO ZERO na geometria nativa quando não há deck de origem, para vídeo vertical (Reels, Shorts, TikTok, Stories). Na conversão, não toca no arquivo original: cria um novo arquivo index-9x16.html ao lado. Cada slide de conteúdo fica com SÓ o título principal no topo e a animação ocupando um canvas alto e padronizado (proporção 128/203) logo abaixo: subtítulo, header do card (ícone/label/Replay) e a base (legenda + pílulas) saem; o título encolhe sozinho até caber em no máximo 2 linhas; e o viewBox de cada animação é esticado em altura para casar com o canvas, sem mexer na geometria do conteúdo. O eixo de cada animação é reformulado para o retrato (fluxo horizontal vira vertical, elipse larga vira alta, comparação lado a lado vira empilhada). Texto, cores, timings e loop ficam intactos, só posição, eixo e altura do viewBox mudam. Fora da coluna o fundo fica #333333. Use SEMPRE que o usuário disser "/mira-vertical", "versão vertical", "deixa vertical", "formato 9:16", "1080x1920", "apresentação vertical", "para Reels", "para Shorts", "para Stories", "para TikTok", "vídeo vertical", "modo retrato", "cria um slide vertical", "novo slide 9:16", "slide vertical do zero", ou pedir o deck ou um slide novo num formato vertical.
-
+description: >-
+  Gera uma versão VERTICAL (9:16, generalista para a tela atual: largura da tela
+  dividida por 3 por altura cheia, ex. 640x1080 numa tela 1080p) de um deck do
+  Mira, a partir do 16:9 original, OU cria slides verticais DO ZERO quando não
+  há deck de origem, para vídeo vertical (Reels, Shorts, TikTok, Stories). Na
+  conversão, não toca no original: cria um novo arquivo index-9x16.html ao lado.
+  Cada slide fica com só o título no topo e a animação num canvas alto e
+  padronizado logo abaixo; o título encolhe até caber em 2 linhas e o viewBox da
+  animação é esticado em altura. O eixo de cada animação é reformulado para o
+  retrato (fluxo horizontal vira vertical, comparação lado a lado vira
+  empilhada). Texto, cores, timings e loop ficam intactos. Use SEMPRE que o
+  usuário disser /mira-vertical, versão vertical, deixa vertical, formato 9:16,
+  1080x1920, apresentação vertical, para Reels, para Shorts, para Stories, para
+  TikTok, vídeo vertical, modo retrato, ou cria um slide vertical.
 ---
 
 # Skill: Versão Vertical do Deck (9:16) com canvas alto, só título + animação

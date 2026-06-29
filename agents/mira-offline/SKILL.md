@@ -1,6 +1,19 @@
 ---
 name: mira-offline
-description: Converte um deck do Mira já criado para modo OFFLINE — self-contained, sem nenhuma dependência de CDN em runtime — para que abra por file:// mesmo atrás do firewall de uma empresa. Por padrão um slide do Mira carrega Tailwind, AOS, Lucide, D3 e a fonte Inter de origens externas (cdn.tailwindcss.com, unpkg.com, d3js.org, fonts.googleapis.com); firewalls corporativos costumam bloquear essas CDNs e o slide quebra ou "trava". Esta skill resolve copiando as bibliotecas JÁ vendoradas no pacote (mira-templates/vendor/, que chegaram pelo npm install) para assets/vendor/ do deck e reescrevendo TODOS os HTMLs do deck (index.html e as variantes 1x1/9x16/thirds/dissolve) para apontar a caminhos relativos locais. NÃO baixa nada da internet — é à prova de firewall mesmo quando o build é feito atrás dele. Roda um script Node determinístico e idempotente (rodar de novo não estraga). Cobre as 5 libs comuns + a fonte Inter (subsets latin/latin-ext, com os acentos do português) E o Three.js dos slides 3D (mira-3d): reescreve o importmap e copia three.module.js + OrbitControls + GLTFLoader (só em decks que usam 3D). Não mexe no GSAP que as skills de morph já vendoram em assets/gsap/ — apenas confere. Use SEMPRE que o usuário disser "/mira-offline", "deixa o deck offline", "deixa o slide self-contained", "o firewall da empresa está bloqueando o slide", "bloqueado pela empresa/empresa bloqueia o slide", "funciona sem internet", "tira as CDN", "baixa as bibliotecas pro deck", "localiza as libs", "copia os js pro deck", "o aluno não consegue abrir o slide na empresa", ou descrever um deck que não roda atrás de firewall corporativo. Para um deck NOVO, crie-o normalmente pelo pipeline e rode esta skill por último.
+description: >-
+  Converte um deck do Mira já criado para modo OFFLINE (self-contained, sem
+  dependência de CDN em runtime), para abrir por file:// mesmo atrás do firewall
+  de uma empresa. Por padrão o slide carrega Tailwind, AOS, Lucide, D3 e a fonte
+  Inter de origens externas; firewalls corporativos bloqueiam essas CDNs e o
+  slide quebra. A skill copia as bibliotecas já vendoradas no pacote para
+  assets/vendor/ do deck e reescreve TODOS os HTMLs (index.html e as variantes
+  1x1, 9x16, thirds, dissolve) para caminhos relativos locais. Não baixa nada da
+  internet e roda um script Node determinístico e idempotente. Cobre as 5 libs
+  comuns, a fonte Inter e o Three.js dos slides 3D. Use SEMPRE que o usuário
+  disser /mira-offline, deixa o deck offline, deixa o slide self-contained, o
+  firewall da empresa está bloqueando o slide, funciona sem internet, tira as
+  CDN, baixa as bibliotecas pro deck, ou o aluno não consegue abrir o slide na
+  empresa. Rode por último, depois do deck pronto.
 ---
 
 # Skill: deck do Mira em modo offline (à prova de firewall)

@@ -1,6 +1,19 @@
 ---
 name: mira-thirds
-description: Reenquadra um deck do Mira na REGRA DOS TERÇOS (rule of thirds), sem mudar a proporção do quadro. Empurra o conteúdo de cada slide (título, animação e pílulas) para as colunas 1 e 2 de um grid 3x3 (os dois terços da esquerda) e deixa a coluna da direita inteira livre, reservada para você sobrepor texto, lower-third ou o vídeo do apresentador na edição. Não toca no arquivo original: cria um novo arquivo com sufixo -thirds ao lado. Funciona por cima do deck 16:9, da versão 1:1 (mira-squared) ou da versão 9:16 (mira-vertical), OU cria slides DO ZERO já compostos em terços quando não há deck de origem. O lado livre é a direita por padrão, com opção de inverter para a esquerda. Use SEMPRE que o usuário disser "/mira-thirds", "regra dos terços", "rule of thirds", "composição em terços", "anima à esquerda", "animação na esquerda", "deixa a direita livre", "coluna livre", "dois terços à esquerda", "2/3 à esquerda", "grid 3x3", "espaço para texto ao lado", "abre espaço à direita", "cria um slide em terços", ou pedir o deck ou um slide novo com a animação encostada num lado e o outro terço livre.
+description: >-
+  Reenquadra um deck do Mira na REGRA DOS TERÇOS, sem mudar a proporção do
+  quadro. Empurra o conteúdo de cada slide (título, animação e pílulas) para as
+  colunas 1 e 2 de um grid 3x3 (os dois terços da esquerda) e deixa a coluna da
+  direita inteira livre, reservada para você sobrepor texto, lower-third ou o
+  vídeo do apresentador na edição. Não toca no arquivo original: cria um novo
+  arquivo com sufixo -thirds ao lado. Funciona por cima do deck 16:9, da versão
+  1:1 (mira-squared) ou da 9:16 (mira-vertical), OU cria slides DO ZERO já
+  compostos em terços. O lado livre é a direita por padrão, com opção de
+  inverter para a esquerda. Use SEMPRE que o usuário disser /mira-thirds, regra
+  dos terços, rule of thirds, composição em terços, anima à esquerda, deixa a
+  direita livre, coluna livre, dois terços à esquerda, grid 3x3, espaço para
+  texto ao lado, abre espaço à direita, cria um slide em terços, ou pedir o deck
+  ou um slide novo com a animação encostada num lado e o outro terço livre.
 ---
 
 # Skill: Reenquadramento na Regra dos Terços (animação em 2/3, um terço livre)
