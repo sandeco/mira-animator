@@ -33,6 +33,7 @@ Ela pergunta o nome do tema, o template do deck, o tema base, a cor principal e 
 | `aula-capitulo` | Uma aula ou palestra a partir de um capítulo / módulo |
 | `pitch-projeto` | Um pitch de projeto |
 | `demo-tecnica` | Uma demo técnica / walkthrough |
+| `animacao-livre` | Um palco preto, sem texto, apenas para a animacao do Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 

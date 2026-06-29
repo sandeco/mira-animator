@@ -74,7 +74,7 @@ You can spell out the template and theme in the same sentence:
 /mira-new create a presentation called 'my-class' with the aula-capitulo template and the mira-dark theme
 ```
 
-**Deck templates:** `aula-capitulo`, `pitch-projeto`, `demo-tecnica`.
+**Deck templates:** `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `animacao-livre`.
 **Themes:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 
 Then, in Claude: *"fill the deck my-class with content from the reversa source"*.

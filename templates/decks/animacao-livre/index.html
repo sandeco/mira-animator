@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mira - Template: Animacao Livre</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        /* @MIRA:THEME:START */
+:root {
+    --mira-primary: #ffffff;
+    --mira-bg: #000000;
+    --mira-text: #ffffff;
+    --mira-text-soft: rgba(255, 255, 255, 0.72);
+    --mira-text-softer: rgba(255, 255, 255, 0.50);
+    --mira-card-bg: transparent;
+    --mira-card-border: transparent;
+    --mira-glow-soft: rgba(255, 255, 255, 0.12);
+    --mira-glow-strong: rgba(255, 255, 255, 0.22);
+    --mira-icon-bg: transparent;
+    --mira-icon-border: transparent;
+    --mira-pill-bg: transparent;
+    --mira-pill-border: transparent;
+    --mira-stage-glow: transparent;
+    --mira-accent-2: #d7e3ff;
+}
+
+body {
+    background: var(--mira-bg);
+    min-height: 100vh;
+    color: var(--mira-text);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+        /* @MIRA:THEME:END */
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html,
+        body {
+            width: 100%;
+            min-height: 100%;
+            margin: 0;
+            overflow: hidden;
+            background: #000000;
+        }
+
+        body {
+            color: #ffffff;
+        }
+
+        .mira-animation-only {
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+            background: #000000;
+        }
+
+        .mira-animation-only svg {
+            display: block;
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- @MIRA:SIZE 3/10 -->
+    <!-- Template sem conteudo textual: use apenas animacao sobre fundo #000000. -->
+    <!-- Cores livres, desde que tenham alto contraste com #000000 e nenhuma seja obrigatoria ou predominante. -->
+    <main id="mira-animation-stage" class="mira-animation-only" aria-label="Animacao Mira"></main>
+
+    <script>
+        (function () {
+            const stage = document.getElementById('mira-animation-stage');
+            const palette = [
+                '#ffffff',
+                '#00E5FF',
+                '#7CFF6B',
+                '#FFD166',
+                '#FF5C8A',
+                '#B388FF'
+            ];
+
+            const svg = d3.select(stage)
+                .append('svg')
+                .attr('role', 'img')
+                .attr('preserveAspectRatio', 'xMidYMid slice');
+
+            const root = svg.append('g');
+            const background = root.append('rect').attr('fill', '#000000');
+            const aura = root.append('g').attr('opacity', 0.62);
+            const field = root.append('g');
+            const lattice = root.append('g').attr('opacity', 0.42);
+
+            let width = 0;
+            let height = 0;
+            let nodes = [];
+            let links = [];
+
+            function buildScene() {
+                width = window.innerWidth;
+                height = window.innerHeight;
+                svg.attr('viewBox', `0 0 ${width} ${height}`);
+                background.attr('width', width).attr('height', height);
+
+                const diagonal = Math.hypot(width, height);
+                const count = Math.max(42, Math.round((width * height) / 24500));
+                nodes = d3.range(count).map((_, index) => {
+                    const angle = (index / count) * Math.PI * 2;
+                    const radius = diagonal * (0.08 + Math.random() * 0.34);
+                    return {
+                        x: width / 2 + Math.cos(angle) * radius * (0.58 + Math.random() * 0.5),
+                        y: height / 2 + Math.sin(angle) * radius * (0.46 + Math.random() * 0.42),
+                        baseX: width / 2 + Math.cos(angle) * radius,
+                        baseY: height / 2 + Math.sin(angle) * radius * 0.58,
+                        radius: 2.2 + Math.random() * 4.8,
+                        orbit: 18 + Math.random() * 84,
+                        speed: 0.00055 + Math.random() * 0.0018,
+                        phase: Math.random() * Math.PI * 2,
+                        color: palette[index % palette.length]
+                    };
+                });
+
+                links = d3.range(count).map(i => ({
+                    source: nodes[i],
+                    target: nodes[(i + 5) % count],
+                    color: palette[(i + 2) % palette.length]
+                }));
+
+                aura.selectAll('circle')
+                    .data(palette)
+                    .join('circle')
+                    .attr('cx', (d, i) => width / 2 + Math.cos((i / palette.length) * Math.PI * 2) * width * 0.16)
+                    .attr('cy', (d, i) => height / 2 + Math.sin((i / palette.length) * Math.PI * 2) * height * 0.11)
+                    .attr('r', Math.min(width, height) * 0.18)
+                    .attr('fill', d => d)
+                    .attr('opacity', 0.11)
+                    .style('filter', 'blur(38px)');
+
+                lattice.selectAll('line')
+                    .data(links)
+                    .join('line')
+                    .attr('stroke', d => d.color)
+                    .attr('stroke-width', 1)
+                    .attr('stroke-opacity', 0.32);
+
+                field.selectAll('circle')
+                    .data(nodes)
+                    .join('circle')
+                    .attr('r', d => d.radius)
+                    .attr('fill', d => d.color)
+                    .attr('fill-opacity', 0.9)
+                    .style('filter', d => `drop-shadow(0 0 10px ${d.color})`);
+            }
+
+            buildScene();
+            window.addEventListener('resize', buildScene);
+
+            d3.timer(elapsed => {
+                aura.selectAll('circle')
+                    .attr('transform', (d, i) => {
+                        const a = elapsed * 0.00018 + i;
+                        return `translate(${Math.cos(a) * 28},${Math.sin(a * 1.3) * 22})`;
+                    });
+
+                nodes.forEach((node, index) => {
+                    const angle = node.phase + elapsed * node.speed;
+                    const drift = Math.sin(elapsed * 0.00045 + index) * 18;
+                    node.x = node.baseX + Math.cos(angle) * node.orbit + drift;
+                    node.y = node.baseY + Math.sin(angle * 1.4) * node.orbit * 0.72;
+                });
+
+                lattice.selectAll('line')
+                    .attr('x1', d => d.source.x)
+                    .attr('y1', d => d.source.y)
+                    .attr('x2', d => d.target.x)
+                    .attr('y2', d => d.target.y)
+                    .attr('stroke-opacity', (_, i) => 0.16 + Math.sin(elapsed * 0.001 + i) * 0.12);
+
+                field.selectAll('circle')
+                    .attr('cx', d => d.x)
+                    .attr('cy', d => d.y)
+                    .attr('r', (d, i) => d.radius * (1 + Math.sin(elapsed * 0.003 + i) * 0.24));
+            });
+        })();
+    </script>
+</body>
+
+</html>

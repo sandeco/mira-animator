@@ -65,7 +65,7 @@ It assembles `decks/<name>/` from a template and registers it. You can spell out
 
 | Choice | Values |
 |---|---|
-| Template | `aula-capitulo`, `pitch-projeto`, `demo-tecnica` |
+| Template | `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `animacao-livre` |
 | Theme | `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald` |
 
 ## `status`

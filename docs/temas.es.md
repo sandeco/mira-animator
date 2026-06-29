@@ -39,6 +39,7 @@ La capa `decks/` guarda presentaciones completas y ejecutables que sirven de **e
 | `aula-capitulo` | Una clase o conferencia a partir de un capítulo / módulo. |
 | `pitch-projeto` | Un pitch de proyecto. |
 | `demo-tecnica` | Una demo técnica o walkthrough. |
+| `animacao-livre` | Un escenario #000000, sin texto, solo para animacion libre. |
 
 ## Los marcadores `@MIRA:`
 

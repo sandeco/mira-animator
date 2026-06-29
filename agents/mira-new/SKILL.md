@@ -25,7 +25,7 @@ Tudo o que esta skill cria ou edita vive **dentro de `decks/<tema>/`**. Nunca to
 Pergunte de forma objetiva, oferecendo os defaults entre parênteses. Se o usuário já adiantou alguma resposta no pedido, não pergunte de novo.
 
 1. **Nome do tema.** Texto livre. Gere um **slug** em kebab-case, minúsculo, sem acento (ex.: "Spec Driven Development" → `spec-driven-development`). Confirme o slug com o usuário se houver ambiguidade.
-2. **Template do deck** (esqueleto). Liste **dinamicamente** as opções varrendo `mira-templates/decks/` (cada subpasta com `index.html` é um template). Os built-in são `aula-capitulo` (default), `pitch-projeto` e `demo-tecnica`; templates criados pelo `/mira-image-template` aparecem aqui automaticamente, junto com os existentes. Mostre todos e deixe o usuário escolher.
+2. **Template do deck** (esqueleto). Liste **dinamicamente** as opções varrendo `mira-templates/decks/` (cada subpasta com `index.html` é um template). Os built-in são `aula-capitulo` (default), `pitch-projeto`, `demo-tecnica` e `animacao-livre`; templates criados pelo `/mira-image-template` aparecem aqui automaticamente, junto com os existentes. Mostre todos e deixe o usuário escolher.
 3. **Tema base** (identidade visual). Liste **dinamicamente** varrendo `mira-templates/themes/` (cada `.css`, exceto `base.css`, é um tema). Os built-in são `mira-dark` (default, laranja), `light-minimal`, `corporate-blue` e `neon-emerald`; temas gerados pelo `/mira-image-template` aparecem aqui também. **Se o template escolhido tiver um tema de mesmo nome** (caso dos templates derivados de imagem), use-o como **padrão** desse template, pois é a identidade que veio da imagem; o usuário ainda pode escolher outro.
 4. **Cor principal** (opcional). Se o usuário não pedir, use a cor do tema base. Se pedir uma cor (hex `#RRGGBB` ou nome como "roxo"), converta para hex e trate como override no Passo 3. Confirme a cor escolhida.
 5. **Descrição do tema.** Uma ou duas frases: do que trata, para quem, qual o objetivo. Isso vira a semente do briefing.
@@ -35,7 +35,7 @@ Se o deck `decks/<slug>/` já existir, avise e pergunte se é para usar outro no
 
 ### Passo 2: Montar o deck
 
-Para os **templates built-in** (`aula-capitulo`, `pitch-projeto`, `demo-tecnica`) com um **tema built-in**, use o comando canônico do Mira, que copia o esqueleto, injeta o CSS do tema e registra no config:
+Para os **templates built-in** (`aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `animacao-livre`) com um **tema built-in**, use o comando canônico do Mira, que copia o esqueleto, injeta o CSS do tema e registra no config:
 
 ```bash
 npx mira-animator new <slug> --deck=<template> --theme=<tema-base>
@@ -43,7 +43,7 @@ npx mira-animator new <slug> --deck=<template> --theme=<tema-base>
 
 Isso cria `decks/<slug>/index.html` com o tema base já embutido (entre os marcadores `/* @MIRA:THEME:START */` e `/* @MIRA:THEME:END */`).
 
-> **Para templates ou temas criados pelo `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<slug>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece os três decks e quatro temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local.
+> **Para templates ou temas criados pelo `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<slug>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece os decks e temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local.
 
 ### Passo 3: Aplicar a cor principal custom (só se houver override)
 
