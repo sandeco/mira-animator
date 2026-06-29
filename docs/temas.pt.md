@@ -39,7 +39,7 @@ A camada `decks/` guarda apresentações completas e rodáveis que servem de **e
 | `aula-capitulo` | Uma aula ou palestra a partir de um capítulo / módulo. |
 | `pitch-projeto` | Um pitch de projeto. |
 | `demo-tecnica` | Uma demo técnica ou walkthrough. |
-| `animacao-livre` | Um palco em #000000, sem texto, apenas para animacao livre. |
+| `sandeco-just-animation-template` | Um palco em #000000, sem texto, apenas para animacao livre. |
 
 ## Os marcadores `@MIRA:`
 

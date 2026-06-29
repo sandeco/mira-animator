@@ -33,7 +33,7 @@ Pregunta el nombre del tema, la plantilla del deck, el tema base, el color princ
 | `aula-capitulo` | Una clase o conferencia a partir de un capítulo / módulo |
 | `pitch-projeto` | Un pitch de proyecto |
 | `demo-tecnica` | Una demo técnica / walkthrough |
-| `animacao-livre` | Un escenario negro, sin texto, solo para la animacion de Mira |
+| `sandeco-just-animation-template` | Un escenario negro, sin texto, solo para la animacion de Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 

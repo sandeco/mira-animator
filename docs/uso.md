@@ -33,7 +33,7 @@ It asks for the theme name, the deck template, the base theme, the primary color
 | `aula-capitulo` | A class or lecture from a chapter / module |
 | `pitch-projeto` | A project pitch |
 | `demo-tecnica` | A technical demo / walkthrough |
-| `animacao-livre` | A black stage with no text, only the Mira animation |
+| `sandeco-just-animation-template` | A black stage with no text, only the Mira animation |
 
 **Themes:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 

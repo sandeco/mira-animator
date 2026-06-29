@@ -39,7 +39,7 @@ The `decks/` layer holds complete, runnable presentations that serve as **skelet
 | `aula-capitulo` | A class or lecture built from a chapter / module. |
 | `pitch-projeto` | A project pitch. |
 | `demo-tecnica` | A technical demo or walkthrough. |
-| `animacao-livre` | A #000000 stage with no text, only free-form animation. |
+| `sandeco-just-animation-template` | A #000000 stage with no text, only free-form animation. |
 
 ## The `@MIRA:` markers
 
