@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Site demo embutido</title>
+<style>
+  * { box-sizing: border-box; margin: 0; }
+  body { min-height: 100vh; font-family: system-ui, sans-serif; color: #fff;
+         background: radial-gradient(1200px 800px at 30% 20%, #1c1206, #000);
+         display: flex; flex-direction: column; }
+  header { padding: 22px 32px; border-bottom: 1px solid rgba(255,144,77,.3);
+           display: flex; align-items: center; gap: 12px; }
+  header b { color: #FF904D; }
+  nav a { color: #FFC766; margin-left: 20px; text-decoration: none; font-weight: 600; }
+  main { flex: 1; display: flex; flex-direction: column; align-items: center;
+         justify-content: center; text-align: center; gap: 24px; padding: 32px; }
+  h1 { font-size: clamp(32px, 6vw, 72px); line-height: 1.05; }
+  h1 span { color: #FF904D; }
+  p { max-width: 640px; color: rgba(255,255,255,.75); font-size: 20px; }
+  button { background: #FF904D; color: #0a0a0a; border: 0; font-weight: 800;
+           padding: 14px 26px; border-radius: 999px; font-size: 17px; cursor: pointer; }
+  #contador { font-variant-numeric: tabular-nums; color: #FFC766; font-weight: 800; }
+  footer { padding: 18px; text-align: center; color: rgba(255,255,255,.4); }
+</style>
+</head>
+<body>
+  <header>
+    <b>ACME</b> Live Site
+    <nav><a href="#produto">Produto</a><a href="#preco">Preço</a><a href="#contato">Contato</a></nav>
+  </header>
+  <main>
+    <h1>Este é um <span>site vivo</span><br>dentro de um slide do Mira</h1>
+    <p>Clique no botão: o site é interativo de verdade. Aperte <b>Esc</b> para devolver o controle ao deck.</p>
+    <button onclick="c++;document.getElementById('contador').textContent=c">Cliques: <span id="contador">0</span></button>
+  </main>
+  <footer>assets/webview/demo/index.html · roda offline por file://</footer>
+  <script>let c = 0;</script>
+</body>
+</html>
