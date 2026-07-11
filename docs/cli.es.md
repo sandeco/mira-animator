@@ -14,7 +14,7 @@ npx mira-animator --version      # muestra la versión
 | `install` | Instala Mira en la carpeta actual (agentes, plantillas, config). |
 | `link <ruta>` | Vincula una carpeta o archivo como fuente de contenido. |
 | `sources` | Lista las fuentes vinculadas. |
-| `edit <deck>` | Activa el **modo edición** (reordenar slides, tecla E) en un deck existente. |
+| `edit <deck>` | Instala/actualiza las **herramientas de autoría** (modo edición E — reordenar, edición libre, crop con Alt — y dibujo P) en un deck existente. |
 | `status` | Muestra el estado de la instalación y los decks. |
 | `update` | Actualiza agentes y plantillas a la última versión. |
 | `uninstall` | Elimina Mira de la carpeta actual. |
@@ -75,7 +75,7 @@ Monta `decks/<nombre>/` a partir de una plantilla y registra el deck. Puedes ind
 npx mira-animator edit <deck>
 ```
 
-Aplica el **modo edición** (reordenar slides) a un deck que ya existe: copia `mira-edit.js` a la carpeta del deck e inyecta el script antes de `</body>`. Abre el deck y pulsa **E** para reordenar, luego guarda. Los decks nuevos ya vienen con él. Mira [Agentes útiles](agentes/uteis.md) para saber cómo funcionan el reorder y el guardado.
+Aplica las **herramientas de autoría** a un deck que ya existe: copia `mira-edit.js`, `mira-edit-free.js` y `mira-draw.js` a `<deck>/mira/` e inyecta los scripts antes de `</body>`. Abre el deck y pulsa **E** para editar (reordenar slides + edición libre: mover, redimensionar, girar, duplicar, eliminar, editar texto y **recortar con Alt + asa**, estilo OBS Studio) o **P** para dibujar encima, luego guarda. Los decks nuevos ya vienen con todo. También es el comando de **migración**: ejecuta `npx mira-animator edit <deck>` en decks antiguos para actualizarlos a la última versión de las herramientas (incluido el crop con Alt). Mira [Agentes útiles](agentes/uteis.md) para saber cómo funcionan el reorder y el guardado.
 
 ## `status`
 

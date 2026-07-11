@@ -153,11 +153,49 @@ Substitua `SLUG` por um id curto único (ex.: `demo-produto`), `URL` pela fonte 
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); enter(); }
     });
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') leave(); });
+
+    /* Ponte de teclado (OBRIGATÓRIA): com o foco dentro do iframe, o deck
+       não ouve tecla nenhuma — Esc não sai e os modos E/P morrem. Em iframe
+       same-origin (cópia local), escuta lá dentro: Esc sai; E/P saem e
+       reenviam a tecla para o deck. Cross-origin não permite a ponte
+       (mais um motivo para preferir a cópia local). */
+    function typingInFrame(doc) {
+      var t = doc.activeElement;
+      return t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName));
+    }
+    function bindFrameKeys() {
+      try {
+        var doc = frame.contentDocument;
+        if (!doc || doc.__mwvKeys) return;
+        doc.__mwvKeys = true;
+        doc.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') { e.preventDefault(); leave(); return; }
+          if (/^[ep]$/i.test(e.key) && !typingInFrame(doc)) {
+            e.preventDefault(); e.stopPropagation();
+            leave();
+            document.dispatchEvent(new KeyboardEvent('keydown', { key: e.key, bubbles: true }));
+          }
+        }, true);
+      } catch (err) { /* cross-origin: sem ponte */ }
+    }
+    frame.addEventListener('load', bindFrameKeys);
+    bindFrameKeys();
+
+    /* Fora da interação o iframe nunca fica com o foco (sites roubam foco
+       no load); devolve o teclado ao deck. */
+    window.addEventListener('blur', function () {
+      setTimeout(function () {
+        if (!slide.classList.contains('interacting') && document.activeElement === frame) {
+          try { frame.blur(); } catch (e) {}
+          try { window.focus(); } catch (e) {}
+        }
+      }, 0);
+    });
   })();
 </script>
 ```
 
-Por que funciona: a guarda (z-index 2, fundo transparente) deixa o site **visível** mas captura o clique, então o teclado do deck nunca é roubado sem intenção; ao clicar entra em `interacting` (iframe ganha `pointer-events`), e **Esc** sai. A camada de fallback (z-index 0) só aparece por baixo se o iframe vier em branco por bloqueio.
+Por que funciona: a guarda (z-index 2, fundo transparente) deixa o site **visível** mas captura o clique, então o teclado do deck nunca é roubado sem intenção; ao clicar entra em `interacting` (iframe ganha `pointer-events`), e **Esc** sai. A camada de fallback (z-index 0) só aparece por baixo se o iframe vier em branco por bloqueio. A ponte de teclado garante que **Esc/E/P continuam funcionando mesmo com o foco dentro do site** — sem ela o deck fica surdo depois do primeiro clique no iframe.
 
 ## Barra de endereço fake (opcional, só se o usuário pedir contexto)
 
@@ -183,6 +221,7 @@ Reduz a área do site em ~48px no topo. Use quando o apresentador quiser mostrar
 
 - [ ] Site ocupa o slide inteiro: `<section>` com `padding:0`, `height:100vh`, iframe `inset:0`, `border:0`.
 - [ ] Guarda de interação presente: site só fica clicável após clique; **Esc** devolve a navegação ao deck (testado).
+- [ ] Ponte de teclado presente: **Esc/E/P funcionam com o foco dentro do iframe** (testado clicando no site e apertando as três teclas).
 - [ ] Camada de fallback com link "abrir em nova aba" caso o site recuse incorporação.
 - [ ] Se o domínio costuma bloquear, o usuário foi avisado e a opção local/offline foi oferecida.
 - [ ] Cópia local (quando usada) fica em `assets/webview/<slug>/`; nada de arquivo de apoio na raiz do deck.

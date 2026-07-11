@@ -3,6 +3,7 @@
    glassmorphism no estilo clássico do canal. */
 :root {
     --mira-primary: #FF904D;
+    --mira-crop: #35D07F;
     --mira-bg: #000000;
     --mira-text: #ffffff;
     --mira-text-soft: rgba(255, 255, 255, 0.70);

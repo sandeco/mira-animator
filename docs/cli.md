@@ -14,7 +14,7 @@ npx mira-animator --version      # print version
 | `install` | Installs Mira in the current folder (agents, templates, config). |
 | `link <path>` | Links a folder or file as a content source. |
 | `sources` | Lists the linked sources. |
-| `edit <deck>` | Turns on **edit mode** (reorder slides, key E) in an existing deck. |
+| `edit <deck>` | Installs/updates the **authoring tools** (edit mode E — reorder, free editing, Alt crop — and drawing P) in an existing deck. |
 | `status` | Shows the state of the installation and the decks. |
 | `update` | Updates agents and templates to the latest version. |
 | `uninstall` | Removes Mira from the current folder. |
@@ -75,7 +75,7 @@ It assembles `decks/<name>/` from a template and registers it. You can spell out
 npx mira-animator edit <deck>
 ```
 
-Retrofits **edit mode** (reorder slides) into a deck that already exists: it copies `mira-edit.js` into the deck folder and injects the script before `</body>`. Open the deck and press **E** to reorder, then save. New decks already ship with it. See [Utility agents](agentes/uteis.md) for how the reorder and saving work.
+Retrofits the **authoring tools** into a deck that already exists: it copies `mira-edit.js`, `mira-edit-free.js` and `mira-draw.js` into `<deck>/mira/` and injects the scripts before `</body>`. Open the deck and press **E** to edit (reorder slides + free editing: move, resize, rotate, duplicate, delete, edit text and **crop with Alt + handle**, OBS Studio style) or **P** to draw on top, then save. New decks already ship with everything. It is also the **migration** command: run `npx mira-animator edit <deck>` on older decks to upgrade them to the latest tools (including Alt crop). See [Utility agents](agentes/uteis.md) for how the reorder and saving work.
 
 ## `status`
 

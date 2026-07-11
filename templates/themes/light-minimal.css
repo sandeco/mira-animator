@@ -3,6 +3,7 @@
    Para ambientes corporativos com projetor fraco ou impressão. */
 :root {
     --mira-primary: #E8722A;
+    --mira-crop: #35D07F;
     --mira-bg: #FAFAF7;
     --mira-text: #1A1A1A;
     --mira-text-soft: rgba(26, 26, 26, 0.72);

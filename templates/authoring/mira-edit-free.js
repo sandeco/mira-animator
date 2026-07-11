@@ -9,6 +9,7 @@
 
      - arrastar o corpo  → mover
      - arrastar uma alça → redimensionar (canto = uniforme, lado = 1 eixo)
+     - Alt + alça       → recortar a borda, como no OBS Studio
      - arrastar a rotação→ girar em torno do centro
      - duplo clique      → editar o texto (Enter/blur confirma, Esc cancela)
      - botão / Delete     → excluir · botão → duplicar
@@ -27,16 +28,18 @@
     'use strict';
 
     var ACCENT = '#FF904D';
-    var EDITABLE = 'h1,h2,h3,h4,h5,h6,p,blockquote,li,figure,img,svg,span,button,[data-me-editable]';
+    var CROP_ACCENT = 'var(--mira-crop, #35D07F)';
+    var EDITABLE = 'h1,h2,h3,h4,h5,h6,p,blockquote,li,figure,img,svg,video,canvas,iframe,span,button,[data-me-editable]';
     var TEXT_EDITABLE = 'h1,h2,h3,h4,h5,h6,p,blockquote,li,span,button';
-    var CHROME = '#me-bar,#me-toast,.me-ctrl,#mef-overlay,#mef-toast,[data-me-chrome]';
+    var CHROME = '#me-bar,#me-toast,.me-ctrl,#mef-overlay,#mef-toast,#md-canvas,#md-bar,[data-me-chrome]';
 
     var enabled = false;   // edição livre ativa (body.me-on presente)
     var sel = null;        // elemento selecionado
-    var opsArr = [];       // lista ordenada de overrides {id,tx,ty,sx,sy,rot,text,deleted,dupOf,baseT}
+    var opsArr = [];       // overrides: transform, crop, texto, exclusão e duplicação
     var opsMap = {};       // id -> op (mesmo objeto de opsArr)
     var dupCount = 0;      // contador de duplicatas na sessão
     var drag = null;       // contexto do arraste corrente
+    var altDown = false;   // Alt transforma temporariamente resize em crop
     var root = null, childTag = 'section', kind = 'section';
     var history = [];      // pilha de undo: cada item é uma função que reverte a última ação
     var stateDirty = false; // há edições livres ainda não persistidas
@@ -89,6 +92,12 @@
             h + '.ne{left:100%;top:0;cursor:nesw-resize}' + h + '.e{left:100%;top:50%;cursor:ew-resize}',
             h + '.se{left:100%;top:100%;cursor:nwse-resize}' + h + '.s{left:50%;top:100%;cursor:ns-resize}',
             h + '.sw{left:0;top:100%;cursor:nesw-resize}' + h + '.w{left:0;top:50%;cursor:ew-resize}',
+            /* Alt: crop estilo OBS, moldura e alças verdes */
+            'body.mef-crop-mode #mef-overlay{outline-color:' + CROP_ACCENT + '}',
+            'body.mef-crop-mode ' + h + '{background:' + CROP_ACCENT + ';border-color:' + CROP_ACCENT + '}',
+            'body.mef-crop-mode #mef-overlay .mef-rot{border-color:' + CROP_ACCENT + '}',
+            'body.mef-crop-mode #mef-overlay .mef-rot::before{background:' + CROP_ACCENT + '}',
+            'body.mef-crop-mode #mef-actions{border-color:' + CROP_ACCENT + '}',
             /* alça de rotação */
             '#mef-overlay .mef-rot{position:absolute;left:50%;top:-46px;width:24px;height:24px;margin-left:-12px;',
             'display:grid;place-items:center;border-radius:50%;background:#181818;color:#fff;border:2px solid ' + ACCENT + ';',
@@ -198,7 +207,15 @@
     }
     function metrics(el) {
         var r = el.getBoundingClientRect();
-        return { cx: r.left + r.width / 2, cy: r.top + r.height / 2, w: (el.offsetWidth || r.width), h: (el.offsetHeight || r.height) };
+        // SVG não expõe offsetWidth/offsetHeight em todos os navegadores.
+        // clientWidth/clientHeight preservam a caixa de layout sem a escala CSS;
+        // assim o overlay não multiplica a escala uma segunda vez.
+        return {
+            cx: r.left + r.width / 2,
+            cy: r.top + r.height / 2,
+            w: (el.offsetWidth || el.clientWidth || r.width),
+            h: (el.offsetHeight || el.clientHeight || r.height)
+        };
     }
     function ensureBase(el, op) {
         if (op.baseT == null) op.baseT = el.style.transform || '';
@@ -221,6 +238,76 @@
         el.style.transformOrigin = 'center center';
     }
 
+    function cropState(op) {
+        return {
+            t: op.cropT || 0,
+            r: op.cropR || 0,
+            b: op.cropB || 0,
+            l: op.cropL || 0
+        };
+    }
+    function hasCrop(op) {
+        return !!(op && (op.cropT || op.cropR || op.cropB || op.cropL));
+    }
+    function ensureBaseClip(el, op) {
+        var css = null;
+        try { css = getComputedStyle(el); } catch (e) {}
+        if (op.baseClip == null) {
+            var clip = el.style.clipPath || (css && css.clipPath) || '';
+            op.baseClip = clip === 'none' ? '' : clip;
+        }
+        if (op.baseWebkitClip == null) {
+            var webkitClip = el.style.webkitClipPath || (css && css.webkitClipPath) || '';
+            op.baseWebkitClip = webkitClip === 'none' ? '' : webkitClip;
+        }
+    }
+    function cropPct(v) {
+        return (Math.round((v || 0) * 10000) / 100) + '%';
+    }
+    function applyCrop(el, op) {
+        ensureBaseClip(el, op);
+        if (hasCrop(op)) {
+            var c = cropState(op);
+            var clip = 'inset(' + cropPct(c.t) + ' ' + cropPct(c.r) + ' ' +
+                cropPct(c.b) + ' ' + cropPct(c.l) + ')';
+            try { if (getComputedStyle(el).display === 'inline') el.style.display = 'inline-block'; } catch (e) {}
+            el.style.clipPath = clip;
+            el.style.webkitClipPath = clip;
+        } else {
+            el.style.clipPath = op.baseClip || '';
+            el.style.webkitClipPath = op.baseWebkitClip || '';
+        }
+    }
+
+    // Caixa visível do elemento depois do crop. O layout e o centro do elemento
+    // continuam intactos; só a moldura acompanha a área que ainda está visível.
+    function frameMetrics(el, op) {
+        var m = metrics(el);
+        var sx = op.sx == null ? 1 : op.sx;
+        var sy = op.sy == null ? 1 : op.sy;
+        var rot = op.rot || 0;
+        var c = cropState(op);
+        var fullW = m.w * sx, fullH = m.h * sy;
+        var localX = (c.l - c.r) * fullW / 2;
+        var localY = (c.t - c.b) * fullH / 2;
+        var a = rot * Math.PI / 180;
+        return {
+            base: m,
+            sx: sx,
+            sy: sy,
+            rot: rot,
+            cx: m.cx + localX * Math.cos(a) - localY * Math.sin(a),
+            cy: m.cy + localX * Math.sin(a) + localY * Math.cos(a),
+            w: Math.max(1, fullW * (1 - c.l - c.r)),
+            h: Math.max(1, fullH * (1 - c.t - c.b))
+        };
+    }
+    function syncCropMode() {
+        if (!document.body) return;
+        document.body.classList.toggle('mef-crop-mode',
+            !!sel && (altDown || !!(drag && drag.mode === 'crop')));
+    }
+
     /* ---------- overlay ---------- */
     var overlay = null, actions = null;
     function buildOverlay() {
@@ -231,7 +318,8 @@
         overlay.setAttribute('data-me-chrome', '1');
         var html = '<div class="mef-body"></div><div class="mef-rot" data-role="rot" title="Girar"></div>';
         ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'].forEach(function (p) {
-            html += '<div class="mef-h ' + p + '" data-role="resize" data-dir="' + p + '"></div>';
+            html += '<div class="mef-h ' + p + '" data-role="resize" data-dir="' + p +
+                '" title="Redimensionar. Alt + arrastar: recortar"></div>';
         });
         overlay.innerHTML = html;
         document.body.appendChild(overlay);
@@ -255,18 +343,18 @@
     function positionOverlay() {
         if (!sel || !overlay) return;
         var op = getOp(sel.dataset.meId, false) || {};
-        var m = metrics(sel);
-        var sx = op.sx == null ? 1 : op.sx, sy = op.sy == null ? 1 : op.sy, rot = op.rot || 0;
-        var w = m.w * sx, h = m.h * sy;
-        overlay.style.left = (m.cx - w / 2) + 'px';
-        overlay.style.top = (m.cy - h / 2) + 'px';
+        var f = frameMetrics(sel, op);
+        var sx = f.sx, sy = f.sy, rot = f.rot;
+        var w = f.w, h = f.h;
+        overlay.style.left = (f.cx - w / 2) + 'px';
+        overlay.style.top = (f.cy - h / 2) + 'px';
         overlay.style.width = w + 'px';
         overlay.style.height = h + 'px';
         overlay.style.transform = 'rotate(' + rot + 'deg)';
         // alça de rotação sempre alcançável: sem espaço acima, vai para baixo;
         // elemento ocupando a tela toda (ex.: svg de palco), fica por dentro.
         var rotRoom = 64; // 46px de haste + metade da alça + folga
-        var topPx = m.cy - h / 2;
+        var topPx = f.cy - h / 2;
         overlay.classList.remove('mef-rot-b', 'mef-rot-in');
         if (topPx < rotRoom) {
             if (topPx + h + rotRoom <= window.innerHeight) overlay.classList.add('mef-rot-b');
@@ -274,26 +362,32 @@
         }
         overlay.classList.remove('mef-hide');
         // mini-barra na lateral: nunca cobre a alça de rotação no topo.
-        var actionW = 72, actionH = 42, gap = 12;
-        var actionLeft = m.cx + w / 2 + gap;
-        var actionTop = m.cy - h / 2;
-        if (actionLeft + actionW > window.innerWidth - 8) actionLeft = m.cx - w / 2 - actionW - gap;
+        actions.classList.add('mef-show');
+        var actionW = actions.offsetWidth || 210, actionH = actions.offsetHeight || 42, gap = 12;
+        var actionLeft = f.cx + w / 2 + gap;
+        var actionTop = f.cy - h / 2;
+        if (actionLeft + actionW > window.innerWidth - 8) actionLeft = f.cx - w / 2 - actionW - gap;
         if (actionLeft < 8) {
-            actionLeft = Math.max(8, Math.min(window.innerWidth - actionW - 8, m.cx - actionW / 2));
-            actionTop = m.cy + h / 2 + gap;
+            actionLeft = Math.max(8, Math.min(window.innerWidth - actionW - 8, f.cx - actionW / 2));
+            actionTop = f.cy + h / 2 + gap;
         }
         actionTop = Math.max(8, Math.min(window.innerHeight - actionH - 8, actionTop));
         actions.style.left = actionLeft + 'px';
         actions.style.top = actionTop + 'px';
-        actions.classList.add('mef-show');
     }
 
     function select(el) {
         if (sel === el) return;
         sel = el;
-        if (!el) { if (overlay) overlay.classList.add('mef-hide'); if (actions) actions.classList.remove('mef-show'); return; }
+        if (!el) {
+            if (overlay) overlay.classList.add('mef-hide');
+            if (actions) actions.classList.remove('mef-show');
+            syncCropMode();
+            return;
+        }
         getOp(el.dataset.meId, true);
         positionOverlay();
+        syncCropMode();
     }
 
     /* ---------- interações de transform ---------- */
@@ -303,19 +397,34 @@
         // O segundo pointerdown de um duplo clique pertence à edição de texto,
         // não a um novo gesto de mover.
         if (e.detail > 1) return;
+        if (drag) onDragCancel();     // gesto anterior nunca terminou: descarta antes de começar outro
         var role = e.target.getAttribute('data-role');
         var op = getOp(sel.dataset.meId, true);
         ensureBase(sel, op);
+        ensureBaseClip(sel, op);
         var m = metrics(sel);
+        var f = frameMetrics(sel, op);
+        // O modificador do próprio evento é a fonte de verdade: ressincroniza
+        // altDown caso o keyup de Alt tenha sido engolido por um diálogo.
+        altDown = !!e.altKey;
+        var cropGesture = role === 'resize' && altDown;
+        var c0 = cropState(op);
         drag = {
-            mode: role || 'move', dir: e.target.getAttribute('data-dir'),
+            mode: cropGesture ? 'crop' : (role || 'move'), dir: e.target.getAttribute('data-dir'),
             sx: e.clientX, sy: e.clientY, cx: m.cx, cy: m.cy,
-            op0: { tx: op.tx || 0, ty: op.ty || 0, sxv: op.sx == null ? 1 : op.sx, syv: op.sy == null ? 1 : op.sy, rot: op.rot || 0 },
-            startDist: Math.hypot(e.clientX - m.cx, e.clientY - m.cy),
+            resizeCx: f.cx, resizeCy: f.cy, baseW: m.w, baseH: m.h,
+            op0: {
+                tx: op.tx || 0, ty: op.ty || 0,
+                sxv: op.sx == null ? 1 : op.sx, syv: op.sy == null ? 1 : op.sy,
+                rot: op.rot || 0, cropT: c0.t, cropR: c0.r, cropB: c0.b, cropL: c0.l
+            },
+            startDist: Math.hypot(e.clientX - f.cx, e.clientY - f.cy),
             startAng: Math.atan2(e.clientY - m.cy, e.clientX - m.cx)
         };
+        syncCropMode();
         window.addEventListener('pointermove', onDragMove);
         window.addEventListener('pointerup', onDragUp);
+        window.addEventListener('pointercancel', onDragCancel);
     }
 
     function onDragMove(e) {
@@ -330,23 +439,44 @@
             deg = ((deg % 360) + 360) % 360;
             op.rot = Math.round(deg * 10) / 10;
         } else if (drag.mode === 'resize') {
-            var f = drag.startDist ? Math.hypot(e.clientX - drag.cx, e.clientY - drag.cy) / drag.startDist : 1;
+            var f = drag.startDist ? Math.hypot(e.clientX - drag.resizeCx, e.clientY - drag.resizeCy) / drag.startDist : 1;
             f = Math.max(0.05, f);
             var d = drag.dir;
             var corner = (d === 'nw' || d === 'ne' || d === 'se' || d === 'sw');
             if (corner) { op.sx = clampScale(drag.op0.sxv * f); op.sy = clampScale(drag.op0.syv * f); }
             else if (d === 'e' || d === 'w') { op.sx = clampScale(drag.op0.sxv * f); }
             else { op.sy = clampScale(drag.op0.syv * f); }
+        } else if (drag.mode === 'crop') {
+            var dx = e.clientX - drag.sx, dy = e.clientY - drag.sy;
+            var a = drag.op0.rot * Math.PI / 180;
+            var localX = dx * Math.cos(a) + dy * Math.sin(a);
+            var localY = -dx * Math.sin(a) + dy * Math.cos(a);
+            var fx = localX / Math.max(1, drag.baseW * drag.op0.sxv);
+            var fy = localY / Math.max(1, drag.baseH * drag.op0.syv);
+            var dir = drag.dir || '';
+            var ct = drag.op0.cropT, cr = drag.op0.cropR;
+            var cb = drag.op0.cropB, cl = drag.op0.cropL;
+            if (dir.indexOf('w') !== -1) cl = clampCrop(cl + fx, cr);
+            if (dir.indexOf('e') !== -1) cr = clampCrop(cr - fx, cl);
+            if (dir.indexOf('n') !== -1) ct = clampCrop(ct + fy, cb);
+            if (dir.indexOf('s') !== -1) cb = clampCrop(cb - fy, ct);
+            op.cropT = ct; op.cropR = cr; op.cropB = cb; op.cropL = cl;
         }
-        applyTransform(sel, op);
+        if (drag.mode === 'crop') applyCrop(sel, op);
+        else applyTransform(sel, op);
         positionOverlay();
     }
     function clampScale(v) { return Math.max(0.05, Math.round(v * 1000) / 1000); }
+    function clampCrop(v, opposite) {
+        var max = Math.max(0, 0.98 - (opposite || 0));
+        return Math.round(Math.max(0, Math.min(max, v)) * 10000) / 10000;
+    }
 
     function onDragUp() {
         var d = drag; drag = null;
         window.removeEventListener('pointermove', onDragMove);
         window.removeEventListener('pointerup', onDragUp);
+        window.removeEventListener('pointercancel', onDragCancel);
         if (d && sel) {
             var id = sel.dataset.meId;
             var op = getOp(id, true);
@@ -354,16 +484,37 @@
             var moved = (op.tx || 0) !== b.tx || (op.ty || 0) !== b.ty ||
                 (op.sx == null ? 1 : op.sx) !== b.sxv || (op.sy == null ? 1 : op.sy) !== b.syv ||
                 (op.rot || 0) !== b.rot;
-            if (moved) {
+            var cropped = (op.cropT || 0) !== b.cropT || (op.cropR || 0) !== b.cropR ||
+                (op.cropB || 0) !== b.cropB || (op.cropL || 0) !== b.cropL;
+            if (moved || cropped) {
                 pushHist(function () {
                     var o = getOp(id, true);
                     o.tx = b.tx; o.ty = b.ty; o.sx = b.sxv; o.sy = b.syv; o.rot = b.rot;
+                    o.cropT = b.cropT; o.cropR = b.cropR; o.cropB = b.cropB; o.cropL = b.cropL;
                     var node = byId(id);
-                    if (node) { applyTransform(node, o); reselect(node); }
+                    if (node) { applyTransform(node, o); applyCrop(node, o); reselect(node); }
                 });
                 markDirty();
             }
         }
+        syncCropMode();
+        refreshBar();
+    }
+    function onDragCancel() {
+        var d = drag; drag = null;
+        window.removeEventListener('pointermove', onDragMove);
+        window.removeEventListener('pointerup', onDragUp);
+        window.removeEventListener('pointercancel', onDragCancel);
+        if (d && sel) {
+            var o = getOp(sel.dataset.meId, true);
+            var b = d.op0;
+            o.tx = b.tx; o.ty = b.ty; o.sx = b.sxv; o.sy = b.syv; o.rot = b.rot;
+            o.cropT = b.cropT; o.cropR = b.cropR; o.cropB = b.cropB; o.cropL = b.cropL;
+            applyTransform(sel, o);
+            applyCrop(sel, o);
+            positionOverlay();
+        }
+        syncCropMode();
         refreshBar();
     }
 
@@ -437,6 +588,18 @@
         textCtx = null;
         positionOverlay();
     }
+    // Encerra a edição de texto mesmo quando o blur do elemento nunca dispara
+    // (diálogo de salvar/permissão rouba o foco, ou o focus() inicial falhou).
+    // Sem isso, body.mef-text-editing fica presa e o overlay some até um F5.
+    function commitActiveTextEdit() {
+        if (!textCtx) {
+            document.body.classList.remove('mef-text-editing');
+            return;
+        }
+        var el = textCtx.el;
+        try { el.blur(); } catch (e) { /* segue pro commit forçado */ }
+        if (textCtx) commitText({ target: el });
+    }
 
     /* ---------- duplicar / excluir ---------- */
     function duplicateSel() {
@@ -452,13 +615,18 @@
         var srcOp = getOp(srcId, false) || {};
         var op = getOp(newId, true);
         op.dupOf = srcId;
-        op.baseT = srcOp.baseT || (sel.style.transform || '');
+        op.baseT = srcOp.baseT != null ? srcOp.baseT : (sel.style.transform || '');
+        op.baseClip = srcOp.baseClip != null ? srcOp.baseClip : '';
+        op.baseWebkitClip = srcOp.baseWebkitClip != null ? srcOp.baseWebkitClip : '';
         op.tx = (srcOp.tx || 0) + 24; op.ty = (srcOp.ty || 0) + 24;
         op.sx = srcOp.sx == null ? 1 : srcOp.sx; op.sy = srcOp.sy == null ? 1 : srcOp.sy;
         op.rot = srcOp.rot || 0;
+        op.cropT = srcOp.cropT || 0; op.cropR = srcOp.cropR || 0;
+        op.cropB = srcOp.cropB || 0; op.cropL = srcOp.cropL || 0;
         if (srcOp.text != null) op.text = srcOp.text;
         if (srcOp.html != null) op.html = srcOp.html;
         applyTransform(clone, op);
+        applyCrop(clone, op);
         select(clone);
         pushHist(function () {
             opsArr = opsArr.filter(function (o) { return o.id !== newId; });
@@ -513,7 +681,8 @@
         return opsArr.filter(function (o) {
             return o.deleted || o.dupOf || o.text != null || o.html != null ||
                 (o.tx && o.tx !== 0) || (o.ty && o.ty !== 0) ||
-                (o.rot && o.rot !== 0) || (o.sx != null && o.sx !== 1) || (o.sy != null && o.sy !== 1);
+                (o.rot && o.rot !== 0) || (o.sx != null && o.sx !== 1) || (o.sy != null && o.sy !== 1) ||
+                o.cropT || o.cropR || o.cropB || o.cropL;
         });
     }
     function refreshBar() {
@@ -543,7 +712,13 @@
             if (o.rot) out.rot = o.rot;
             if (o.sx != null && o.sx !== 1) out.sx = o.sx;
             if (o.sy != null && o.sy !== 1) out.sy = o.sy;
+            if (o.cropT) out.cropT = o.cropT;
+            if (o.cropR) out.cropR = o.cropR;
+            if (o.cropB) out.cropB = o.cropB;
+            if (o.cropL) out.cropL = o.cropL;
             if (o.baseT) out.baseT = o.baseT;
+            if (o.baseClip) out.baseClip = o.baseClip;
+            if (o.baseWebkitClip) out.baseWebkitClip = o.baseWebkitClip;
             return out;
         });
         return JSON.stringify({ v: 1, ops: ops }, null, 0).replace(/</g, '\\u003c');
@@ -576,6 +751,7 @@
             hasChanges: function () { return stateDirty; },
             changeCount: function () { return stateDirty ? meaningfulOps().length : 0; },
             injectIntoSource: function (src, options) {
+                commitActiveTextEdit();   // salvar no meio de uma edição de texto inclui (e encerra) a edição
                 var permutation = options && options.slidePermutation;
                 return injectOps(src, serialize(permutation));
             },
@@ -604,6 +780,7 @@
             if (o.html != null) el.innerHTML = o.html;
             else if (o.text != null) el.textContent = o.text;
             applyTransform(el, op);
+            applyCrop(el, op);
         });
         var pending = data.ops.filter(function (o) { return !!o.dupOf; });
         while (pending.length) {
@@ -618,6 +795,7 @@
                 else if (o.text != null) clone.textContent = o.text;
                 var opC = getOp(o.id, true); Object.assign(opC, o);
                 applyTransform(clone, opC);
+                applyCrop(clone, opC);
                 var match = /^me-dup-(\d+)-/.exec(o.id);
                 if (match) dupCount = Math.max(dupCount, parseInt(match[1], 10));
                 progressed = true;
@@ -644,12 +822,18 @@
         document.addEventListener('pointerdown', onDocDown, true);
         document.addEventListener('dblclick', onDocDblClick, true);
         document.addEventListener('keydown', onKey, true);
+        document.addEventListener('keyup', onKeyUp, true);
+        window.addEventListener('blur', onWindowBlur);
     }
     function disable() {
         if (!enabled) return;
+        if (drag) onDragCancel();
+        commitActiveTextEdit();   // não deixa contenteditable/estado de texto vivos fora do modo E
         enabled = false;
         document.body.classList.remove('mef-on');
         document.body.classList.remove('mef-text-editing');
+        document.body.classList.remove('mef-crop-mode');
+        altDown = false;
         select(null);
         history = [];
         window.removeEventListener('scroll', onViewportChange, true);
@@ -657,11 +841,20 @@
         document.removeEventListener('pointerdown', onDocDown, true);
         document.removeEventListener('dblclick', onDocDblClick, true);
         document.removeEventListener('keydown', onKey, true);
+        document.removeEventListener('keyup', onKeyUp, true);
+        window.removeEventListener('blur', onWindowBlur);
     }
     function onViewportChange() { if (sel) positionOverlay(); }
 
     function onDocDown(e) {
         if (!enabled) return;
+        // Auto-cura de estados presos por pointerup/keyup/blur que nunca chegaram
+        // (diálogo de salvar/permissão do navegador rouba o foco no meio do fluxo):
+        // roda ANTES do filtro de chrome pra valer também no clique em "Salvar".
+        if (drag && !(overlay && overlay.contains(e.target))) onDragCancel();
+        if (textCtx && textCtx.el !== e.target && !textCtx.el.contains(e.target)) commitActiveTextEdit();
+        else if (!textCtx) document.body.classList.remove('mef-text-editing');
+        altDown = !!e.altKey;
         if (isChrome(e.target)) return;                 // clique no overlay/barra: tratado à parte
         var el = e.target.closest ? e.target.closest(EDITABLE) : null;
         if (el && !isChrome(el) && !(el.classList && el.classList.contains('me-slide'))) {
@@ -670,6 +863,7 @@
         } else {
             select(null);
         }
+        syncCropMode();
     }
     function onDocDblClick(e) {
         if (!enabled || !sel) return;
@@ -680,11 +874,28 @@
     function onKey(e) {
         if (!enabled) return;
         if (textCtx) return; // durante edição de texto, o contenteditable/undo nativo cuida
+        if (e.key === 'Alt') {
+            altDown = true;
+            syncCropMode();
+            if (sel) { e.preventDefault(); e.stopPropagation(); }
+            return;
+        }
         if ((e.ctrlKey || e.metaKey) && (e.key === 'z' || e.key === 'Z') && !e.shiftKey) {
             e.preventDefault(); e.stopPropagation(); undo(); return;
         }
         if ((e.key === 'Delete' || e.key === 'Backspace') && sel) { e.preventDefault(); e.stopPropagation(); deleteSel(); }
         else if (e.key === 'Escape' && sel) { e.preventDefault(); e.stopPropagation(); select(null); } // não deixa sair do modo edição
+    }
+    function onKeyUp(e) {
+        if (e.key !== 'Alt') return;
+        altDown = false;
+        syncCropMode();
+        if (sel) { e.preventDefault(); e.stopPropagation(); }
+    }
+    function onWindowBlur() {
+        altDown = false;
+        if (drag) onDragCancel();
+        else syncCropMode();
     }
 
     function watchEditMode() {

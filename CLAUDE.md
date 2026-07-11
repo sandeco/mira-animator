@@ -15,6 +15,18 @@ A raiz de um deck contém SOMENTE `index.html` e os launchers (`remote-control-w
 
 Nunca gere ou copie `.js` de apoio para a raiz do deck. Ao mexer num deck antigo com JS na raiz, migre para `mira/` e reaponte as tags (o `npx mira-animator edit <deck>` faz essa migração).
 
+## Modos de edição e pintura em todo deck (diretiva)
+
+TODO deck (novo ou existente) tem que ter os modos de pintura (**tecla P**, `mira-draw.js`) e de edição (**tecla E**, `mira-edit.js` + `mira-edit-free.js`) funcionando. Ao criar ou mexer em qualquer deck, garanta os três arquivos em `mira/` e as tags antes do `</body>`:
+
+```html
+<script defer src="mira/mira-edit.js"></script>
+<script defer src="mira/mira-edit-free.js"></script>
+<script defer src="mira/mira-draw.js"></script>
+```
+
+`mira-edit-free.js` sempre depois de `mira-edit.js`. Se encontrar um deck sem esses módulos, instale-os na hora (copie de um deck atualizado ou de `templates/authoring/`).
+
 ## Diretriz de título da capa (não-negociável)
 
 O título do **primeiro slide (a capa, o "header" do deck)** nunca pode quebrar com uma linha muito maior que a outra deixando artigo/preposição solto (ex.: "Responsividade em quatro" / "formatos"). O CSS base de todo deck deve levar `text-wrap: balance` escopado **só à capa** (`body > section:first-of-type h1, body > section:first-of-type h2`). Detalhes em `agents/_shared/titulo-capa.md`. Vale só para a capa; slides de conteúdo não entram nesta regra.

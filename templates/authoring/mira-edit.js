@@ -282,12 +282,50 @@
     // "SLIDE:", "SLIDE 1:", "SLIDE EXEMPLO 2:" etc. — SLIDE logo após o banner)
     var MARKER = /<!--\s*=*\s*SLIDE\b[\s\S]*?-->/gi;
 
+    // Fallback sem marcadores: fatia os <section> de primeiro nível direto no
+    // texto-fonte (contando aninhamento) e reordena os blocos. Vale para o
+    // padrão Mira (slides = <section> filhos do <body>), que é o caso de decks
+    // montados à mão sem os comentários <!-- SLIDE -->.
+    function reorderBySections(src, perm) {
+        var open = /<section\b[^>]*>/gi;
+        var closeOrOpen = /<\/section\s*>|<section\b[^>]*>/gi;
+        var blocks = [];
+        var m;
+        while ((m = open.exec(src)) !== null) {
+            var depth = 1, end = -1, t;
+            closeOrOpen.lastIndex = open.lastIndex;
+            while ((t = closeOrOpen.exec(src)) !== null) {
+                depth += (t[0][1] === '/') ? -1 : 1;
+                if (depth === 0) { end = closeOrOpen.lastIndex; break; }
+            }
+            if (end === -1) return { err: 'Achei um <section> sem fechamento no arquivo; não dá pra reordenar com segurança.' };
+            blocks.push({ start: m.index, end: end });
+            open.lastIndex = end;
+        }
+        if (blocks.length !== perm.length) {
+            return { err: 'Nº de <section> no arquivo (' + blocks.length + ') ≠ nº de slides na tela (' + perm.length + ').' };
+        }
+        var out = src.slice(0, blocks[0].start);
+        for (var i = 0; i < blocks.length; i++) {
+            var b = blocks[perm[i]];
+            out += src.slice(b.start, b.end);
+            // preserva o separador original entre os slots (indentação, comentários soltos)
+            if (i + 1 < blocks.length) out += src.slice(blocks[i].end, blocks[i + 1].start);
+        }
+        out += src.slice(blocks[blocks.length - 1].end);
+        return { out: out };
+    }
+
     function reorderSource(src, perm) {
         MARKER.lastIndex = 0;
         var marks = [];
         var m;
         while ((m = MARKER.exec(src)) !== null) marks.push(m.index);
-        if (marks.length < 2) return { err: 'Não achei os marcadores <!-- ... SLIDE ... --> no arquivo.' };
+        if (marks.length < 2) {
+            // deck sem os comentários-marcador: reordena pelos próprios <section>
+            if (kind === 'section') return reorderBySections(src, perm);
+            return { err: 'Não achei os marcadores <!-- ... SLIDE ... --> no arquivo.' };
+        }
 
         var start = marks[0];
         // fim da região reordenável depende de onde o último slide fecha:
