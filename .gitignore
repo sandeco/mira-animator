@@ -18,7 +18,13 @@ no_permissions.md
 decks/apresentacao-mira/
 
 # Reversa
-.reversa/config.user.toml
+.reversa/
 _reversa_sdd/
+_reversa_docs/
+_reversa_forward/
+
+# Brainstormings locais
+brainstormings/
+
 # Videos de teste pesados nos decks
 decks/**/*.mp4
