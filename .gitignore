@@ -11,8 +11,11 @@ site/
 # Notas/rascunhos locais
 no_permissions.md
 
-# Config local do Claude Code
-.claude/settings.local.json
+# Desenvolvimento do MIRA (so no repo privado)
+.claude/
+.agents/
+AGENTS.md
+CLAUDE.md
 
 # Devcontainer (config local, nao vai para o repo publico)
 .devcontainer/
