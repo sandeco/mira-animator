@@ -14,8 +14,12 @@ no_permissions.md
 # Config local do Claude Code
 .claude/settings.local.json
 
-# Deck de apresentacao (mantido apenas local, contem videos pesados)
-decks/apresentacao-mira/
+# Devcontainer (config local, nao vai para o repo publico)
+.devcontainer/
+
+# Repo privado sobreposto (persiste specs, reversa, brainstormings, decks pessoais)
+.git-private/
+sync-private.sh
 
 # Reversa
 .reversa/
@@ -25,6 +29,13 @@ _reversa_forward/
 
 # Brainstormings locais
 brainstormings/
+
+# Decks: publico so os exemplos curados (allowlist)
+decks/*
+!decks/exemplo-responsivo/
+!decks/mira-launch/
+!decks/mira-edit-livre-demo/
+!decks/site-mira-responsivo/
 
 # Videos de teste pesados nos decks
 decks/**/*.mp4
