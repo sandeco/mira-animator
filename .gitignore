@@ -17,6 +17,7 @@ no_permissions.md
 AGENTS.md
 CLAUDE.md
 dev/
+studio-plus/
 
 # Devcontainer (config local, nao vai para o repo publico)
 .devcontainer/
