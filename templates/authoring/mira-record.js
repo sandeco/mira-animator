@@ -103,7 +103,7 @@
             /* gravando, o snap "assenta" com animação smooth se o salto instant
                cair sub-pixel fora do ponto (zoom/DPI fracionário do Windows) e o
                micro-scroll entra no vídeo; navegação gravando já é instant */
-            'html[data-mira-recording] { scroll-snap-type: none !important; scroll-behavior: auto !important; }'
+            'html[data-mira-recording], html[data-mira-recording] body { scroll-snap-type: none !important; scroll-behavior: auto !important; }'
         ].join('\n');
         document.head.appendChild(st);
     }
