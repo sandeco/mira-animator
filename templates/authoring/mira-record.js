@@ -99,7 +99,11 @@
             '  background: #1c1c20; color: #f4f4f5; font: 600 11px Inter, system-ui, sans-serif; cursor: pointer; }',
             '#mrc-diag-save:disabled { display: none; }',
             '#mrc-note { font-size: 11.5px; color: rgba(244, 244, 245, .55); }',
-            '#mrc-panel.mrc-tight { display: none; }'   /* painel sobreporia a coluna (e entraria no vídeo): some; tecla R continua */
+            '#mrc-panel.mrc-tight { display: none; }',   /* painel sobreporia a coluna (e entraria no vídeo): some; tecla R continua */
+            /* gravando, o snap "assenta" com animação smooth se o salto instant
+               cair sub-pixel fora do ponto (zoom/DPI fracionário do Windows) e o
+               micro-scroll entra no vídeo; navegação gravando já é instant */
+            'html[data-mira-recording] { scroll-snap-type: none !important; scroll-behavior: auto !important; }'
         ].join('\n');
         document.head.appendChild(st);
     }
