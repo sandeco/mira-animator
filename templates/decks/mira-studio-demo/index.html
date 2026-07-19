@@ -228,7 +228,9 @@
 </head>
 <body>
 
-    <!-- === CAPA (sem data-layout: layout próprio) === -->
+    <!-- === SLIDE 1 · CAPA (sem data-layout: layout próprio) ===
+         As <section> abaixo são o FALLBACK: em http(s) o builder do roteiro.md
+         as substitui; em file:// (ou sem o arquivo) elas são o deck. -->
     <section class="capa">
         <span class="eyebrow"><span class="dot"></span>MIRA · Multi Formato</span>
         <h1>Um roteiro, <span class="accent">três formatos</span></h1>
@@ -240,25 +242,25 @@
         </div>
     </section>
 
-    <!-- === SLIDE 1 · LAYOUT CAMERA (você em tela cheia) === -->
+    <!-- === SLIDE 2 · LAYOUT CAMERA (você em tela cheia) === -->
     <section data-layout="camera">
         <div class="cam-area"></div>
     </section>
 
-    <!-- === SLIDE 2 · LAYOUT SPLIT (metáfora 1:1 em cima + você embaixo) === -->
+    <!-- === SLIDE 3 · LAYOUT SPLIT (metáfora 1:1 em cima + você embaixo) === -->
     <section data-layout="split">
         <div class="split-top">
             <h2>Três formatos, <span class="accent">um roteiro</span></h2>
-            <div class="anim-stage"><svg id="sv-orbita" preserveAspectRatio="xMidYMid meet"></svg></div>
+            <div class="anim-stage"><svg id="sv-slide-3" preserveAspectRatio="xMidYMid meet"></svg></div>
         </div>
         <div class="cam-area"></div>
     </section>
 
-    <!-- === SLIDE 3 · LAYOUT FULL (metáfora vertical em tela cheia) === -->
+    <!-- === SLIDE 4 · LAYOUT FULL (metáfora vertical em tela cheia) === -->
     <section data-layout="full">
         <div class="full-wrap">
             <h2>Do roteiro <span class="accent">ao vídeo</span></h2>
-            <div class="anim-stage"><svg id="sv-fluxo" preserveAspectRatio="xMidYMid meet"></svg></div>
+            <div class="anim-stage"><svg id="sv-slide-4" preserveAspectRatio="xMidYMid meet"></svg></div>
         </div>
     </section>
 
@@ -272,10 +274,10 @@
             <div class="mp-sw" data-sw="ec"><span>Element Capture<span class="mp-key">G</span></span><span class="mp-toggle"></span></div>
             <div class="mp-sw" data-sw="edit"><span>Mover/redimensionar overlay<span class="mp-key">E</span></span><span class="mp-toggle"></span></div>
         </div>
-        <div class="mp-lbl">Texto do slide (edite aqui, reflete no overlay):</div>
+        <div class="mp-lbl">Texto do slide (daqui grava no roteiro.md, e vice-versa):</div>
         <div class="mp-body" id="mp-body" contenteditable="true" spellcheck="false"></div>
         <button id="mp-save" class="mp-save" type="button">Salvar no arquivo</button>
-        <div class="mp-hint" id="mp-save-hint">Move, redimensiona e edita à vontade; clique em Salvar (ou Ctrl+S) para gravar tudo no index.html.</div>
+        <div class="mp-hint" id="mp-save-hint">Posições e tamanhos vão para o index.html com Salvar (ou Ctrl+S). O texto do roteiro grava sozinho no roteiro.md.</div>
     </aside>
 
     <!-- TELEPROMPTER · overlay central (o que se lê no ar). IRMÃO das <section>:
@@ -288,7 +290,8 @@
         </div>
     </div>
 
-    <!-- Estado editável salvo NO ARQUIVO (posições, tamanhos e textos do roteiro).
+    <!-- Estado editável salvo NO ARQUIVO (posições e tamanhos dos overlays; o texto
+         do roteiro NÃO entra aqui: ele mora no roteiro.md).
          O botão "Salvar no arquivo" / Ctrl+S reescreve este bloco. Começa vazio. -->
     <script id="mira-studio-state" type="application/json">{}</script>
 
@@ -309,12 +312,211 @@
         })();
 
         /* ============================================================
-           SLIDE 2 · Orbital (quadrado 1:1, padrão mira-squared):
+           ROTEIRO EXTERNO (roteiro.md) · builder dos slides
+
+           O roteiro.md ao lado do index.html é a fonte da verdade: cada bloco
+           "## Slide N | layout | Título" vira uma <section>, na ORDEM em que
+           aparece (o número do cabeçalho é rótulo, não índice), e o texto
+           abaixo do cabeçalho é a fala daquele slide (teleprompter).
+
+           A leitura é SÍNCRONA e acontece aqui, antes de tudo: as animações
+           logo abaixo e os módulos (câmera, gravação, edição) precisam das
+           seções já no DOM. Só roda em http(s); em file:// o deck fica com as
+           <section> estáticas, que SÃO o conjunto de slides padrão.
+
+           Estrutura (layout e título) é lida UMA vez, no load: mudou, recarregue.
+           Só o TEXTO sincroniza ao vivo (ver o bloco do TELEPROMPTER).
+
+           Este deck tem animação AUTORAL: o builder cria o palco vazio
+           (svg#sv-slide-N, N = posição no roteiro) e cada animação escrita à
+           mão se prende ao seu palco. Palco sem animação fica vazio, não quebra.
+           Chrome autoral dentro da <section> (logo, selo .me-ov) precisa ser
+           emitido AQUI, senão a reconstrução o descarta.
+           ============================================================ */
+        (function () {
+            /* fala de cada slide quando não há roteiro.md (file:// ou sem servidor) */
+            window.__miraScript = [
+                'Um roteiro, três formatos. Este é o deck vertical do Mira Studio.',
+                'Aqui a câmera preenche a coluna inteira: só você falando.',
+                'No meio a meio, a metáfora animada fica no quadrado de cima e você embaixo.',
+                'E na tela cheia, a animação toma conta: do roteiro ao vídeo pronto.'
+            ];
+
+            var INTRO = [
+                '# Roteiro · Mira Studio (deck vertical 9:16)',
+                '',
+                'Cada bloco `## Slide` vira um slide, na ORDEM em que aparece aqui (o número é',
+                'rótulo, não índice), e o texto abaixo do cabeçalho é a sua fala.',
+                '',
+                '**Cabeçalho:** `## Slide N | layout | Título`',
+                '',
+                '- `layout` (obrigatório): `capa`, `camera`, `split` ou `full`. Desconhecido cai em `camera`.',
+                '- `Título`: vale em `capa`, `split` e `full`; ignorado em `camera`. `*entre asteriscos*`',
+                '  pinta o trecho com a cor de destaque.',
+                '- Sem campo de animação: as animações deste deck são autorais, presas ao palco `sv-slide-N`.',
+                '',
+                'Editar o texto aqui aparece no deck em ~1,5 s; digitar no painel grava de volta aqui.',
+                'Layout e título só valem no reload.'
+            ].join('\n');
+
+            var isHttp = location.protocol === 'http:' || location.protocol === 'https:';
+            window.__miraRoteiroPath = location.pathname.replace(/[^/]*$/, '') + 'roteiro.md';
+            if (!isHttp) return;                    /* R-05: sem servidor, sem roteiro */
+
+            var HEAD = /^##[ \t]+/;
+
+            /* parse por ORDEM de aparição (R-01). Guarda intro e cabeçalhos crus:
+               a escrita de volta reusa os dois verbatim, nunca os re-deriva (R-04). */
+            function parse(raw) {
+                var linhas = String(raw).split(/\r?\n/);
+                var intro = [], headers = [], slides = [], corpo = null;
+                for (var i = 0; i < linhas.length; i++) {
+                    if (HEAD.test(linhas[i])) {
+                        headers.push(linhas[i]);
+                        var campos = linhas[i].replace(HEAD, '').split('|');
+                        corpo = [];
+                        slides.push({
+                            layout: (campos[1] || '').trim().toLowerCase(),
+                            titulo: (campos[2] || '').trim(),
+                            linhas: corpo
+                        });
+                    } else if (corpo) corpo.push(linhas[i]);
+                    else intro.push(linhas[i]);
+                }
+                slides.forEach(function (s) {
+                    s.texto = s.linhas.join('\n').replace(/^\s+|\s+$/g, '');
+                    delete s.linhas;
+                });
+                return { intro: intro.join('\n'), headers: headers, slides: slides };
+            }
+
+            /* R-04: intro capturada no load + cabeçalhos capturados no load + textos atuais */
+            window.__miraRoteiroMontar = function (R, textos) {
+                var out = R.intro ? R.intro.replace(/\s*$/, '') + '\n\n' : '';
+                for (var i = 0; i < R.headers.length; i++) {
+                    var t = textos[i] == null ? '' : String(textos[i]).replace(/\s+$/, '');
+                    out += R.headers[i] + '\n\n' + t + '\n\n';
+                }
+                return out.replace(/\s*$/, '') + '\n';
+            };
+            window.__miraRoteiroParse = parse;
+
+            /* título por fragmento: *trecho* vira <span class="accent">. Nunca innerHTML. */
+            function tituloEm(el, txt) {
+                if (!el) return;
+                el.textContent = '';
+                String(txt || '').split(/\*([^*]+)\*/).forEach(function (p, i) {
+                    if (!p) return;
+                    if (i % 2) {
+                        var sp = document.createElement('span');
+                        sp.className = 'accent';
+                        sp.textContent = p;
+                        el.appendChild(sp);
+                    } else el.appendChild(document.createTextNode(p));
+                });
+            }
+            /* caminho inverso, só para semear o arquivo a partir dos slides embutidos */
+            function tituloMd(sec) {
+                var h = sec.querySelector('h1, h2');
+                if (!h) return '';
+                var out = '';
+                Array.prototype.forEach.call(h.childNodes, function (nd) {
+                    var t = (nd.textContent || '').replace(/\s+/g, ' ');
+                    if (!t.trim()) return;
+                    out += (nd.nodeType === 1 && nd.classList && nd.classList.contains('accent'))
+                        ? '*' + t.trim() + '*' : t;
+                });
+                return out.replace(/\s+/g, ' ').trim();
+            }
+
+            var estaticas = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+            var capaBase = document.querySelector('body > section.capa');
+
+            function palco(n) {
+                return '<div class="anim-stage"><svg id="sv-slide-' + n +
+                    '" preserveAspectRatio="xMidYMid meet"></svg></div>';
+            }
+            function montarSecao(s, n) {
+                var sec;
+                if (s.layout === 'capa' && capaBase) {
+                    sec = capaBase.cloneNode(true);
+                    if (s.titulo) tituloEm(sec.querySelector('h1'), s.titulo);
+                    return sec;
+                }
+                sec = document.createElement('section');
+                if (s.layout === 'split') {
+                    sec.setAttribute('data-layout', 'split');
+                    sec.innerHTML = '<div class="split-top"><h2></h2>' + palco(n) + '</div><div class="cam-area"></div>';
+                } else if (s.layout === 'full') {
+                    sec.setAttribute('data-layout', 'full');
+                    sec.innerHTML = '<div class="full-wrap"><h2></h2>' + palco(n) + '</div>';
+                } else {
+                    /* camera é o layout mais simples: também é a queda de layout desconhecido */
+                    sec.setAttribute('data-layout', 'camera');
+                    sec.innerHTML = '<div class="cam-area"></div>';
+                    return sec;
+                }
+                tituloEm(sec.querySelector('h2'), s.titulo);
+                return sec;
+            }
+
+            /* leitura SÍNCRONA: as animações e os módulos abaixo dependem do DOM pronto */
+            function ler() {
+                try {
+                    var x = new XMLHttpRequest();
+                    x.open('GET', window.__miraRoteiroPath + '?t=' + Date.now(), false);
+                    x.send(null);
+                    if (x.status >= 200 && x.status < 300) return { raw: x.responseText };
+                    if (x.status === 404) return { ausente: true };
+                } catch (e) { }
+                return {};
+            }
+
+            /* R-06: arquivo apagado ou deck novo — recria uma vez a partir do embutido */
+            function semear() {
+                var raw = INTRO.replace(/\s*$/, '') + '\n\n';
+                estaticas.forEach(function (sec, i) {
+                    var layout = sec.getAttribute('data-layout') ||
+                        (sec.classList.contains('capa') ? 'capa' : 'camera');
+                    var cab = '## Slide ' + (i + 1) + ' | ' + layout;
+                    var tit = layout === 'camera' ? '' : tituloMd(sec);
+                    if (tit) cab += ' | ' + tit;
+                    raw += cab + '\n\n' + (window.__miraScript[i] || '') + '\n\n';
+                });
+                raw = raw.replace(/\s*$/, '') + '\n';
+                try {
+                    fetch('/__mira_save', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: window.__miraRoteiroPath, content: raw })
+                    }).catch(function () { });
+                } catch (e) { }
+                return raw;
+            }
+
+            var res = ler();
+            var raw = res.raw != null ? res.raw : (res.ausente ? semear() : null);
+            if (raw == null) return;                /* R-08: fica com as seções estáticas */
+
+            var R = parse(raw);
+            if (!R.slides.length) return;           /* R-08: parse vazio, idem */
+            R.raw = raw;
+            window.__miraRoteiro = R;
+
+            var novas = R.slides.map(function (s, i) { return montarSecao(s, i + 1); });
+            var ancora = document.getElementById('mira-prompter');
+            estaticas.forEach(function (sec) { sec.parentNode.removeChild(sec); });
+            novas.forEach(function (sec) { document.body.insertBefore(sec, ancora); });
+        })();
+
+        /* ============================================================
+           SLIDE 3 · Orbital (quadrado 1:1, padrão mira-squared):
            o núcleo é o roteiro; os três formatos orbitam em volta dele.
            Loop interno infinito (Regra Zero) + casarPalco + fitToArea.
            ============================================================ */
         (function () {
-            var svg = d3.select('#sv-orbita');
+            /* animação AUTORAL presa ao palco do slide 3 do roteiro.md (posição,
+               não rótulo). Palco ausente = slide removido do roteiro: sai quieto. */
+            var svg = d3.select('#sv-slide-3');
             if (svg.empty()) return;
             var stage = svg.node().closest('.anim-stage');
             var F = { W: 960, H: 960 };
@@ -437,12 +639,13 @@
         })();
 
         /* ============================================================
-           SLIDE 3 · Fluxo vertical (padrão mira-vertical): a produção
+           SLIDE 4 · Fluxo vertical (padrão mira-vertical): a produção
            desce como uma linha de montagem, do roteiro ao vídeo pronto.
            Partícula desce nó a nó, com pulso na chegada. Loop infinito.
            ============================================================ */
         (function () {
-            var svg = d3.select('#sv-fluxo');
+            /* animação AUTORAL presa ao palco do slide 4 do roteiro.md */
+            var svg = d3.select('#sv-slide-4');
             if (svg.empty()) return;
             var stage = svg.node().closest('.anim-stage');
             var F = { W: 960, H: 1523 };
@@ -640,15 +843,10 @@
             var num = document.getElementById('mp-num');
             var tot = document.getElementById('mp-tot');
 
-            /* ROTEIRO: uma entrada por slide, na ordem das <section>. Troque por
-               aquilo que você vai FALAR em cada slide. O texto também é editável
-               ao vivo no painel (e persiste com "Salvar no arquivo"). */
-            var SCRIPT = [
-                'Um roteiro, três formatos. Este é o deck vertical do Mira Studio.',
-                'Aqui a câmera preenche a coluna inteira: só você falando.',
-                'No meio a meio, a metáfora animada fica no quadrado de cima e você embaixo.',
-                'E na tela cheia, a animação toma conta: do roteiro ao vídeo pronto.'
-            ];
+            /* ROTEIRO: a fala de cada slide vem do roteiro.md (fonte da verdade).
+               Este array é só o FALLBACK de file:// / sem servidor; ele vive no
+               builder do roteiro, uma entrada por slide embutido. */
+            var SCRIPT = window.__miraScript || [];
 
             var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
             var cur = -1;
@@ -668,12 +866,22 @@
                que a restrição exige). Tecla G desliga. */
             if (typeof window.__miraElemCapture === 'undefined') window.__miraElemCapture = true;
 
-            /* texto do roteiro POR SLIDE (o arquivo semeia; o localStorage guarda) */
+            /* texto do roteiro POR SLIDE. Precedência no load:
+               roteiro.md > localStorage (cópia de trabalho entre polls) > SCRIPT. */
             var TXTKEY = 'mira-tp-text';
             var txt = {};
             try { txt = JSON.parse(localStorage.getItem(TXTKEY) || '{}') || {}; } catch (e) { txt = {}; }
-            function curText(i) { return (txt[i] != null) ? txt[i] : (SCRIPT[i] || ''); }
             function saveText() { try { localStorage.setItem(TXTKEY, JSON.stringify(txt)); } catch (e) { } }
+            var R = window.__miraRoteiro || null;
+            var agendarEscrita = null;
+            function doRoteiro(r) {                 /* textos por ORDEM, nunca pelo número do cabeçalho */
+                var mudou = false;
+                r.slides.forEach(function (s, i) { if (txt[i] !== s.texto) { txt[i] = s.texto; mudou = true; } });
+                if (mudou) saveText();
+                return mudou;
+            }
+            if (R) doRoteiro(R);                    /* o arquivo manda no load */
+            function curText(i) { return (txt[i] != null) ? txt[i] : (SCRIPT[i] || ''); }
 
             /* posição e escala do overlay POR SLIDE (movidas com a tecla E) */
             var POSKEY = 'mira-tp-ov-pos';
@@ -700,13 +908,84 @@
             window.addEventListener('load', render);
             render();
 
-            /* editar no painel reflete no overlay na hora, e salva por slide */
+            /* editar no painel reflete no overlay na hora, salva por slide e
+               agenda a gravação no roteiro.md (debounce) */
             body.addEventListener('input', function () {
                 var i = cur < 0 ? 0 : cur;
                 txt[i] = body.innerText;
                 saveText();
                 if (ovBody) ovBody.textContent = txt[i];
+                if (agendarEscrita) agendarEscrita();
             });
+
+            /* ============================================================
+               SINCRONIZAÇÃO AO VIVO COM O roteiro.md (só o TEXTO, R-03)
+
+               arquivo -> deck: poll de 1,5 s.  deck -> arquivo: debounce 800 ms.
+               Quatro guards, cada um por causa de uma falha concreta:
+                 1) escrita em voo (ou agendada) trava o poll — senão ele lê a
+                    versão antiga do arquivo e desfaz o que você acabou de digitar;
+                 2) gravação em andamento trava o poll — nada de texto piscando
+                    dentro do vídeo;
+                 3) campo com foco recebe estado e overlay, mas NÃO é sobrescrito
+                    — senão o cursor salta enquanto você digita;
+                 4) conteúdo idêntico aborta poll e escrita — sem gravação em loop.
+               ============================================================ */
+            (function () {
+                if (!R) return;                     /* R-05: file:// ou sem o arquivo */
+                var PATH = window.__miraRoteiroPath;
+                var ultimo = R.raw;                 /* último conteúdo conhecido do arquivo */
+                var escrevendo = false, timer = null;
+
+                function gravando() { return document.documentElement.hasAttribute('data-mira-recording'); }
+                function ocupado() { return escrevendo || timer !== null; }
+
+                function pintarAtual() {
+                    var tx = curText(cur < 0 ? 0 : cur);
+                    if (ovBody) ovBody.textContent = tx;
+                    if (document.activeElement !== body && body.innerText !== tx) body.textContent = tx;
+                }
+
+                function escrever(forcar) {
+                    var conteudo = window.__miraRoteiroMontar(R, txt);
+                    if (!forcar && conteudo === ultimo) return;
+                    escrevendo = true;
+                    fetch('/__mira_save', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: PATH, content: conteudo })
+                    }).then(function (r) {
+                        if (r.ok) ultimo = conteudo;
+                        else try { console.warn('[Mira Studio] roteiro.md não gravou (HTTP ' + r.status + '). Sirva o deck pelo launcher.'); } catch (e) { }
+                    }).catch(function () { }).then(function () { escrevendo = false; });
+                }
+                agendarEscrita = function () {
+                    if (timer) clearTimeout(timer);
+                    timer = setTimeout(function () { timer = null; escrever(false); }, 800);
+                };
+
+                setInterval(function () {
+                    if (ocupado() || gravando()) return;
+                    fetch(PATH + '?t=' + Date.now(), { cache: 'no-store' })
+                        .then(function (r) {
+                            if (r.status === 404) { escrever(true); return null; }   /* R-06 */
+                            return r.ok ? r.text() : null;
+                        })
+                        .then(function (t) {
+                            if (t == null || t === ultimo) return;
+                            ultimo = t;
+                            var novo = window.__miraRoteiroParse(t);
+                            if (!novo.slides.length) return;     /* arquivo pela metade: espera o próximo poll */
+                            /* intro e cabeçalhos vêm sempre do ARQUIVO, nunca do estado do
+                               deck (R-04). Reancorar aqui evita que uma edição de layout
+                               feita no .md seja desfeita pela próxima escrita do painel.
+                               O que eles descrevem só entra no DOM no reload (R-02). */
+                            R.intro = novo.intro;
+                            R.headers = novo.headers;
+                            if (doRoteiro(novo)) pintarAtual();
+                        })
+                        .catch(function () { });
+                }, 1500);
+            })();
 
             /* ----- modo E: arrastar move o overlay, a alça redimensiona ----- */
             function inEdit() { return document.body.classList.contains('me-on'); }
@@ -785,10 +1064,12 @@
            brigam pelo mesmo clique.
 
            Overlay que DEVE entrar no vídeo (logo, selo) fica DENTRO da <section>.
-           O que NÃO deve (teleprompter) fica fora dela.
+           O que NÃO deve (teleprompter) fica fora dela. Atenção: o que fica
+           dentro da <section> precisa ser emitido pelo builder do roteiro,
+           que reconstrói as seções no load.
 
-           "Salvar no arquivo" grava TODO o estado editável (posições, tamanhos e
-           textos) no bloco #mira-studio-state do próprio index.html: por localhost
+           "Salvar no arquivo" grava o estado editável (posições e tamanhos)
+           no bloco #mira-studio-state do próprio index.html: por localhost
            via POST /__mira_save (um clique), em file:// pela File System Access API.
            ============================================================ */
         (function () {
@@ -835,7 +1116,10 @@
 
             /* ---- salvar TODO o estado editável dentro do próprio index.html ---- */
             function collectState() {
-                var keys = ['mira-tp-text', 'mira-tp-ov-pos'];
+                /* SEM 'mira-tp-text': o texto do roteiro mora no roteiro.md. Gravá-lo
+                   aqui criaria uma segunda fonte da verdade, que o seed do load
+                   restauraria por cima do arquivo. */
+                var keys = ['mira-tp-ov-pos'];
                 Array.prototype.forEach.call(document.querySelectorAll('.me-ov[data-me-key]'), function (el) {
                     keys.push(el.getAttribute('data-me-key'));
                 });
@@ -848,7 +1132,7 @@
             }
             var btn = document.getElementById('mp-save');
             var hint = document.getElementById('mp-save-hint');
-            var HINT = 'Move, redimensiona e edita à vontade; clique em Salvar (ou Ctrl+S) para gravar tudo no index.html.';
+            var HINT = 'Posições e tamanhos vão para o index.html com Salvar (ou Ctrl+S). O texto do roteiro grava sozinho no roteiro.md.';
             function say(msg, ok) {
                 if (hint) hint.textContent = msg;
                 if (btn) { btn.classList.toggle('ok', !!ok); btn.textContent = ok ? 'Salvo ✓' : 'Salvar no arquivo'; }

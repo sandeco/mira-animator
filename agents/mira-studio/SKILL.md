@@ -95,10 +95,10 @@ Todo deck nasce com o teleprompter em **duas peças**, mais o editor de overlays
 
 - **Painel lateral (`#mira-prompter`, tecla T):** fica na margem cinza, FORA da coluna. É o **editor**: as quatro chaves, o texto do slide (`#mp-body`, `contenteditable`) e o botão "Salvar no arquivo". **Some durante a gravação** (`html[data-mira-recording] #mira-prompter { display: none }`) — quem se lê no ar é o overlay.
 - **Overlay central (`#tp-ov`, tecla O):** o retângulo que o apresentador lê, por cima da coluna (fundo preto 60%, texto branco 60%). É **irmão das `<section>`, nunca filho** — é exatamente isso que permite excluí-lo do vídeo.
-- **Texto por slide:** o array `SCRIPT[]` traz o roteiro (uma entrada por `<section>`); editar no painel reflete no overlay na hora e persiste em `localStorage['mira-tp-text']`. O texto troca ao navegar (`scroll` + `mira-navigation`).
+- **Texto por slide:** vem do **`roteiro.md` na raiz do deck** (seção abaixo), não do HTML. Editar no painel reflete no overlay na hora, grava no `.md` e persiste em `localStorage['mira-tp-text']` (cópia de trabalho). O texto troca ao navegar (`scroll` + `mira-navigation`).
 - **Element Capture (tecla G):** a gravação nativa restringe a captura à **subárvore da seção visível** (`RestrictionTarget.fromElement` + `track.restrictTo`), então tudo que não é descendente dela — o overlay e o painel — **não é pintado no vídeo**, mesmo sobreposto. O deck liga o recurso declarando `window.__miraElemCapture = true`; sem essa flag o `mira-record.js` usa o Region Capture de sempre.
 - **Editor genérico de overlays (`.me-ov`, tecla E):** qualquer camada sobre a câmera marcada com `class="me-ov" data-me-chrome data-me-key="<id>"` (mais um filho `<div class="me-ov-grip" data-me-chrome></div>`) vira movível e redimensionável no modo E. O `data-me-chrome` é obrigatório: sem ele o `mira-edit-free` disputa o mesmo clique e seleciona o `<img>` interno em vez do grupo.
-- **Salvar no arquivo (botão ou Ctrl+S):** grava TODO o estado editável (posições, tamanhos e textos) no bloco `<script id="mira-studio-state" type="application/json">` do próprio `index.html` — em localhost por `POST /__mira_save`, em `file://` pela File System Access API. No load, um IIFE **semeia o `localStorage` a partir desse bloco**: o **arquivo é a fonte da verdade**, não o navegador. No template o bloco começa `{}`.
+- **Salvar no arquivo (botão ou Ctrl+S):** grava o estado editável de LAYOUT (posições e tamanhos dos overlays, **sem o texto do roteiro**) no bloco `<script id="mira-studio-state" type="application/json">` do próprio `index.html` — em localhost por `POST /__mira_save`, em `file://` pela File System Access API. No load, um IIFE **semeia o `localStorage` a partir desse bloco**: o **arquivo é a fonte da verdade**, não o navegador. No template o bloco começa `{}`.
 
 **Onde cada overlay mora (a regra de ouro):** o que deve entrar no vídeo (logo, selo, animação sobre a câmera) fica **DENTRO** da `<section>`; o que não deve (teleprompter, painéis) fica **FORA** dela, como filho direto de `body`.
 
@@ -108,6 +108,52 @@ Todo deck nasce com o teleprompter em **duas peças**, mais o editor de overlays
 - Element Capture exige **Chrome/Edge desktop recente** e **contexto seguro** (localhost ou https). Sem suporte, o deck cai no Region Capture e o **overlay some durante a gravação** (fallback no CSS, via `html[data-mira-recording]:not([data-mira-elemcapture])`), para não vazar.
 - `body > section { isolation: isolate }` é **pré-requisito**: sem stacking context o Chrome aceita o `restrictTo` e não emite frame — o MP4 sai vazio.
 - Salvar por localhost exige o **servidor com os endpoints** (`/__mira_save`, `/__mira_meta`): num deck antigo, **reinicie o launcher** depois de atualizar o `mira-studio-server.cjs`.
+
+## Roteiro externo `roteiro.md` (todo deck de gravação nasce com um)
+
+O roteiro NÃO mora mais dentro do HTML. Todo deck gerado leva um **`roteiro.md` na raiz**, ao lado do `index.html`: é dele que saem os slides (layout e título) e a fala de cada slide. O apresentador escreve o roteiro no editor de texto que quiser, versiona em git, e vê o resultado no deck aberto sem recarregar.
+
+**Gramática (uma linha por cabeçalho):**
+
+```
+<intro: texto livre, documenta a gramática para o usuário>
+
+## Slide 1 | capa | Um roteiro, *três formatos*
+
+Fala do apresentador neste slide.
+
+## Slide 2 | camera
+
+Fala do apresentador neste slide.
+```
+
+- `layout` (obrigatório): `capa`, `camera`, `split` ou `full`, comparado em minúsculas. Valor desconhecido cai em `camera`, o layout mais simples.
+- `Título`: vale em `capa`, `split` e `full`; ignorado em `camera`. `*entre asteriscos*` vira `<span class="accent">`, montado por fragmento (**nunca `innerHTML`**).
+- **Sem campo de animação.** As animações do mira-studio são AUTORAIS (metáfora escrita à mão por slide, não montada a partir de uma lista de itens). O builder cria só o palco vazio `svg#sv-slide-N`, com **N = posição do slide no arquivo**, e cada animação escrita à mão se prende ao seu palco. Palco sem animação fica vazio em vez de quebrar; avise o usuário quando o roteiro tiver mais slides do que animações autoradas.
+- O número do cabeçalho é **rótulo, não índice**: o mapeamento é sempre pela **ordem de aparição**. Numeração duplicada ou fora de ordem não desloca texto nenhum.
+
+**O que sincroniza e o que não:**
+
+| Dado | Fonte da verdade | Quando vale |
+|------|------------------|-------------|
+| Layout, título | `roteiro.md` | lido uma vez, no **load** (mudou, recarregue) |
+| Texto da fala | `roteiro.md` | **ao vivo**, nos dois sentidos |
+| Posição/tamanho dos overlays | bloco `#mira-studio-state` no `index.html` | Ctrl+S |
+| Cópia de trabalho do texto | `localStorage` | entre polls |
+
+Precedência no load: `roteiro.md` > `localStorage` > array `SCRIPT[]` embutido. O texto **não** entra no `#mira-studio-state`: duas fontes da verdade fariam o seed do load restaurar texto velho por cima do arquivo.
+
+**Como o deck consome (blocos canônicos no deck de referência):**
+
+- Um IIFE **antes** das animações e dos `<script defer>` faz a leitura **síncrona** do `.md` (os módulos de câmera, gravação e edição precisam das `<section>` já no DOM), guarda texto bruto, intro e cabeçalhos, monta as seções e as insere antes do painel do teleprompter, removendo as estáticas.
+- As `<section>` estáticas do HTML continuam lá como **fallback**: em `file://`, sem servidor ou com parse vazio, elas SÃO o deck. A ausência do roteiro nunca produz deck em branco.
+- Sincronização: poll de leitura a cada **1,5 s**, escrita com debounce de **800 ms**, com quatro guards que não são opcionais: (1) escrita em voo ou agendada trava o poll, senão ele desfaz o que você acabou de digitar; (2) gravação em andamento trava o poll, para não piscar texto dentro do vídeo; (3) campo com foco recebe estado e overlay mas não é sobrescrito, senão o cursor salta; (4) conteúdo idêntico aborta poll e escrita.
+- A escrita de volta remonta o arquivo com a **intro e os cabeçalhos capturados no load** mais os textos atuais. Cabeçalho nunca é reescrito a partir do estado do deck.
+- Arquivo ausente (404) é **recriado uma vez** a partir dos slides e textos embutidos.
+
+**Restrição honesta:** a escrita depende do `POST /__mira_save`. Ele existe no `mira/mira-studio-server.cjs` (launcher, que também cria o arquivo quando falta) e no `lib/mira-serve.js` (grava, mas só em arquivo que já existe). Em `file://` não há leitura nem escrita: o deck usa os slides embutidos, sem erro no console e sem sincronizar.
+
+**Chrome autoral dentro da `<section>`** (logo, selo, `.me-ov` que deve entrar no vídeo) precisa ser emitido pelo builder, senão a reconstrução do load o descarta.
 
 ## Launcher `mira-studio-windows.bat` + `mira/mira-studio-server.cjs` (GPU dedicada, opcional)
 
@@ -176,12 +222,12 @@ Os dois blocos estão no deck de referência; detalhes e regras completas em `ag
 
 ## Passos
 
-1. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um. Sem layout declarado, pergunte. O que ele vai FALAR em cada slide vira o `SCRIPT[]` do teleprompter.
-2. **Criar a estrutura.** `decks/<nome>/` com `index.html`, `mira/` (edit, edit-free, draw, camera, record copiados de `templates/authoring/` + `mira-studio-server.cjs` de `templates/studio/`), `assets/vendor/mp4-muxer.js` (de `templates/vendor/`, obrigatório para os encoders do painel), `assets/vendor/d3.v7.min.js` quando houver animação, e `mira-studio-windows.bat` na raiz (de `templates/studio/`, launcher com preferência de alto desempenho).
-3. **Gerar os slides.** Um `body > section` por slide com `data-layout` correto; `.cam-area` nas áreas de câmera; animações nativas da geometria (quadrado no `split`, retrato no `full`) com `casarPalco` + enquadramento **uma vez** sobre a parte estática (reenquadrar a cada frame faz o palco reescalar junto com o que se move) e loop interno. Todo callback de `d3.timer` vai dentro de `try/catch`: uma exceção num deles congela a FILA inteira de timers do d3.
-4. **Injetar os blocos canônicos.** `<style id="mira-formato-multi">` (com o `isolation: isolate`), `fitTitles`, navegação com dissolve (transição padrão), o **teleprompter completo** (painel + overlay + `SCRIPT[]` + chaves + editor `.me-ov` + bloco `#mira-studio-state` vazio + seed + salvar/Ctrl+S) e os cinco `<script defer src="mira/...">` antes de `</body>` (`mira-edit.js` → `mira-edit-free.js` → `mira-draw.js` → `mira-camera.js` → `mira-record.js`).
-5. **Verificar.** Servido em localhost: câmera nas áreas certas, permissão pedida uma vez, animações preenchendo, títulos em máx. 2 linhas. Painel lateral com as chaves T/O/G/E sincronizadas; editar o texto reflete no overlay; **Ctrl+S** grava e o texto sobrevive ao reload. Gravando com `Element Capture: ON`, o overlay continua visível para você e **some do MP4** — e navegar entre slides durante a gravação não pode congelar o vídeo. Em `file://`: áreas verdes `#00FF00` puras.
-6. **Reportar.** Caminho do deck, layout de cada slide (uma linha por slide), a gravação nativa (tecla R; encoder Auto/Hardware preferido/Software no painel; launcher Windows para inventário e preferência de alto desempenho) e a receita OBS como alternativa: servir com `node lib/mira-serve.js decks/<nome>` (ou `npx mira-animator serve`), Chrome em tela cheia, Captura de Janela no OBS, recorte na coluna, gravação 1080x1920.
+1. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um. Sem layout declarado, pergunte. O que ele vai FALAR em cada slide vai para o **`roteiro.md`**, não para dentro do HTML. Diga a ele, em uma linha, que dá para editar esse arquivo com o deck aberto: o texto aparece no teleprompter em cerca de 1,5 s.
+2. **Criar a estrutura.** `decks/<nome>/` com `index.html`, **`roteiro.md`** (um bloco `## Slide` por slide combinado, já com a fala do usuário no corpo, e a intro documentando a gramática e os layouts DESTE deck), `mira/` (edit, edit-free, draw, camera, record copiados de `templates/authoring/` + `mira-studio-server.cjs` de `templates/studio/`), `assets/vendor/mp4-muxer.js` (de `templates/vendor/`, obrigatório para os encoders do painel), `assets/vendor/d3.v7.min.js` quando houver animação, e `mira-studio-windows.bat` na raiz (de `templates/studio/`, launcher com preferência de alto desempenho).
+3. **Gerar os slides.** Um bloco `## Slide` no `roteiro.md` por slide e, no HTML, o `body > section` equivalente (fallback de `file://`) com `data-layout` correto; `.cam-area` nas áreas de câmera; animações nativas da geometria (quadrado no `split`, retrato no `full`) com `casarPalco` + enquadramento **uma vez** sobre a parte estática (reenquadrar a cada frame faz o palco reescalar junto com o que se move) e loop interno. Todo callback de `d3.timer` vai dentro de `try/catch`: uma exceção num deles congela a FILA inteira de timers do d3.
+4. **Injetar os blocos canônicos.** `<style id="mira-formato-multi">` (com o `isolation: isolate`), o **builder do `roteiro.md`** (antes das animações e dos `<script defer>`), `fitTitles`, navegação com dissolve (transição padrão), o **teleprompter completo** (painel + overlay + sincronização com o `.md` + `SCRIPT[]` só como fallback + chaves + editor `.me-ov` + bloco `#mira-studio-state` vazio + seed + salvar/Ctrl+S) e os cinco `<script defer src="mira/...">` antes de `</body>` (`mira-edit.js` → `mira-edit-free.js` → `mira-draw.js` → `mira-camera.js` → `mira-record.js`).
+5. **Verificar.** Servido em localhost: câmera nas áreas certas, permissão pedida uma vez, animações preenchendo, títulos em máx. 2 linhas. Painel lateral com as chaves T/O/G/E sincronizadas; editar o texto reflete no overlay; editar o `roteiro.md` no editor externo aparece no deck em ~1,5 s e digitar no painel grava no `.md` sem tocar na intro nem nos cabeçalhos; **Ctrl+S** grava posições e tamanhos, que sobrevivem ao reload. Gravando com `Element Capture: ON`, o overlay continua visível para você e **some do MP4** — e navegar entre slides durante a gravação não pode congelar o vídeo. Em `file://`: áreas verdes `#00FF00` puras.
+6. **Reportar.** Caminho do deck, o `roteiro.md` como lugar de escrever a fala (editável com o deck aberto), layout de cada slide (uma linha por slide), a gravação nativa (tecla R; encoder Auto/Hardware preferido/Software no painel; launcher Windows para inventário e preferência de alto desempenho) e a receita OBS como alternativa: servir com `node lib/mira-serve.js decks/<nome>` (ou `npx mira-animator serve`), Chrome em tela cheia, Captura de Janela no OBS, recorte na coluna, gravação 1080x1920.
 
 ## Edge cases (do mais comum ao menos)
 
@@ -205,7 +251,13 @@ Os dois blocos estão no deck de referência; detalhes e regras completas em `ag
 **Teleprompter (o que mais quebra aqui):**
 - [ ] `body > section { isolation: isolate }` presente (sem ele o Element Capture grava vídeo VAZIO).
 - [ ] Painel `#mira-prompter` e overlay `#tp-ov-wrap` **fora** das `<section>`; overlays que devem entrar no vídeo, **dentro**.
-- [ ] `SCRIPT[]` com uma entrada por slide; texto troca ao navegar e reflete do painel no overlay.
+- [ ] `roteiro.md` na raiz, com intro documentando a gramática e um `## Slide` por `<section>`; os layouts citados na intro batem com os que o deck aceita.
+- [ ] Slides nascem do `.md`; sem o arquivo (ou em `file://`), o deck sobe com os slides padrão embutidos, sem erro no console.
+- [ ] Numeração duplicada ou fora de ordem nos cabeçalhos não desloca os textos (mapeamento por ordem de aparição).
+- [ ] Editar o `.md` aparece no deck em ~1,5 s; digitar no painel grava no `.md` com intro e cabeçalhos intactos; digitação contínua não tem o cursor roubado pelo poll.
+- [ ] Durante a gravação o poll fica parado; `.md` apagado com o deck aberto é recriado.
+- [ ] Builder do roteiro ANTES das animações e dos `<script defer>`; animação autoral presa ao palco `sv-slide-N`.
+- [ ] `SCRIPT[]` continua no HTML só como fallback, e `mira-tp-text` NÃO entra no `#mira-studio-state`.
 - [ ] `window.__miraElemCapture = true` declarado (é o opt-in que liga o Element Capture no mira-record).
 - [ ] Bloco `#mira-studio-state` começa `{}`, com o IIFE de **seed antes** de qualquer leitor de `localStorage`.
 - [ ] `.me-ov` com `data-me-chrome` (senão o mira-edit-free briga pelo clique) e `.me-ov-grip`.

@@ -162,8 +162,9 @@ const server = http.createServer(function (req, res) {
         json(res, 200, { path: abs });
         return;
     }
-    /* gravação no disco: o "Salvar no arquivo" do deck (bloco #mira-studio-state)
-       e o Salvar da barra do mira-edit. Só HTML, só dentro do root. */
+    /* gravação no disco: o "Salvar no arquivo" do deck (bloco #mira-studio-state),
+       o Salvar da barra do mira-edit e a escrita do roteiro.md pelo teleprompter.
+       Só HTML/Markdown, só dentro do root. */
     if (url === '/__mira_save' && (req.method === 'POST' || req.method === 'PUT')) {
         const chunks = [];
         let size = 0, tooBig = false;
@@ -186,7 +187,7 @@ const server = http.createServer(function (req, res) {
             const abs = resolveInRoot(rel);
             if (!abs) { json(res, 403, { error: 'fora do root' }); return; }
             const ext = path.extname(abs).toLowerCase();
-            if (ext !== '.html' && ext !== '.htm') { json(res, 403, { error: 'só .html/.htm' }); return; }
+            if (ext !== '.html' && ext !== '.htm' && ext !== '.md') { json(res, 403, { error: 'só .html/.htm/.md' }); return; }
             fs.writeFile(abs, content, 'utf8', function (err) {
                 if (err) { json(res, 500, { error: String(err && err.message || err) }); return; }
                 log('salvo: ' + abs + ' (' + size + ' bytes)');
