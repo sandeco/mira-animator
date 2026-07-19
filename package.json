@@ -59,6 +59,7 @@
     "bin/",
     "lib/",
     "templates/",
+    "!templates/videos_header",
     "README.md",
     "LICENSE"
   ],
