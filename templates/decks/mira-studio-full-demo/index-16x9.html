@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Mira Studio Full · 16:9</title>
+    <!-- Inter por CDN (padrão do projeto); offline cai no system-ui do stack -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* 16:9 casado à janela: em tela cheia 1080p fecha exatos 1920x1080;
+               em janela menor encolhe mantendo a proporção (letterbox #333) */
+            --fmt-w: min(100vw, calc(100vh * 16 / 9));
+            --fmt-h: min(100vh, calc(100vw * 9 / 16));
+            /* tema mira-dark (mira-templates/themes/mira-dark.css), embutido
+               para o deck seguir self-contained */
+            --mira-primary: #FF904D;
+            --mira-crop: #35D07F;
+            --mira-bg: #000000;
+            --mira-text: #ffffff;
+            --mira-text-soft: rgba(255, 255, 255, 0.70);
+            --mira-text-softer: rgba(255, 255, 255, 0.50);
+            --mira-card-bg: rgba(255, 255, 255, 0.05);
+            --mira-card-border: rgba(255, 255, 255, 0.10);
+            --mira-glow-soft: rgba(255, 144, 77, 0.15);
+            --mira-glow-strong: rgba(255, 144, 77, 0.25);
+            --mira-icon-bg: rgba(255, 144, 77, 0.15);
+            --mira-icon-border: rgba(255, 144, 77, 0.30);
+            --mira-pill-bg: rgba(255, 255, 255, 0.04);
+            --mira-pill-border: rgba(255, 255, 255, 0.08);
+            --mira-stage-glow: rgba(255, 144, 77, 0.06);
+            --mira-accent-2: #FFC766;
+            /* apelidos locais: sempre derivados das variáveis do tema */
+            --accent: var(--mira-primary);
+            --bg: var(--mira-bg);
+            --ink: var(--mira-text);
+            --muted: var(--mira-text-soft);
+            --line: var(--mira-card-border);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { background: #333333; scroll-behavior: smooth; scroll-snap-type: y proximity; }
+        /* sem barras de rolagem: a coluna 16:9 cobre a janela (a barra vertical
+           roubava largura e criava scroll horizontal em F11); navegue por
+           teclado ou roda do mouse */
+        html { scrollbar-width: none; overflow-x: hidden; }
+        html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+        body {
+            background: #333333;
+            color: var(--ink);
+            font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        body > section {
+            position: relative;
+            width: var(--fmt-w);
+            height: var(--fmt-h);
+            min-height: var(--fmt-h);
+            /* centraliza o quadro na janela: em tela que não é 16:9 a sobra
+               vertical vira faixa #333 acima e abaixo, nunca o slide seguinte */
+            margin: calc((100vh - var(--fmt-h)) / 2) 0;
+            scroll-margin-top: calc((100vh - var(--fmt-h)) / 2);
+            overflow: hidden;
+            background: var(--bg);
+            scroll-snap-align: start;
+            display: flex;
+            flex-direction: column;
+            isolation: isolate;
+        }
+        body > section:first-of-type h1,
+        body > section:first-of-type h2 { text-wrap: balance; }
+        h1 { font-size: clamp(34px, 7.4vh, 72px); line-height: 1.02; letter-spacing: -.02em; font-weight: 800; }
+        h2 { font-size: clamp(28px, 4.6vh, 46px); line-height: 1.1; letter-spacing: -.01em; font-weight: 800; }
+        p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
+        .accent { color: var(--accent); }
+
+        /* camera: webcam na coluna inteira */
+        section[data-layout="camera"] .cam-area { flex: 1 1 auto; min-height: 0; }
+
+        /* thirds: título + animação nos 2/3 da esquerda, câmera ao vivo no 1/3 direito */
+        section[data-layout="thirds"] { flex-direction: row; }
+        section[data-layout="thirds"] .thirds-main {
+            width: 66.667%;
+            max-width: 66.667%;
+            height: 100%;
+            flex: 0 0 auto;
+            display: flex;
+            flex-direction: column;
+            padding: 50px; /* área segura: título e animação vivem dentro dela */
+        }
+        section[data-layout="thirds"] h2 { flex: 0 0 auto; margin-bottom: 14px; text-align: center; }
+        section[data-layout="thirds"] .cam-area {
+            width: 33.333%;
+            height: 100%;
+            flex: 0 0 auto;
+            min-height: 0;
+            border-left: 1px solid var(--line);
+        }
+
+        /* full: título + animação no quadro inteiro, sem câmera */
+        section[data-layout="full"] .full-main {
+            width: 100%;
+            height: 100%;
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            padding: 50px; /* área segura: título e animação vivem dentro dela */
+        }
+        section[data-layout="full"] h2 { flex: 0 0 auto; margin-bottom: 14px; text-align: center; }
+
+        /* palco de animação */
+        .anim-stage { flex: 1 1 auto; min-height: 0; width: 100%; }
+        .anim-stage svg { width: 100%; height: 100%; display: block; }
+
+        /* TELEPROMPTER */
+        #mira-prompter {
+            position: fixed; top: 2.5vh; bottom: 2.5vh; left: 2vh;
+            width: min(380px, 44vw); min-width: 0;
+            display: flex; flex-direction: column; gap: 11px;
+            padding: 16px;
+            background: rgba(10, 10, 12, .93);
+            border: 1px solid rgba(255, 255, 255, .14); border-radius: 16px;
+            box-shadow: 0 12px 48px rgba(0, 0, 0, .55);
+            z-index: 60; overflow: hidden;
+        }
+        #mira-prompter.off { display: none; }
+        html[data-mira-recording] #mira-prompter { display: none; }
+        #mira-prompter .mp-head {
+            font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase;
+            color: var(--accent); flex: 0 0 auto;
+        }
+        #mira-prompter .mp-switches {
+            display: flex; flex-direction: column; gap: 8px; flex: 0 0 auto;
+            padding-bottom: 11px; border-bottom: 1px solid rgba(255, 255, 255, .1);
+        }
+        #mira-prompter .mp-sw {
+            display: flex; align-items: center; justify-content: space-between;
+            font: 600 13px/1.2 Inter, system-ui, sans-serif; color: rgba(244, 244, 245, .88);
+            cursor: pointer; user-select: none;
+        }
+        #mira-prompter .mp-sw .mp-key { color: rgba(244, 244, 245, .38); font-weight: 700; font-size: 11px; margin-left: 6px; }
+        #mira-prompter .mp-toggle {
+            position: relative; width: 40px; height: 22px; flex: 0 0 auto;
+            background: rgba(255, 255, 255, .16); border-radius: 999px; transition: background .15s ease;
+        }
+        #mira-prompter .mp-toggle::after {
+            content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
+            border-radius: 50%; background: #fff; transition: transform .15s ease;
+        }
+        #mira-prompter .mp-sw.on .mp-toggle { background: var(--accent); }
+        #mira-prompter .mp-sw.on .mp-toggle::after { transform: translateX(18px); }
+        #mira-prompter .mp-fs {
+            display: flex; align-items: center; gap: 8px; flex: 0 0 auto;
+            font: 600 13px/1.2 Inter, system-ui, sans-serif; color: rgba(244, 244, 245, .88);
+            padding-bottom: 11px; border-bottom: 1px solid rgba(255, 255, 255, .1);
+        }
+        #mira-prompter .mp-fs input[type=range] { flex: 1 1 auto; min-width: 0; accent-color: var(--accent); }
+        #mira-prompter .mp-fs #mp-fs-val { color: rgba(244, 244, 245, .45); font-size: 11px; min-width: 36px; text-align: right; }
+        #mira-prompter .mp-fs #mp-fs-auto {
+            font: 700 11px/1 Inter, system-ui, sans-serif; color: #101010;
+            background: var(--accent); border: none; border-radius: 7px; padding: 5px 8px; cursor: pointer;
+        }
+        #mira-prompter .mp-lbl { font-size: 11px; color: rgba(244, 244, 245, .45); flex: 0 0 auto; }
+        #mira-prompter .mp-body {
+            font-size: clamp(15px, 2vh, 20px); line-height: 1.5; font-weight: 500;
+            color: var(--ink); overflow-y: auto; flex: 1 1 auto; white-space: pre-wrap;
+            outline: none; border: 1px solid rgba(255, 255, 255, .14); border-radius: 10px; padding: 10px 12px;
+        }
+        #mira-prompter .mp-body:focus { border-color: var(--accent); }
+        #mira-prompter .mp-hint { font-size: 11px; color: rgba(244, 244, 245, .5); flex: 0 0 auto; }
+        #mira-prompter .mp-save {
+            flex: 0 0 auto; font: 700 13px/1 Inter, system-ui, sans-serif; color: #101010;
+            background: var(--accent); border: none; border-radius: 10px; padding: 11px 14px; cursor: pointer;
+        }
+        #mira-prompter .mp-save:hover { filter: brightness(1.08); }
+        #mira-prompter .mp-save.ok { background: #3ddc84; }
+
+        #tp-ov-wrap {
+            position: fixed; inset: 0; z-index: 55; pointer-events: none;
+            display: flex; align-items: center; justify-content: center;
+            font-family: Inter, system-ui, sans-serif;
+        }
+        #tp-ov-wrap.off { display: none; }
+        #tp-ov {
+            position: relative;
+            width: min(86vw, calc(var(--fmt-w) - 6vh));
+            max-height: 84vh; overflow: hidden;
+            padding: 30px 32px;
+            background: rgba(0, 0, 0, .6);
+            border-radius: 26px;
+            transform: translate(0px, 0px) scale(1);
+            transform-origin: center center;
+            pointer-events: none;
+            display: flex; flex-direction: column;
+        }
+        #tp-ov .tp-ov-body {
+            font-size: clamp(20px, 3.1vh, 40px); line-height: 1.42; font-weight: 600;
+            color: rgba(255, 255, 255, .6);
+            white-space: pre-wrap;
+            /* rolagem do teleprompter: programática (tecla P), sem barra visível */
+            flex: 1 1 auto; min-height: 0; overflow-y: hidden;
+        }
+        /* indicador de que há mais texto abaixo do corte */
+        #tp-ov .tp-ov-more {
+            position: absolute; left: 0; right: 0; bottom: 0; height: 56px;
+            background: linear-gradient(transparent, rgba(0, 0, 0, .78));
+            border-radius: 0 0 26px 26px;
+            pointer-events: none; opacity: 0; transition: opacity .2s ease;
+        }
+        /* aviso rápido de rolagem/velocidade (fora do vídeo com Element Capture;
+           na gravação por Region Capture some junto com o resto do chrome) */
+        #tp-toast {
+            position: fixed; left: 14px; bottom: 14px; z-index: 62;
+            background: rgba(10, 10, 12, .92); color: var(--ink);
+            border: 1px solid color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 10px;
+            padding: 8px 12px; font: 600 13px/1.2 Inter, system-ui, sans-serif;
+            opacity: 0; transition: opacity .15s ease; pointer-events: none;
+        }
+        #tp-toast.on { opacity: 1; }
+        html[data-mira-recording]:not([data-mira-elemcapture]) #tp-toast { display: none; }
+
+        /* CHEAT-SHEET de atalhos (tecla ?) */
+        #mira-keys {
+            position: fixed; inset: 0; z-index: 70;
+            display: flex; align-items: center; justify-content: center;
+            background: rgba(0, 0, 0, .5);
+        }
+        #mira-keys.off { display: none; }
+        html[data-mira-recording] #mira-keys { display: none; }
+        #mira-keys .mk-box {
+            background: rgba(10, 10, 12, .96);
+            border: 1px solid color-mix(in srgb, var(--accent) 50%, transparent); border-radius: 16px;
+            padding: 22px 26px; box-shadow: 0 12px 48px rgba(0, 0, 0, .55);
+        }
+        #mira-keys .mk-title {
+            color: var(--accent); font: 800 13px/1 Inter, system-ui, sans-serif;
+            letter-spacing: .12em; text-transform: uppercase; margin-bottom: 14px;
+        }
+        #mira-keys .mk-grid {
+            display: grid; grid-template-columns: auto auto; gap: 8px 18px;
+            font: 600 14px/1.3 Inter, system-ui, sans-serif; color: rgba(244, 244, 245, .88);
+        }
+        #mira-keys .mk-grid span:nth-child(odd) { color: var(--accent); font-weight: 800; text-align: right; }
+        body.me-on #tp-ov { pointer-events: auto; cursor: move; outline: 2px dashed color-mix(in srgb, var(--accent) 80%, transparent); }
+        #tp-ov .tp-ov-grip {
+            position: absolute; right: 8px; bottom: 8px; width: 26px; height: 26px; border-radius: 8px;
+            background: color-mix(in srgb, var(--accent) 95%, transparent); cursor: nwse-resize; display: none;
+        }
+        body.me-on #tp-ov .tp-ov-grip { display: block; }
+        /* alças de borda (modo E): direita = largura, baixo = altura */
+        #tp-ov .tp-ov-edge-r, #tp-ov .tp-ov-edge-b { position: absolute; display: none; background: color-mix(in srgb, var(--accent) 55%, transparent); border-radius: 4px; }
+        #tp-ov .tp-ov-edge-r { top: 20%; bottom: 20%; right: 2px; width: 8px; cursor: ew-resize; }
+        #tp-ov .tp-ov-edge-b { left: 20%; right: 20%; bottom: 2px; height: 8px; cursor: ns-resize; }
+        body.me-on #tp-ov .tp-ov-edge-r, body.me-on #tp-ov .tp-ov-edge-b { display: block; }
+        html[data-mira-recording]:not([data-mira-elemcapture]) #tp-ov-wrap { display: none; }
+
+        .me-ov { position: relative; }
+        body.me-on .me-ov { pointer-events: auto; cursor: move; outline: 2px dashed color-mix(in srgb, var(--accent) 80%, transparent); outline-offset: 3px; }
+        .me-ov .me-ov-grip {
+            position: absolute; right: -7px; bottom: -7px; width: 22px; height: 22px; border-radius: 7px;
+            background: color-mix(in srgb, var(--accent) 95%, transparent); cursor: nwse-resize; display: none; z-index: 3;
+        }
+        body.me-on .me-ov .me-ov-grip { display: block; }
+
+        /* === DISSOLVE === */
+        ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 0.55s; }
+        #mrc-panel { view-transition-name: mrc-panel; }
+        .cam-notice { view-transition-name: cam-notice; }
+        #mira-prompter { view-transition-name: mira-prompter; }
+        #tp-ov-wrap { view-transition-name: tp-ov; }
+    </style>
+</head>
+<body>
+
+    <!-- SLIDE 1: CAMERA FULL -->
+    <section data-layout="camera">
+        <div class="cam-area"></div>
+    </section>
+
+    <!-- SLIDE 2: TERÇOS (animação 2/3 + câmera 1/3) -->
+    <section data-layout="thirds">
+        <div class="thirds-main">
+            <h2>Linha de <span class="accent">Produção</span></h2>
+            <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+        <div class="cam-area"></div>
+    </section>
+
+    <!-- SLIDE 3: TERÇOS (animação 2/3 + câmera 1/3) -->
+    <section data-layout="thirds">
+        <div class="thirds-main">
+            <h2>Órbita da <span class="accent">Produção</span></h2>
+            <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+        <div class="cam-area"></div>
+    </section>
+
+    <!-- SLIDE 4: FULL (animação em tela cheia, sem câmera) -->
+    <section data-layout="full">
+        <div class="full-main">
+            <h2>Produção ao <span class="accent">Vivo</span></h2>
+            <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
+        </div>
+    </section>
+
+    <!-- SLIDE 5: CAMERA FULL -->
+    <section data-layout="camera">
+        <div class="cam-area"></div>
+    </section>
+
+    <!-- TELEPROMPTER PAINEL -->
+    <aside id="mira-prompter">
+        <div class="mp-head">Roteiro · slide <span id="mp-num">1</span>/<span id="mp-tot">5</span></div>
+        <div class="mp-switches">
+            <div class="mp-sw" data-sw="side"><span>Teleprompt lateral<span class="mp-key">T</span></span><span class="mp-toggle"></span></div>
+            <div class="mp-sw" data-sw="ov"><span>Overlay no slide<span class="mp-key">O</span></span><span class="mp-toggle"></span></div>
+            <div class="mp-sw" data-sw="ec"><span>Element Capture<span class="mp-key">G</span></span><span class="mp-toggle"></span></div>
+            <div class="mp-sw" data-sw="edit"><span>Mover/redimensionar overlay<span class="mp-key">E</span></span><span class="mp-toggle"></span></div>
+        </div>
+        <div class="mp-fs">
+            <span>Texto do overlay</span>
+            <input type="range" id="mp-fs" min="16" max="72" step="1">
+            <span id="mp-fs-val">auto</span>
+            <button type="button" id="mp-fs-auto">padrão</button>
+        </div>
+        <div class="mp-lbl">Texto do slide (edite aqui ou no roteiro.md; reflete no overlay):</div>
+        <div class="mp-body" id="mp-body" contenteditable="true" spellcheck="false"></div>
+        <button id="mp-save" class="mp-save" type="button">Salvar no arquivo</button>
+        <div class="mp-hint" id="mp-save-hint">Modo E no overlay: arraste para mover; alças laranja mudam largura/altura da caixa. Tamanho do texto: slider acima. Salvar (ou Ctrl+S) grava tudo no arquivo do deck.</div>
+    </aside>
+
+    <!-- TELEPROMPTER OVERLAY -->
+    <div id="tp-ov-wrap" aria-hidden="true">
+        <div id="tp-ov">
+            <div class="tp-ov-body" id="tp-ov-body"></div>
+            <div class="tp-ov-more"></div>
+            <div class="tp-ov-grip" data-me-chrome></div>
+            <div class="tp-ov-edge-r" data-me-chrome></div>
+            <div class="tp-ov-edge-b" data-me-chrome></div>
+        </div>
+    </div>
+
+    <!-- Aviso rápido (rolagem/velocidade do teleprompter) -->
+    <div id="tp-toast" aria-hidden="true"></div>
+
+    <!-- ATALHOS (tecla ?) -->
+    <div id="mira-keys" class="off" aria-hidden="true">
+        <div class="mk-box">
+            <div class="mk-title">Atalhos do estúdio</div>
+            <div class="mk-grid">
+                <span>&#8592; &#8594; espaço</span><span>navegar entre os slides</span>
+                <span>T</span><span>teleprompt lateral</span>
+                <span>O</span><span>overlay de texto no slide</span>
+                <span>L</span><span>liga/pausa a rolagem do overlay</span>
+                <span>+ / &#8722;</span><span>velocidade da rolagem</span>
+                <span>P</span><span>caneta de desenho (telestrator)</span>
+                <span>E</span><span>mover/redimensionar overlay</span>
+                <span>G</span><span>Element Capture</span>
+                <span>C</span><span>espelhar a câmera</span>
+                <span>R</span><span>gravar / parar</span>
+                <span>?</span><span>abre/fecha esta lista</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estado salvo -->
+    <script id="mira-studio-state" type="application/json">{"mira-tp-text":{"0":"Abertura direto na câmera: você em tela cheia, falando com a lente.","1":"No layout de terços, a animação ocupa os dois terços da esquerda e você aparece ao vivo no terço direito.","2":"Cada satélite é uma etapa orbitando o núcleo. Edite esta fala no painel do roteiro ou direto no roteiro.md.","3":"Este é o layout full: só animação, ocupando o quadro inteiro, sem câmera.","4":"Encerramento direto na câmera. Tecla R grava e o MP4 sai em 1920x1080."},"mira-tp-ov-pos":{"0":{"x":1,"y":-23,"s":1,"w":621,"h":454,"fs":34},"1":{"x":1,"y":-23,"s":1,"w":621,"h":454,"fs":34},"2":{"x":1,"y":-23,"s":1,"w":621,"h":454,"fs":34},"3":{"x":1,"y":-23,"s":1,"w":621,"h":454,"fs":34},"4":{"x":1,"y":-23,"s":1,"w":621,"h":454,"fs":34}}}</script>
+
+    <script src="assets/vendor/d3.v7.min.js"></script>
+    <script>
+        /* Seed do localStorage a partir do arquivo. O bloco só sobrescreve o
+           localStorage quando MUDOU desde o último seed (hash guardado):
+           ajustes locais ainda não salvos sobrevivem a um simples recarregar,
+           e um arquivo atualizado (salvo aqui ou editado fora) sempre vence. */
+        (function () {
+            try {
+                var blk = document.getElementById('mira-studio-state');
+                if (!blk) return;
+                var raw = blk.textContent || '{}';
+                var h = 5381;
+                for (var i = 0; i < raw.length; i++) h = ((h << 5) + h + raw.charCodeAt(i)) | 0;
+                var rev = 'v' + h;
+                var REVKEY = 'mira-studio-state-rev';
+                if (localStorage.getItem(REVKEY) === rev) return;
+                var data = JSON.parse(raw) || {};
+                Object.keys(data).forEach(function (k) {
+                    try { localStorage.setItem(k, JSON.stringify(data[k])); } catch (e) { }
+                });
+                localStorage.setItem(REVKEY, rev);
+            } catch (e) { }
+        })();
+
+        /* ---------- animações reutilizáveis (Regra Zero: entrada coreografada
+           e DEPOIS loop interno perpétuo; fora da tela o timer morre) ----------
+           animLinha: linha de produção em diagonal, orbe percorrendo as etapas.
+           animOrbita: satélites orbitando um núcleo, elipse casada ao box. */
+        window.__animGen = window.__animGen || {};
+
+        function animLinha(svgId, ETAPAS) {
+            var svg = d3.select('#' + svgId);
+            if (svg.empty()) return;
+            var stage = svg.node().closest('.anim-stage');
+            var F = { W: 960, H: 810 };
+            var EDGE = 14;
+
+            function casarPalco() {
+                var r = stage.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
+                svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
+            }
+            function fitOnce(root, staticSel, pad) {
+                root.attr('transform', null);
+                var b = staticSel.node().getBBox();
+                if (!b.width || !b.height) return;
+                var P = pad || 0;
+                var bx = b.x - P, by = b.y - P, bw = b.width + 2 * P, bh = b.height + 2 * P;
+                var tw = F.W - 2 * EDGE, th = F.H - 2 * EDGE;
+                var s = Math.min(tw / bw, th / bh);
+                var tx = EDGE + (tw - bw * s) / 2 - bx * s;
+                var ty = EDGE + (th - bh * s) / 2 - by * s;
+                root.attr('transform', 'translate(' + tx + ',' + ty + ') scale(' + s + ')');
+            }
+
+            var TRAVEL = 1100, PAUSE = 450;
+            var CICLO = (ETAPAS.length - 1) * (TRAVEL + PAUSE) + 1400;
+            /* Regra Zero: a haste se desenha e as etapas pipocam em sequência;
+               só DEPOIS o orbe entra no loop perpétuo */
+            var ENTRADA = 700 + ETAPAS.length * 140;
+
+            function build() {
+                /* cada build ganha uma geração nova; o timer da anterior morre
+                   no próximo tick (usado também para pausar fora da tela) */
+                var gen = window.__animGen[svgId] = (window.__animGen[svgId] || 0) + 1;
+                casarPalco();
+                svg.selectAll('*').interrupt();
+                svg.selectAll('*').remove();
+                var root = svg.append('g');
+                var xs = d3.scalePoint().domain(d3.range(ETAPAS.length)).range([F.W * 0.10, F.W * 0.60]);
+                var ys = d3.scalePoint().domain(d3.range(ETAPAS.length)).range([F.H * 0.06, F.H * 0.94]);
+
+                var hasteG = root.append('g');
+                var pulseLayer = root.append('g');
+                var nodesG = root.append('g');
+                var dynG = root.append('g');
+
+                var hasteLen = Math.hypot(xs(ETAPAS.length - 1) - xs(0), ys(ETAPAS.length - 1) - ys(0));
+                var haste = hasteG.append('line')
+                    .attr('x1', xs(0)).attr('y1', ys(0)).attr('x2', xs(ETAPAS.length - 1)).attr('y2', ys(ETAPAS.length - 1))
+                    .style('stroke', 'var(--mira-card-border)').attr('stroke-width', 3)
+                    .attr('stroke-dasharray', hasteLen).attr('stroke-dashoffset', hasteLen);
+
+                var nos = ETAPAS.map(function (label, i) {
+                    var g = nodesG.append('g').attr('transform', 'translate(' + xs(i) + ',' + ys(i) + ')').attr('opacity', 0);
+                    g.append('circle').attr('r', 52)
+                        .style('fill', 'var(--mira-bg)')
+                        .style('stroke', 'color-mix(in srgb, var(--mira-primary) 55%, transparent)').attr('stroke-width', 4);
+                    g.append('text').text(i + 1)
+                        .attr('text-anchor', 'middle').attr('y', 14)
+                        .attr('font-family', 'Inter, sans-serif').attr('font-size', 40)
+                        .attr('font-weight', 800).style('fill', 'var(--mira-primary)');
+                    g.append('text').text(label)
+                        .attr('x', 84).attr('y', 15).attr('text-anchor', 'start')
+                        .attr('font-family', 'Inter, sans-serif').attr('font-size', 46)
+                        .attr('font-weight', 800).style('fill', 'var(--mira-text)');
+                    return { g: g, circle: g.select('circle'), x: xs(i), y: ys(i), lit: false };
+                });
+
+                var orbeHalo = dynG.append('circle').attr('r', 34)
+                    .attr('cx', xs(0)).attr('cy', ys(0))
+                    .style('fill', 'var(--mira-glow-strong)').attr('opacity', 0);
+                var orbe = dynG.append('circle').attr('r', 18)
+                    .attr('cx', xs(0)).attr('cy', ys(0))
+                    .style('fill', 'var(--mira-primary)').attr('opacity', 0);
+
+                fitOnce(root, nodesG, 72);
+
+                /* coreografia de entrada */
+                haste.transition().duration(600).ease(d3.easeCubicOut).attr('stroke-dashoffset', 0);
+                nos.forEach(function (n, i) {
+                    n.g.transition().delay(260 + i * 140).duration(340).ease(d3.easeCubicOut).attr('opacity', 1);
+                });
+                orbe.transition().delay(ENTRADA - 260).duration(240).attr('opacity', 1);
+                orbeHalo.transition().delay(ENTRADA - 260).duration(240).attr('opacity', 1);
+
+                function pulse(x, y) {
+                    pulseLayer.append('circle')
+                        .attr('cx', x).attr('cy', y).attr('r', 52)
+                        .attr('fill', 'none').style('stroke', 'var(--mira-primary)').attr('stroke-width', 5)
+                        .attr('opacity', .85)
+                        .transition().duration(650).ease(d3.easeCubicOut)
+                        .attr('r', 120).attr('opacity', 0)
+                        .remove();
+                }
+
+                d3.timeout(function () {
+                    if (window.__animGen[svgId] !== gen) return;
+                    var t = d3.timer(function (ms) {
+                        if (window.__animGen[svgId] !== gen) { t.stop(); return; }
+                        try {
+                            var m = ms % CICLO;
+                            var seg = Math.min(Math.floor(m / (TRAVEL + PAUSE)), ETAPAS.length - 2);
+                            var inSeg = m - seg * (TRAVEL + PAUSE);
+                            var x, y;
+                            if (m >= (ETAPAS.length - 1) * (TRAVEL + PAUSE)) {
+                                x = nos[ETAPAS.length - 1].x;
+                                y = nos[ETAPAS.length - 1].y;
+                            } else if (inSeg < TRAVEL) {
+                                var p = d3.easeCubicInOut(inSeg / TRAVEL);
+                                x = nos[seg].x + (nos[seg + 1].x - nos[seg].x) * p;
+                                y = nos[seg].y + (nos[seg + 1].y - nos[seg].y) * p;
+                                nos[seg + 1].lit = false;
+                            } else {
+                                x = nos[seg + 1].x;
+                                y = nos[seg + 1].y;
+                                if (!nos[seg + 1].lit) {
+                                    nos[seg + 1].lit = true;
+                                    pulse(nos[seg + 1].x, nos[seg + 1].y);
+                                    nos[seg + 1].circle.style('stroke', 'var(--mira-primary)').style('fill', 'var(--mira-glow-soft)');
+                                }
+                            }
+                            if (m < 60) nos.forEach(function (n, i) {
+                                if (i > 0) {
+                                    n.lit = false;
+                                    n.circle.style('stroke', 'color-mix(in srgb, var(--mira-primary) 55%, transparent)').style('fill', 'var(--mira-bg)');
+                                }
+                            });
+                            orbe.attr('cx', x).attr('cy', y);
+                            orbeHalo.attr('cx', x).attr('cy', y).attr('r', 34 + 6 * Math.sin(ms / 300));
+                        } catch (e) { }
+                    });
+                }, ENTRADA);
+            }
+
+            /* fora da tela o loop morre; ao entrar, a coreografia toca de novo */
+            var section = stage ? stage.closest('section') : null;
+            if (section && 'IntersectionObserver' in window) {
+                new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        if (en.isIntersecting) build();
+                        else window.__animGen[svgId] = (window.__animGen[svgId] || 0) + 1;
+                    });
+                }, { threshold: 0.35 }).observe(section);
+            } else {
+                build();
+            }
+            window.addEventListener('resize', function () { casarPalco(); });
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { casarPalco(); });
+        }
+
+        function animOrbita(svgId, ROTULOS, CENTRO) {
+            var svg = d3.select('#' + svgId);
+            if (svg.empty()) return;
+            var stage = svg.node().closest('.anim-stage');
+            var F = { W: 960, H: 810 };
+            var EDGE = 14;
+
+            function casarPalco() {
+                var r = stage.getBoundingClientRect();
+                if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
+                svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
+            }
+            function fitOnce(root, staticSel, pad) {
+                root.attr('transform', null);
+                var b = staticSel.node().getBBox();
+                if (!b.width || !b.height) return;
+                var P = pad || 0;
+                var bx = b.x - P, by = b.y - P, bw = b.width + 2 * P, bh = b.height + 2 * P;
+                var tw = F.W - 2 * EDGE, th = F.H - 2 * EDGE;
+                var s = Math.min(tw / bw, th / bh);
+                var tx = EDGE + (tw - bw * s) / 2 - bx * s;
+                var ty = EDGE + (th - bh * s) / 2 - by * s;
+                root.attr('transform', 'translate(' + tx + ',' + ty + ') scale(' + s + ')');
+            }
+
+            var SATS = ROTULOS.map(function (r, k) {
+                return { linhas: [r], phase: 2 * Math.PI * k / ROTULOS.length };
+            });
+            var SAT_R = 72;
+            /* Regra Zero: núcleo cresce, órbita acende e satélites pipocam;
+               só DEPOIS o giro perpétuo */
+            var ENTRADA = 650 + ROTULOS.length * 140;
+
+            function build() {
+                /* cada build ganha uma geração nova; o timer da anterior morre
+                   no próximo tick (usado também para pausar fora da tela) */
+                var gen = window.__animGen[svgId] = (window.__animGen[svgId] || 0) + 1;
+                casarPalco();
+                svg.selectAll('*').interrupt();
+                svg.selectAll('*').remove();
+                var root = svg.append('g');
+                var cx = F.W / 2, cy = F.H / 2;
+                var RX = F.W * 0.36, RY = F.H * 0.36;
+
+                var orbitG = root.append('g');
+                var spokes = root.append('g');
+                var haloG = root.append('g');
+                var coreG = root.append('g');
+                var satsG = root.append('g');
+
+                orbitG.append('ellipse')
+                    .attr('cx', cx).attr('cy', cy)
+                    .attr('rx', RX).attr('ry', RY)
+                    .attr('fill', 'none')
+                    .style('stroke', 'color-mix(in srgb, var(--mira-primary) 35%, transparent)')
+                    .attr('stroke-width', 2)
+                    .attr('stroke-dasharray', '6 10')
+                    .attr('opacity', 0);
+
+                var halo = haloG.append('circle')
+                    .attr('cx', cx).attr('cy', cy).attr('r', 120)
+                    .style('fill', 'var(--mira-glow-strong)')
+                    .attr('opacity', 0);
+                var core = coreG.append('g').attr('transform', 'translate(' + cx + ',' + cy + ') scale(0)');
+                core.append('circle').attr('r', 92).style('fill', 'var(--mira-primary)');
+                core.append('text').text(CENTRO)
+                    .attr('text-anchor', 'middle').attr('y', 8)
+                    .attr('font-family', 'Inter, sans-serif').attr('font-size', 26)
+                    .attr('font-weight', 800).style('fill', 'var(--mira-bg)');
+
+                var sats = SATS.map(function (d) {
+                    var g = satsG.append('g').attr('opacity', 0);
+                    g.append('circle').attr('r', SAT_R)
+                        .style('fill', 'var(--mira-bg)')
+                        .style('stroke', 'var(--mira-primary)').attr('stroke-width', 3);
+                    d.linhas.forEach(function (ln) {
+                        g.append('text').text(ln)
+                            .attr('text-anchor', 'middle')
+                            .attr('y', 8)
+                            .attr('font-family', 'Inter, sans-serif').attr('font-size', 24)
+                            .attr('font-weight', 700).style('fill', 'var(--mira-text)');
+                    });
+                    return { g: g, phase: d.phase };
+                });
+
+                var line = spokes.selectAll('line').data(sats).enter().append('line')
+                    .style('stroke', 'var(--mira-card-border)').attr('stroke-width', 2)
+                    .attr('opacity', 0);
+
+                /* pose inicial = ângulo zero do loop, para a entrada emendar no giro */
+                sats.forEach(function (s) {
+                    s.x = cx + Math.cos(s.phase) * RX;
+                    s.y = cy + Math.sin(s.phase) * RY;
+                    s.g.attr('transform', 'translate(' + s.x + ',' + s.y + ')');
+                });
+                line.attr('x1', cx).attr('y1', cy)
+                    .attr('x2', function (d) { return d.x; })
+                    .attr('y2', function (d) { return d.y; });
+
+                fitOnce(root, orbitG, SAT_R + 12);
+
+                /* coreografia de entrada */
+                core.transition().duration(420).ease(d3.easeBackOut)
+                    .attr('transform', 'translate(' + cx + ',' + cy + ') scale(1)');
+                halo.transition().delay(180).duration(320).attr('opacity', 1);
+                orbitG.select('ellipse').transition().delay(220).duration(360).attr('opacity', 1);
+                sats.forEach(function (s, k) {
+                    s.g.transition().delay(360 + k * 140).duration(320).ease(d3.easeCubicOut).attr('opacity', 1);
+                });
+                line.transition().delay(function (d, k) { return 360 + k * 140; }).duration(320).attr('opacity', 1);
+
+                d3.timeout(function () {
+                    if (window.__animGen[svgId] !== gen) return;
+                    var t = d3.timer(function (ms) {
+                        if (window.__animGen[svgId] !== gen) { t.stop(); return; }
+                        try {
+                            var ang = ms / 1000 * 0.5;
+                            sats.forEach(function (s) {
+                                s.x = cx + Math.cos(ang + s.phase) * RX;
+                                s.y = cy + Math.sin(ang + s.phase) * RY;
+                                s.g.attr('transform', 'translate(' + s.x + ',' + s.y + ')');
+                            });
+                            line.attr('x1', cx).attr('y1', cy)
+                                .attr('x2', function (d) { return d.x; })
+                                .attr('y2', function (d) { return d.y; });
+                            halo.attr('r', 120 + 14 * Math.sin(ms / 450));
+                        } catch (e) { }
+                    });
+                }, ENTRADA);
+            }
+
+            /* fora da tela o loop morre; ao entrar, a coreografia toca de novo */
+            var section = stage ? stage.closest('section') : null;
+            if (section && 'IntersectionObserver' in window) {
+                new IntersectionObserver(function (entries) {
+                    entries.forEach(function (en) {
+                        if (en.isIntersecting) build();
+                        else window.__animGen[svgId] = (window.__animGen[svgId] || 0) + 1;
+                    });
+                }, { threshold: 0.35 }).observe(section);
+            } else {
+                build();
+            }
+            window.addEventListener('resize', function () { casarPalco(); });
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { casarPalco(); });
+        }
+
+        /* ---------- slides nascem do roteiro.md ----------
+           Cada "## Slide N | layout | Título | animação" vira um slide:
+             layout: camera (só você) ou thirds (animação 2/3 + câmera 1/3)
+             Título (thirds): *palavra* vira a cor de destaque
+             animação (thirds): "linha: A, B, C, D" ou "orbita: A, B, C @ NÚCLEO"
+           Layout, título e animação valem ao recarregar; o TEXTO sincroniza ao
+           vivo (bloco do teleprompter). Sem roteiro.md (file:// ou 404), o deck
+           monta os 5 slides padrão abaixo. A busca é síncrona de propósito: os
+           módulos (câmera, gravação, edição) leem as seções logo em seguida. */
+        (function () {
+            var DEFAULT = [
+                { layout: 'camera' },
+                { layout: 'thirds', titulo: 'Linha de *Produção*', anim: { tipo: 'linha', itens: ['CRIAÇÃO', 'GRAVAÇÃO', 'EDIÇÃO', 'FINALIZAÇÃO'] } },
+                { layout: 'thirds', titulo: 'Órbita da *Produção*', anim: { tipo: 'orbita', itens: ['CÂMERA', 'ÁUDIO', 'ROTEIRO'], centro: 'PRODUÇÃO' } },
+                { layout: 'full', titulo: 'Produção ao *Vivo*', anim: { tipo: 'linha', itens: ['TEMA', 'ESTRUTURA', 'CONTEÚDO', 'VISUAL'] } },
+                { layout: 'camera' }
+            ];
+            function parseAnim(s) {
+                var def = { tipo: 'linha', itens: ['CRIAÇÃO', 'GRAVAÇÃO', 'EDIÇÃO', 'FINALIZAÇÃO'] };
+                if (!s) return def;
+                var m = s.match(/^(linha|orbita)\s*:\s*(.+)$/i);
+                if (!m) return def;
+                var resto = m[2], centro = '';
+                if (resto.indexOf('@') !== -1) {
+                    var ab = resto.split('@');
+                    resto = ab[0];
+                    centro = (ab[1] || '').trim();
+                }
+                var itens = resto.split(',').map(function (x) { return x.trim(); }).filter(Boolean);
+                if (m[1].toLowerCase() === 'orbita') {
+                    return itens.length ? { tipo: 'orbita', itens: itens, centro: centro || 'NÚCLEO' } : def;
+                }
+                return itens.length >= 2 ? { tipo: 'linha', itens: itens } : def;
+            }
+            function parseMd(t) {
+                var re = /^(##\s*Slide[^\n]*)$/gm, m, list = [];
+                while ((m = re.exec(t))) list.push({ hdr: m[1], at: m.index });
+                if (!list.length) return null;
+                window.__miraMdIntro = t.slice(0, list[0].at);
+                var hdrs = [], out = [];
+                list.forEach(function (h) {
+                    var partes = h.hdr.replace(/^##\s*/, '').split('|').map(function (s) { return s.trim(); });
+                    var lraw = (partes[1] || 'camera').toLowerCase();
+                    var layout = (lraw === 'thirds' || lraw === 'full') ? lraw : 'camera';
+                    var slide = { layout: layout };
+                    if (layout !== 'camera') {
+                        slide.titulo = partes[2] || 'Slide';
+                        slide.anim = parseAnim(partes[3]);
+                    }
+                    hdrs.push(h.hdr);
+                    out.push(slide);
+                });
+                window.__miraMdHeaders = hdrs;
+                return out;
+            }
+            function tituloFrag(t) {
+                var frag = document.createDocumentFragment();
+                String(t).split(/\*([^*]+)\*/).forEach(function (parte, i) {
+                    if (!parte) return;
+                    if (i % 2) {
+                        var sp = document.createElement('span');
+                        sp.className = 'accent';
+                        sp.textContent = parte;
+                        frag.appendChild(sp);
+                    } else {
+                        frag.appendChild(document.createTextNode(parte));
+                    }
+                });
+                return frag;
+            }
+            var spec = null;
+            if (location.protocol === 'http:' || location.protocol === 'https:') {
+                try {
+                    var x = new XMLHttpRequest();
+                    x.open('GET', '/roteiro.md', false);
+                    x.send();
+                    if (x.status === 200 && x.responseText) {
+                        window.__miraMdText = x.responseText;
+                        spec = parseMd(x.responseText);
+                    }
+                } catch (e) { spec = null; }
+            }
+            var slides = spec || DEFAULT;
+            /* remonta as seções (as estáticas do HTML são só fallback sem JS) */
+            document.querySelectorAll('body > section').forEach(function (s) { s.remove(); });
+            var anchor = document.getElementById('mira-prompter');
+            slides.forEach(function (sl, i) {
+                var sec = document.createElement('section');
+                sec.setAttribute('data-layout', sl.layout);
+                if (sl.layout !== 'camera') {
+                    var main = document.createElement('div');
+                    main.className = sl.layout === 'full' ? 'full-main' : 'thirds-main';
+                    var h2 = document.createElement('h2');
+                    h2.appendChild(tituloFrag(sl.titulo));
+                    var stage = document.createElement('div');
+                    stage.className = 'anim-stage';
+                    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.id = 'sv-slide-' + (i + 1);
+                    svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
+                    stage.appendChild(svg);
+                    main.appendChild(h2);
+                    main.appendChild(stage);
+                    sec.appendChild(main);
+                }
+                if (sl.layout !== 'full') {
+                    var cam = document.createElement('div');
+                    cam.className = 'cam-area';
+                    sec.appendChild(cam);
+                }
+                document.body.insertBefore(sec, anchor);
+            });
+            slides.forEach(function (sl, i) {
+                if (sl.layout === 'camera') return;
+                if (sl.anim.tipo === 'orbita') animOrbita('sv-slide-' + (i + 1), sl.anim.itens, sl.anim.centro);
+                else animLinha('sv-slide-' + (i + 1), sl.anim.itens);
+            });
+        })();
+
+        /* Auto-ajuste de título */
+        (function () {
+            var MAX_LINES = 2, MIN_FONT = 18;
+            function fitTitles() {
+                document.querySelectorAll('body > section h2').forEach(function (h2) {
+                    h2.style.removeProperty('font-size');
+                    var font = parseFloat(getComputedStyle(h2).fontSize), guard = 0;
+                    while (h2.scrollHeight > parseFloat(getComputedStyle(h2).lineHeight) * MAX_LINES + 2 && font > MIN_FONT && guard < 90) {
+                        font -= 1; h2.style.setProperty('font-size', font + 'px', 'important'); guard++;
+                    }
+                });
+            }
+            window.addEventListener('load', fitTitles);
+            if (document.fonts && document.fonts.ready) document.fonts.ready.then(fitTitles);
+            window.addEventListener('resize', function () { clearTimeout(window.__fitT); window.__fitT = setTimeout(fitTitles, 150); });
+        })();
+
+        /* Navegação */
+        (function () {
+            var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+            function current() {
+                /* com os slides centrados (margem de letterbox), o critério é o
+                   slide cujo topo já passou do MEIO da janela */
+                var best = 0, mid = window.scrollY + window.innerHeight * 0.5;
+                for (var i = 0; i < secs.length; i++) if (secs[i].offsetTop <= mid) best = i;
+                return best;
+            }
+            function dissolve(jump) {
+                if (document.documentElement.hasAttribute('data-mira-recording')) { jump(); return; }
+                if (document.startViewTransition) document.startViewTransition(jump); else jump();
+            }
+            function go(d) {
+                var from = current();
+                var i = Math.max(0, Math.min(secs.length - 1, from + d));
+                if (i === from) return;
+                try { window.dispatchEvent(new CustomEvent('mira-navigation', {
+                    detail: { from: from, to: i, at: performance.now() }
+                })); } catch (e) { }
+                dissolve(function () { secs[i].scrollIntoView({ behavior: 'instant', block: 'start' }); });
+            }
+            document.addEventListener('keydown', function (e) {
+                if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
+                var t = e.target;
+                if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); go(1); }
+                else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); go(-1); }
+            });
+        })();
+
+        /* Desenho por slide: a caneta (P) desenha sobre o slide ATUAL; ao trocar
+           de slide os traços saem junto e voltam quando o slide volta. Usa a API
+           pública do mira-draw (getShapes/setShapes). No palco do mira-remote o
+           desenho é da shell (modelo global sincronizado), então aqui não mexe. */
+        (function () {
+            var porSlide = {}, atual = -1;
+            function current() {
+                var secs = document.querySelectorAll('body > section');
+                var best = 0, mid = window.scrollY + window.innerHeight * 0.5;
+                for (var i = 0; i < secs.length; i++) if (secs[i].offsetTop <= mid) best = i;
+                return best;
+            }
+            function sync() {
+                if (window.__MIRA_REMOTE_STAGE__) return;
+                var md = window.miraDraw;
+                if (!md || !md.getShapes || !md.setShapes) return;
+                var i = current();
+                if (i === atual) return;
+                if (atual >= 0) porSlide[atual] = md.getShapes();
+                atual = i;
+                md.setShapes(porSlide[i] || []);
+            }
+            window.addEventListener('load', function () { atual = current(); });
+            window.addEventListener('scroll', sync, { passive: true });
+            window.addEventListener('mira-navigation', function () { setTimeout(sync, 60); });
+        })();
+
+        /* Cheat-sheet de atalhos: tecla ? abre/fecha, Esc ou clique fecha */
+        (function () {
+            var el = document.getElementById('mira-keys');
+            if (!el) return;
+            document.addEventListener('keydown', function (e) {
+                var t = e.target;
+                if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
+                if (e.key === '?') { e.preventDefault(); el.classList.toggle('off'); }
+                else if (e.key === 'Escape' && !el.classList.contains('off')) { e.preventDefault(); el.classList.add('off'); }
+            });
+            el.addEventListener('click', function () { el.classList.add('off'); });
+        })();
+
+        /* Teleprompter */
+        (function () {
+            var panel = document.getElementById('mira-prompter');
+            if (!panel) return;
+            var body = document.getElementById('mp-body');
+            var num = document.getElementById('mp-num');
+            var tot = document.getElementById('mp-tot');
+
+            /* fallback quando não há estado nem roteiro.md: espelha o roteiro atual */
+            var SCRIPT = [
+                'Abertura direto na câmera: você em tela cheia, falando com a lente.',
+                'No layout de terços, a animação ocupa os dois terços da esquerda e você aparece ao vivo no terço direito.',
+                'Cada satélite é uma etapa orbitando o núcleo. Edite esta fala no painel do roteiro ou direto no roteiro.md.',
+                'Este é o layout full: só animação, ocupando o quadro inteiro, sem câmera.',
+                'Encerramento direto na câmera. Tecla R grava e o MP4 sai em 1920x1080.'
+            ];
+
+            var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+            var cur = -1;
+            if (tot) tot.textContent = secs.length;
+            function current() {
+                var best = 0, mid = window.scrollY + window.innerHeight * 0.5;
+                for (var i = 0; i < secs.length; i++) if (secs[i].offsetTop <= mid) best = i;
+                return best;
+            }
+
+            var ovBody = document.getElementById('tp-ov-body');
+            var box = document.getElementById('tp-ov');
+            var wrap = document.getElementById('tp-ov-wrap');
+            var grip = document.querySelector('#tp-ov .tp-ov-grip');
+            if (typeof window.__miraElemCapture === 'undefined') window.__miraElemCapture = true;
+
+            var TXTKEY = 'mira-tp-text';
+            var txt = {};
+            try { txt = JSON.parse(localStorage.getItem(TXTKEY) || '{}') || {}; } catch (e) { txt = {}; }
+            function curText(i) { return (txt[i] != null) ? txt[i] : (SCRIPT[i] || ''); }
+            function saveText() { try { localStorage.setItem(TXTKEY, JSON.stringify(txt)); } catch (e) { } }
+
+            var POSKEY = 'mira-tp-ov-pos';
+            var pos = {};
+            try { pos = JSON.parse(localStorage.getItem(POSKEY) || '{}') || {}; } catch (e) { pos = {}; }
+            /* padrão do deck (definido pelo sandeco): caixa 621x454, texto 34px */
+            function curPos() { var p = pos[cur < 0 ? 0 : cur]; return p || { x: 1, y: -23, s: 1, w: 621, h: 454, fs: 34 }; }
+            function applyPos() {
+                var p = curPos();
+                if (!box) return;
+                box.style.transform = 'translate(' + p.x + 'px,' + p.y + 'px) scale(' + p.s + ')';
+                /* w/h em px por slide; 0 ou ausente = tamanho automático original */
+                box.style.width = p.w ? p.w + 'px' : '';
+                if (p.h) { box.style.height = p.h + 'px'; box.style.maxHeight = 'none'; }
+                else { box.style.height = ''; box.style.maxHeight = ''; }
+                /* fs = tamanho do texto por slide, controlado no painel de roteiro */
+                if (ovBody) ovBody.style.fontSize = p.fs ? p.fs + 'px' : '';
+            }
+            function setPos(p) { pos[cur < 0 ? 0 : cur] = p; try { localStorage.setItem(POSKEY, JSON.stringify(pos)); } catch (e) { } }
+
+            /* tamanho do texto do overlay: slider no painel de roteiro, por slide */
+            var fsSlider = document.getElementById('mp-fs');
+            var fsVal = document.getElementById('mp-fs-val');
+            var fsAuto = document.getElementById('mp-fs-auto');
+            function syncFs() {
+                if (!fsSlider) return;
+                var p = curPos();
+                if (p.fs) { fsSlider.value = p.fs; if (fsVal) fsVal.textContent = p.fs + 'px'; }
+                else {
+                    var px = ovBody ? Math.round(parseFloat(getComputedStyle(ovBody).fontSize) || 28) : 28;
+                    fsSlider.value = px;
+                    if (fsVal) fsVal.textContent = 'auto';
+                }
+            }
+            if (fsSlider) fsSlider.addEventListener('input', function () {
+                var p = curPos();
+                setPos({ x: p.x, y: p.y, s: p.s, w: p.w || 0, h: p.h || 0, fs: +fsSlider.value });
+                applyPos();
+                if (fsVal) fsVal.textContent = fsSlider.value + 'px';
+            });
+            if (fsAuto) fsAuto.addEventListener('click', function () {
+                var p = curPos();
+                /* "padrão" = o padrão do deck (34px), não o automático do CSS */
+                setPos({ x: p.x, y: p.y, s: p.s, w: p.w || 0, h: p.h || 0, fs: 34 });
+                applyPos();
+                syncFs();
+            });
+
+            /* ---------- rolagem automática do overlay (teleprompter) ----------
+               L liga/pausa (P é da caneta do mira-draw); + e - ajustam a
+           velocidade (persistida). A cada
+               troca de slide volta ao topo e espera ~1s antes de rolar. O
+               degradê .tp-ov-more indica que há mais texto abaixo do corte. */
+            var SCROLLKEY = 'mira-tp-scroll';
+            var scr = { on: false, v: 40 };
+            try { var sv = JSON.parse(localStorage.getItem(SCROLLKEY) || '{}'); if (sv && sv.v) scr.v = sv.v; } catch (e) { }
+            var scrPrev = 0, scrHold = 0;
+            var ovMore = document.querySelector('#tp-ov .tp-ov-more');
+            var toastEl = document.getElementById('tp-toast');
+            var toastT = 0;
+            function toast(msg) {
+                if (!toastEl) return;
+                toastEl.textContent = msg;
+                toastEl.classList.add('on');
+                clearTimeout(toastT);
+                toastT = setTimeout(function () { toastEl.classList.remove('on'); }, 1400);
+            }
+            function scrSave() { try { localStorage.setItem(SCROLLKEY, JSON.stringify({ v: scr.v })); } catch (e) { } }
+            function scrHint() {
+                if (!ovMore || !ovBody) return;
+                var resto = ovBody.scrollHeight - ovBody.scrollTop - ovBody.clientHeight;
+                ovMore.style.opacity = resto > 8 ? 1 : 0;
+            }
+            function scrTick(ts) {
+                requestAnimationFrame(scrTick);
+                if (!scrPrev) { scrPrev = ts; return; }
+                var dt = Math.min((ts - scrPrev) / 1000, 0.1);
+                scrPrev = ts;
+                if (!scr.on || !ovBody || ts < scrHold) return;
+                ovBody.scrollTop += scr.v * dt;
+                scrHint();
+            }
+            requestAnimationFrame(scrTick);
+            function scrToggle() {
+                scr.on = !scr.on;
+                if (scr.on && ovBody) scrHold = performance.now() + 300;
+                toast(scr.on ? 'Rolagem ligada · ' + Math.round(scr.v) + ' px/s' : 'Rolagem pausada');
+            }
+            function scrSpeed(d) {
+                scr.v = Math.max(10, Math.min(200, scr.v + d));
+                scrSave();
+                toast('Velocidade: ' + Math.round(scr.v) + ' px/s');
+            }
+
+            /* ---------- roteiro.md: fonte externa dos textos ----------
+               Servido pelo launcher (localhost): o roteiro.md abastece painel e
+               overlay; editar no painel grava de volta no .md (debounce), e
+               editar o .md reflete aqui em ~1,5s. Em file:// (sem servidor) o
+               deck segue com o estado interno, sem sincronizar. */
+            var MD_PATH = '/roteiro.md';
+            var mdHttp = location.protocol === 'http:' || location.protocol === 'https:';
+            var mdLast = null, mdPushTimer = null, mdSaving = false;
+            function mdBuild() {
+                /* preserva a intro e os cabeçalhos (layout | título | animação)
+                   capturados pelo builder no load: o push só troca os TEXTOS */
+                var hdrs = window.__miraMdHeaders || [];
+                var out = window.__miraMdIntro || '# Roteiro · Mira Studio 16:9\n\n';
+                for (var i = 0; i < secs.length; i++) out += (hdrs[i] || ('## Slide ' + (i + 1))) + '\n\n' + (curText(i) || '').trim() + '\n\n';
+                return out;
+            }
+            function mdParse(t) {
+                /* mapeia por ORDEM de aparição, igual ao builder dos slides:
+                   o número escrito no cabeçalho é só rótulo. Assim numeração
+                   duplicada ou fora de ordem não desloca os textos. */
+                var map = {}, re = /^##\s*Slide[^\n]*$/gm, m, list = [];
+                while ((m = re.exec(t))) list.push({ start: m.index, at: m.index + m[0].length });
+                for (var k = 0; k < list.length; k++) {
+                    var end = (k + 1 < list.length) ? list[k + 1].start : t.length;
+                    map[k] = t.slice(list[k].at, end).trim();
+                }
+                return map;
+            }
+            function mdApply(t) {
+                var map = mdParse(t), i = cur < 0 ? 0 : cur, mudou = false;
+                Object.keys(map).forEach(function (k) {
+                    if ((curText(+k) || '').trim() !== map[k]) { txt[+k] = map[k]; mudou = true; }
+                });
+                if (!mudou) return;
+                saveText();
+                var tx = curText(i);
+                /* não sobrescreve o painel enquanto você digita nele */
+                if (document.activeElement !== body) body.textContent = tx;
+                if (ovBody) ovBody.textContent = tx;
+            }
+            function mdPush() {
+                if (!mdHttp) return;
+                var content = mdBuild();
+                if (content === mdLast) return;
+                mdSaving = true;
+                fetch('/__mira_save', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ path: MD_PATH, content: content })
+                }).then(function (r) { if (r.ok) mdLast = content; })
+                    .catch(function () { })
+                    .then(function () { mdSaving = false; });
+            }
+            function mdPoll() {
+                if (!mdHttp || mdSaving) return;
+                if (document.documentElement.hasAttribute('data-mira-recording')) return;
+                fetch(MD_PATH, { cache: 'no-store' }).then(function (r) {
+                    /* sem arquivo ainda: cria a partir dos textos atuais */
+                    if (r.status === 404) { if (mdLast === null) { mdLast = ''; mdPush(); } return null; }
+                    return r.ok ? r.text() : null;
+                }).then(function (t) {
+                    if (t == null || t === mdLast) return;
+                    mdLast = t;
+                    mdApply(t);
+                }).catch(function () { });
+            }
+            /* o builder já buscou o roteiro.md no load: aplica sem esperar o poll */
+            if (mdHttp && window.__miraMdText) { mdLast = window.__miraMdText; mdApply(window.__miraMdText); }
+            if (mdHttp) { mdPoll(); setInterval(mdPoll, 1500); }
+
+            function render() {
+                var i = current();
+                if (i !== cur) {
+                    cur = i;
+                    num.textContent = (i + 1);
+                    var tx = curText(i);
+                    body.textContent = tx;
+                    body.scrollTop = 0;
+                    if (ovBody) {
+                        ovBody.textContent = tx;
+                        ovBody.scrollTop = 0;
+                        scrHold = performance.now() + 900;
+                        scrHint();
+                    }
+                }
+                applyPos();
+                syncFs();
+            }
+            window.addEventListener('scroll', render, { passive: true });
+            window.addEventListener('mira-navigation', function () { setTimeout(render, 60); });
+            window.addEventListener('load', render);
+            render();
+
+            body.addEventListener('input', function () {
+                var i = cur < 0 ? 0 : cur;
+                txt[i] = body.innerText;
+                saveText();
+                if (ovBody) { ovBody.textContent = txt[i]; scrHint(); }
+                /* reflete no roteiro.md quando a digitação dá uma pausa */
+                clearTimeout(mdPushTimer);
+                mdPushTimer = setTimeout(mdPush, 800);
+            });
+
+            function inEdit() { return document.body.classList.contains('me-on'); }
+            var drag = null;
+            function onDown(e, mode) {
+                if (!inEdit()) return;
+                e.preventDefault(); e.stopPropagation();
+                var p = curPos();
+                /* pw/ph = valor SALVO (0 = automático, preservado no move/escala);
+                   bw/bh = tamanho renderizado, base do arrasto das alças */
+                drag = { mode: mode, sx: e.clientX, sy: e.clientY, x: p.x, y: p.y, s: p.s, fs: p.fs || 0,
+                    pw: p.w || 0, ph: p.h || 0,
+                    bw: p.w || (box ? box.offsetWidth : 300), bh: p.h || (box ? box.offsetHeight : 120) };
+                document.addEventListener('mousemove', onMove, true);
+                document.addEventListener('mouseup', onUp, true);
+            }
+            function onMove(e) {
+                if (!drag) return;
+                e.preventDefault();
+                if (drag.mode === 'move') {
+                    setPos({ x: drag.x + (e.clientX - drag.sx), y: drag.y + (e.clientY - drag.sy), s: drag.s, w: drag.pw, h: drag.ph, fs: drag.fs });
+                } else if (drag.mode === 'w') {
+                    /* caixa ancorada no centro: a borda anda metade do delta, daí o fator 2 */
+                    var nw = drag.bw + 2 * (e.clientX - drag.sx) / (drag.s || 1);
+                    nw = Math.max(220, Math.min(window.innerWidth * 2, Math.round(nw)));
+                    setPos({ x: drag.x, y: drag.y, s: drag.s, w: nw, h: drag.ph, fs: drag.fs });
+                } else if (drag.mode === 'h') {
+                    var nh = drag.bh + 2 * (e.clientY - drag.sy) / (drag.s || 1);
+                    nh = Math.max(70, Math.min(window.innerHeight * 2, Math.round(nh)));
+                    setPos({ x: drag.x, y: drag.y, s: drag.s, w: drag.pw, h: nh, fs: drag.fs });
+                } else {
+                    /* canto: largura e altura juntas (a caixa, não o texto) */
+                    var nw2 = drag.bw + 2 * (e.clientX - drag.sx) / (drag.s || 1);
+                    var nh2 = drag.bh + 2 * (e.clientY - drag.sy) / (drag.s || 1);
+                    nw2 = Math.max(220, Math.min(window.innerWidth * 2, Math.round(nw2)));
+                    nh2 = Math.max(70, Math.min(window.innerHeight * 2, Math.round(nh2)));
+                    setPos({ x: drag.x, y: drag.y, s: drag.s, w: nw2, h: nh2, fs: drag.fs });
+                }
+                applyPos();
+            }
+            function onUp() {
+                drag = null;
+                document.removeEventListener('mousemove', onMove, true);
+                document.removeEventListener('mouseup', onUp, true);
+            }
+            if (box) box.addEventListener('mousedown', function (e) {
+                if (e.target && e.target.hasAttribute && e.target.hasAttribute('data-me-chrome')) return;
+                onDown(e, 'move');
+            });
+            if (grip) grip.addEventListener('mousedown', function (e) { onDown(e, 'resize'); });
+            var edgeR = document.querySelector('#tp-ov .tp-ov-edge-r');
+            var edgeB = document.querySelector('#tp-ov .tp-ov-edge-b');
+            if (edgeR) edgeR.addEventListener('mousedown', function (e) { onDown(e, 'w'); });
+            if (edgeB) edgeB.addEventListener('mousedown', function (e) { onDown(e, 'h'); });
+
+            function sideOn() { return !panel.classList.contains('off'); }
+            function ovOn() { return wrap && !wrap.classList.contains('off'); }
+            function ecOn() { return !!window.__miraElemCapture; }
+            function editOn() { return document.body.classList.contains('me-on'); }
+            var sws = {};
+            Array.prototype.forEach.call(panel.querySelectorAll('.mp-sw'), function (el) { sws[el.getAttribute('data-sw')] = el; });
+            function syncSwitches() {
+                if (sws.side) sws.side.classList.toggle('on', sideOn());
+                if (sws.ov) sws.ov.classList.toggle('on', ovOn());
+                if (sws.ec) sws.ec.classList.toggle('on', ecOn());
+                if (sws.edit) sws.edit.classList.toggle('on', editOn());
+            }
+            function toggleSide() { panel.classList.toggle('off'); syncSwitches(); }
+            function toggleOv() { if (wrap) wrap.classList.toggle('off'); syncSwitches(); }
+            function toggleEC() { window.__miraElemCapture = !window.__miraElemCapture; syncSwitches(); }
+            function toggleEdit() { document.dispatchEvent(new KeyboardEvent('keydown', { key: 'e', bubbles: true })); setTimeout(syncSwitches, 30); }
+            if (sws.side) sws.side.addEventListener('click', toggleSide);
+            if (sws.ov) sws.ov.addEventListener('click', toggleOv);
+            if (sws.ec) sws.ec.addEventListener('click', toggleEC);
+            if (sws.edit) sws.edit.addEventListener('click', toggleEdit);
+            try { new MutationObserver(syncSwitches).observe(document.body, { attributes: true, attributeFilter: ['class'] }); } catch (e) { }
+            syncSwitches();
+
+            document.addEventListener('keydown', function (e) {
+                var t = e.target;
+                if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
+                if (e.ctrlKey || e.metaKey || e.altKey) return;
+                if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
+                if (e.key === 't' || e.key === 'T') { e.preventDefault(); toggleSide(); }
+                else if ((e.key === 'o' || e.key === 'O') && wrap) { e.preventDefault(); toggleOv(); }
+                else if (e.key === 'g' || e.key === 'G') { e.preventDefault(); toggleEC(); }
+                else if (e.key === 'l' || e.key === 'L') { e.preventDefault(); scrToggle(); }
+                else if (e.key === '+' || e.key === '=') { e.preventDefault(); scrSpeed(10); }
+                else if (e.key === '-' || e.key === '_') { e.preventDefault(); scrSpeed(-10); }
+            });
+        })();
+
+        /* Editor genérico de overlays + Salvar */
+        (function () {
+            function attach(el, key) {
+                if (!el || !key) return;
+                var grip = el.querySelector('.me-ov-grip');
+                if (!grip) {
+                    grip = document.createElement('div');
+                    grip.className = 'me-ov-grip';
+                    grip.setAttribute('data-me-chrome', '');
+                    el.appendChild(grip);
+                }
+                var st = {};
+                try { st = JSON.parse(localStorage.getItem(key) || '{}') || {}; } catch (e) { st = {}; }
+                function apply() { el.style.transform = 'translate(' + (st.x || 0) + 'px,' + (st.y || 0) + 'px) scale(' + (st.s || 1) + ')'; }
+                function save() { try { localStorage.setItem(key, JSON.stringify(st)); } catch (e) { } }
+                apply();
+                var drag = null;
+                function down(e, mode) {
+                    if (!document.body.classList.contains('me-on')) return;
+                    e.preventDefault(); e.stopPropagation();
+                    drag = { mode: mode, sx: e.clientX, sy: e.clientY, x: st.x || 0, y: st.y || 0, s: st.s || 1 };
+                    document.addEventListener('mousemove', move, true);
+                    document.addEventListener('mouseup', up, true);
+                }
+                function move(e) {
+                    if (!drag) return;
+                    e.preventDefault();
+                    if (drag.mode === 'move') { st.x = drag.x + (e.clientX - drag.sx); st.y = drag.y + (e.clientY - drag.sy); }
+                    else { var d = (e.clientX - drag.sx) + (e.clientY - drag.sy); st.s = Math.max(0.3, Math.min(3, drag.s + d / 300)); }
+                    apply();
+                }
+                function up() {
+                    drag = null; save();
+                    document.removeEventListener('mousemove', move, true);
+                    document.removeEventListener('mouseup', up, true);
+                }
+                el.addEventListener('mousedown', function (e) { if (grip.contains(e.target)) return; down(e, 'move'); });
+                grip.addEventListener('mousedown', function (e) { down(e, 'resize'); });
+            }
+            Array.prototype.forEach.call(document.querySelectorAll('.me-ov[data-me-key]'), function (el) {
+                attach(el, el.getAttribute('data-me-key'));
+            });
+
+            function collectState() {
+                var keys = ['mira-tp-text', 'mira-tp-ov-pos'];
+                Array.prototype.forEach.call(document.querySelectorAll('.me-ov[data-me-key]'), function (el) {
+                    keys.push(el.getAttribute('data-me-key'));
+                });
+                var state = {};
+                keys.forEach(function (k) {
+                    var v = localStorage.getItem(k);
+                    if (v != null) { try { state[k] = JSON.parse(v); } catch (e) { } }
+                });
+                return state;
+            }
+            var btn = document.getElementById('mp-save');
+            var hint = document.getElementById('mp-save-hint');
+            var HINT = 'Modo E no overlay: arraste para mover; alças laranja mudam largura/altura da caixa. Tamanho do texto: slider acima. Salvar (ou Ctrl+S) grava tudo no arquivo do deck.';
+            function say(msg, ok) {
+                if (hint) hint.textContent = msg;
+                if (btn) { btn.classList.toggle('ok', !!ok); btn.textContent = ok ? 'Salvo ✓' : 'Salvar no arquivo'; }
+            }
+            async function saveToFile() {
+                var state = collectState();
+                var json = JSON.stringify(state).replace(/</g, '\\u003c');
+                var count = Object.keys(state).length;
+                var re = /(<script id="mira-studio-state"[^>]*>)([\s\S]*?)(<\/script>)/;
+                var isHttp = location.protocol === 'http:' || location.protocol === 'https:';
+                try {
+                    if (isHttp) {
+                        var relPath = (location.pathname && location.pathname !== '/') ? location.pathname : '/index-16x9.html';
+                        var cur = await fetch(relPath, { cache: 'no-store' });
+                        if (!cur.ok) throw new Error('não li o arquivo (HTTP ' + cur.status + ')');
+                        var text = await cur.text();
+                        if (!re.test(text)) throw new Error('bloco de estado não encontrado');
+                        text = text.replace(re, function (m, p1, p2, p3) { return p1 + json + p3; });
+                        var saved = await fetch('/__mira_save', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ path: relPath, content: text })
+                        });
+                        if (!saved.ok) throw new Error('servidor recusou (HTTP ' + saved.status + '). Reinicie o launcher: os endpoints são novos.');
+                        say('Salvo no arquivo (' + count + ' itens). Pode recarregar.', true);
+                    } else {
+                        if (!window.showOpenFilePicker) { say('Sirva o deck em localhost para salvar (ou use Chrome/Edge).', false); return; }
+                        var handle = window.__miraStateHandle;
+                        if (!handle) {
+                            var picks = await window.showOpenFilePicker({ types: [{ description: 'HTML do deck', accept: { 'text/html': ['.html', '.htm'] } }] });
+                            handle = picks[0]; window.__miraStateHandle = handle;
+                        }
+                        if (handle.queryPermission) {
+                            var perm = await handle.queryPermission({ mode: 'readwrite' });
+                            if (perm !== 'granted' && handle.requestPermission) perm = await handle.requestPermission({ mode: 'readwrite' });
+                            if (perm !== 'granted') { say('Permissão de escrita negada.', false); window.__miraStateHandle = null; return; }
+                        }
+                        var file = await handle.getFile();
+                        var t2 = await file.text();
+                        if (!re.test(t2)) { say('Escolha o index-16x9.html deste deck.', false); window.__miraStateHandle = null; return; }
+                        t2 = t2.replace(re, function (m, p1, p2, p3) { return p1 + json + p3; });
+                        var w = await handle.createWritable();
+                        await w.write(t2);
+                        await w.close();
+                        say('Salvo no arquivo (' + count + ' itens). Pode recarregar.', true);
+                    }
+                    setTimeout(function () { say(HINT, false); }, 4000);
+                } catch (e) {
+                    if (e && e.name === 'AbortError') return;
+                    try { console.error('[Mira Studio] salvar:', e); } catch (x) { }
+                    say('Falha ao salvar: ' + (e && (e.name + ' ' + e.message) || e), false);
+                    window.__miraStateHandle = null;
+                }
+            }
+            if (btn) btn.addEventListener('click', saveToFile);
+            document.addEventListener('keydown', function (e) {
+                if ((e.ctrlKey || e.metaKey) && (e.key === 's' || e.key === 'S')) { e.preventDefault(); saveToFile(); }
+            });
+        })();
+    </script>
+
+    <!-- Módulos Mira -->
+    <script defer src="mira/mira-edit.js"></script>
+    <script defer src="mira/mira-edit-free.js"></script>
+    <script defer src="mira/mira-draw.js"></script>
+    <script defer src="mira/mira-camera.js"></script>
+    <script defer src="mira/mira-record-16x9.js"></script>
+</body>
+</html>

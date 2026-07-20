@@ -36,7 +36,8 @@ const MIME = {
     '.gif': 'image/gif', '.svg': 'image/svg+xml', '.webp': 'image/webp',
     '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2',
     '.ttf': 'font/ttf', '.glb': 'model/gltf-binary', '.mp4': 'video/mp4',
-    '.webm': 'video/webm', '.mp3': 'audio/mpeg', '.pdf': 'application/pdf'
+    '.webm': 'video/webm', '.mp3': 'audio/mpeg', '.pdf': 'application/pdf',
+    '.md': 'text/markdown; charset=utf-8'
 };
 
 /* limite de uma gravação de deck: o index.html mais pesado não chega perto */
@@ -155,7 +156,7 @@ const server = http.createServer(function (req, res) {
 
     /* caminho absoluto do alvo de gravação (o mira-edit usa para o rótulo da barra) */
     if (url === '/__mira_meta') {
-        let rel = '/index.html';
+        let rel = process.env.MIRA_STUDIO_PAGE || '/index.html';
         try { rel = new URL(req.url, 'http://x').searchParams.get('path') || rel; } catch (e) { }
         const abs = resolveInRoot(rel);
         if (!abs) { json(res, 403, { error: 'fora do root' }); return; }
@@ -197,7 +198,7 @@ const server = http.createServer(function (req, res) {
         return;
     }
 
-    if (url === '/') url = '/index.html';
+    if (url === '/') url = process.env.MIRA_STUDIO_PAGE || '/index.html';
     const file = resolveInRoot(url);
     if (!file) { res.writeHead(403); res.end(); return; }
     fs.readFile(file, function (err, data) {
@@ -209,6 +210,9 @@ const server = http.createServer(function (req, res) {
 
 function chromeCandidates() {
     if (process.env.MIRA_STUDIO_CHROME) return [process.env.MIRA_STUDIO_CHROME];
+    if (process.platform === 'darwin') {
+        return ['/Applications/Google Chrome.app/Contents/MacOS/Google Chrome'];
+    }
     if (process.platform !== 'win32') return [];
     return [
         process.env.ProgramFiles && path.join(process.env.ProgramFiles, 'Google', 'Chrome', 'Application', 'chrome.exe'),
@@ -225,7 +229,9 @@ function openStudio(url) {
         return;
     }
     const args = [
-        '--no-first-run', '--no-default-browser-check', '--start-maximized', '--new-window',
+        '--no-first-run', '--no-default-browser-check', '--new-window',
+        /* tela cheia opcional (launchers de gravação, ex. o 16:9): F11 já na abertura */
+        process.env.MIRA_STUDIO_FULLSCREEN ? '--start-fullscreen' : '--start-maximized',
         '--force-high-performance-gpu'
     ];
     if (PROFILE) args.unshift('--user-data-dir=' + PROFILE);
@@ -264,7 +270,8 @@ function listen(port, triesLeft) {
         log('  servidor pronto; Ctrl+C encerra.');
         log('  GPU dedicada é preferência do Chrome/Windows; o painel mostra o renderer realmente ativo.');
         log('');
-        openStudio(url);
+        /* página inicial opcional (launchers alternativos, ex. o deck 16:9) */
+        openStudio(url + String(process.env.MIRA_STUDIO_PAGE || '').replace(/^\//, ''));
     };
     const onError = function (err) {
         /* Um callback passado diretamente a server.listen() sobrevive ao

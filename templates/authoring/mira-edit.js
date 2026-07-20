@@ -543,7 +543,7 @@
         });
         document.addEventListener('keydown', function (e) {
             if (isTyping(e.target)) return;
-            if (e.key === 'e' || e.key === 'E') { e.preventDefault(); toggle(!editing); }
+            if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); toggle(!editing); }
             if (e.key === 'Escape' && editing) { toggle(false); }
         });
         window.addEventListener('beforeunload', function (e) {

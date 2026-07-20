@@ -27,13 +27,16 @@ const path = require('path');
 const os = require('os');
 const { exec } = require('child_process');
 
-// A pasta do deck (a que tem o index.html). O servidor vive em <deck>/mira/;
-// se for uma cópia antiga na raiz do deck, __dirname já é a pasta certa.
-const ROOT = fs.existsSync(path.join(__dirname, 'index.html'))
+// A pasta do deck (a que tem o index.html ou index-16x9.html). O servidor vive em
+// <deck>/mira/; se for uma cópia antiga na raiz do deck, __dirname já é a
+// pasta certa.
+const ROOT = (fs.existsSync(path.join(__dirname, 'index.html')) || fs.existsSync(path.join(__dirname, 'index-16x9.html')))
   ? __dirname
   : path.resolve(__dirname, '..');
 const BASE_PORT = Number(process.env.PORT) || 3000;
 const PORT_TRIES = 10;                      // 3000..3009 (RF-11)
+/* limite de uma gravação de deck: o HTML mais pesado não chega perto */
+const MAX_SAVE_BYTES = 25 * 1024 * 1024;
 
 /* ================= QR code (encoder embutido, modo byte, ECC M, v1-4) ==== */
 /* Validado por round-trip com decodificador real (jsQR). Cobre até 62
@@ -407,12 +410,70 @@ const server = http.createServer((req, res) => {
     });
   }
 
+  /* paridade com o mira-studio-server: sem estes endpoints, o "Salvar no
+     arquivo", o push do roteiro.md e o painel de gravação falhavam com 404
+     quando o deck era servido pelo launcher do remote. */
+  if (req.method === 'GET' && url === '/__mira/gpus') {
+    // este servidor não enumera GPUs; o painel de gravação trata 'unavailable'
+    res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(JSON.stringify({ status: 'unavailable', gpus: [], error: '', retryAfterMs: 0 }));
+  }
+  if (req.method === 'GET' && url === '/__mira_meta') {
+    let rel = '/index.html';
+    try { rel = new URL(req.url, 'http://x').searchParams.get('path') || rel; } catch { /* usa o padrão */ }
+    const abs = safePath(rel);
+    res.writeHead(abs ? 200 : 403, { 'Content-Type': 'application/json; charset=utf-8' });
+    return res.end(JSON.stringify(abs ? { path: abs } : { error: 'fora do root' }));
+  }
+  if ((req.method === 'POST' || req.method === 'PUT') && url === '/__mira_save') {
+    const jsonOut = (code, value) => {
+      res.writeHead(code, { 'Content-Type': 'application/json; charset=utf-8' });
+      res.end(JSON.stringify(value));
+    };
+    // só o palco (localhost) grava; celulares na LAN não escrevem no disco
+    if (roleOf(ip) !== 'stage') return jsonOut(403, { error: 'só o palco salva' });
+    const chunks = [];
+    let size = 0, tooBig = false;
+    req.on('data', (c) => {
+      size += c.length;
+      if (size > MAX_SAVE_BYTES) { tooBig = true; req.destroy(); }
+      else chunks.push(c);
+    });
+    req.on('error', () => { try { jsonOut(400, { error: 'erro na leitura' }); } catch { /* já respondido */ } });
+    req.on('end', () => {
+      if (tooBig) return jsonOut(413, { error: 'conteúdo grande demais' });
+      let body;
+      try { body = JSON.parse(Buffer.concat(chunks).toString('utf8')); }
+      catch { return jsonOut(400, { error: 'json inválido' }); }
+      const rel = body && body.path;
+      const content = body && body.content;
+      if (typeof content !== 'string' || typeof rel !== 'string' || !rel) {
+        return jsonOut(400, { error: 'path/content faltando' });
+      }
+      const abs = safePath(rel);
+      if (!abs) return jsonOut(403, { error: 'fora do root' });
+      const ext = path.extname(abs).toLowerCase();
+      if (ext !== '.html' && ext !== '.htm' && ext !== '.md') return jsonOut(403, { error: 'só .html/.htm/.md' });
+      fs.writeFile(abs, content, 'utf8', (err) => {
+        if (err) return jsonOut(500, { error: String(err && err.message || err) });
+        console.log('  salvo: ' + abs + ' (' + size + ' bytes)');
+        jsonOut(200, { path: abs, ok: true });
+      });
+    });
+    return;
+  }
+
   // demais GETs: arquivos do deck. /index.html com ?stage=1 (o iframe da
   // shell) recebe a flag que desliga a UI local do mira-draw.
   if (req.method === 'GET') {
     let target = safePath(url);
     if (!target) { res.writeHead(400); return res.end('caminho inválido'); }
-    if (fs.existsSync(target) && fs.statSync(target).isDirectory()) target = path.join(target, 'index.html');
+    if (fs.existsSync(target) && fs.statSync(target).isDirectory()) {
+      const idx = ['index.html', 'index-16x9.html']
+        .map((n) => path.join(target, n))
+        .find((p) => fs.existsSync(p));
+      target = idx || path.join(target, 'index.html');
+    }
     if (!fs.existsSync(target)) { res.writeHead(404); return res.end('não encontrado'); }
     return fs.readFile(target, (err, buf) => {
       if (err) { res.writeHead(500); return res.end('erro: ' + err.message); }

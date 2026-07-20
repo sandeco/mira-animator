@@ -76,6 +76,7 @@ Estos producen archivos extra al lado de tu deck sin tocar el original. Mira [Fo
 | **mira-vertical** | `index-9x16.html` | vertical 9:16 |
 | **mira-thirds** | `index-thirds.html` | regla de los tercios |
 | **mira-studio** | `decks/<nombre>/` | deck de grabación 9:16 con cámara incrustada en vivo (listo para OBS) |
+| **mira-studio-full** | `decks/<nombre>/index-16x9.html` | deck de grabación 16:9 full-hd con cámara incrustada, slides desde roteiro.md y teleprompter fuera del video |
 | **mira-transition-dissolve** | `index-dissolve.html` | transición disolvencia |
 | **mira-slide-to-video** | `deck.mp4` | video MP4 de la animación real de los slides |
 

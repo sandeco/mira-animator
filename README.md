@@ -133,6 +133,7 @@ Starting from the 16:9 deck, without touching the original:
 | `mira-vertical` | `index-9x16.html` | 9:16 (1080×1920) | Reels, Shorts, Stories, TikTok |
 | `mira-thirds` | `index-thirds.html` | rule of thirds | leaves a third free for text / presenter video |
 | `mira-studio` | `decks/<name>/` | 9:16 (1080×1920) | recording deck with the presenter's webcam live inside the slide (OBS-ready, native MP4 recording) |
+| `mira-studio-full` | `decks/<name>/index-16x9.html` | 16:9 (1920×1080) | full-hd recording deck with the webcam live inside the slide, roteiro.md-driven slides and an out-of-video teleprompter |
 | `mira-transition-dissolve` | `index-dissolve.html` | dissolve | real crossfade between slides (Canva style) |
 
 `mira-squared` and `mira-vertical` lock the slides to the target ratio (fixed frame) and shrink the side gaps. `mira-thirds` is a **composition** variant (it does not change the ratio): it pushes content into the left two-thirds and leaves the right column free to overlay text, a lower-third or the presenter's video in editing. `mira-transition-dissolve` swaps the scroll between slides for a real crossfade via the View Transitions API, it works on `file://` with no server (Chrome/Edge).

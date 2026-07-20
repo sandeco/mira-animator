@@ -38,7 +38,7 @@
             '.cam-notice { position: fixed; top: 14px; left: 14px; z-index: 2147483000;',
             '  max-width: 300px; padding: 10px 14px; border-radius: 10px;',
             '  background: rgba(13, 13, 15, .94); color: #f4f4f5;',
-            '  border: 1px solid rgba(255, 144, 77, .55);',
+            '  border: 1px solid var(--mira-icon-border, rgba(255, 144, 77, .55));',
             '  font: 600 13px/1.45 Inter, system-ui, -apple-system, sans-serif; }'
         ].join('\n');
         document.head.appendChild(st);
@@ -55,6 +55,8 @@
                 // se o id não existir mais, cai na câmera padrão.
                 var plus = window.__miraStudioPlus;
                 var id = plus && plus.cameraDeviceId;
+                /* preferência do seletor de câmera do painel de gravação */
+                if (!id) { try { id = localStorage.getItem('mira-cam-device') || ''; } catch (e) { id = ''; } }
                 if (id) {
                     streamPromise = navigator.mediaDevices
                         .getUserMedia({ video: { deviceId: { exact: id } }, audio: false })
@@ -82,6 +84,32 @@
         areas.forEach(function (a) { a.classList.add('cam-fallback'); });
         notice(msg);
     }
+
+    /* ---------- troca de câmera ao vivo (painel de gravação) ----------
+       Re-obtém o stream com o deviceId escolhido, troca o sink das .cam-area
+       ativas (as detached pegam o novo no próximo attach) e para as tracks
+       antigas. A escolha persiste para os próximos loads. */
+    window.__miraCameraUse = function (deviceId) {
+        try { localStorage.setItem('mira-cam-device', deviceId || ''); } catch (e) { }
+        var next = deviceId
+            ? navigator.mediaDevices.getUserMedia({ video: { deviceId: { exact: deviceId } }, audio: false })
+            : navigator.mediaDevices.getUserMedia({ video: true, audio: false });
+        return next.then(function (stream) {
+            var old = activeStream;
+            activeStream = stream;
+            streamPromise = Promise.resolve(stream);
+            Array.prototype.forEach.call(document.querySelectorAll('.cam-area'), function (a) {
+                a.classList.remove('cam-fallback');
+                var v = a._camVideo;
+                if (v && v.srcObject) {
+                    v.srcObject = stream;
+                    var p = v.play();
+                    if (p && p.catch) p.catch(function () { });
+                }
+            });
+            if (old && old !== stream) old.getTracks().forEach(function (t) { t.stop(); });
+        });
+    };
 
     /* ---------- teclado: C alterna espelhamento ---------- */
     function bindMirrorKey() {
@@ -114,8 +142,10 @@
             activeStream = stream;
 
             function attach(v) {
-                if (v.srcObject === stream) return;
-                v.srcObject = stream;
+                /* usa activeStream (mutável): a troca de câmera ao vivo não
+                   deixa sinks presos ao stream antigo */
+                if (v.srcObject === activeStream) return;
+                v.srcObject = activeStream;
                 var p = v.play();
                 if (p && p.catch) p.catch(function () { /* autoplay muted não bloqueia */ });
             }
@@ -162,7 +192,7 @@
             var denied = err && (err.name === 'NotAllowedError' || err.name === 'SecurityError');
             var msg;
             if (insecure) {
-                msg = 'Câmera indisponível em file://. Sirva o deck em localhost (npx mira-animator serve) para o feed ao vivo. Área em verde chroma: no OBS, aplique Chroma Key.';
+                msg = 'Câmera indisponível em file://. Abra o deck pelo launcher do Mira Studio (localhost) para o feed ao vivo. Área em verde chroma: no OBS, aplique Chroma Key.';
             } else if (denied) {
                 msg = 'Permissão de câmera negada. Área em verde chroma: no OBS, aplique Chroma Key em #00FF00.';
             } else {

@@ -125,7 +125,7 @@
     <div class="qr">
         <img id="qr-img" src="/__mira_remote/qr.svg" alt="QR para conectar o celular">
         <div class="url" id="qr-url"></div>
-        <div class="label">aponte a câmera do celular (mesma rede/Wi-Fi)<br><b>C</b> mostra/esconde este QR</div>
+        <div class="label">aponte a câmera do celular (mesma rede/Wi-Fi)<br><b>Q</b> mostra/esconde este QR</div>
     </div>
 
     <script>
@@ -246,7 +246,7 @@
                     // teclas apertadas com o foco dentro do deck chegam à shell
                     frame.contentDocument.addEventListener('keydown', function (e) {
                         var k = e.key;
-                        if (k === 'p' || k === 'P' || k === 'c' || k === 'C' || k === 'Escape' ||
+                        if (k === 'p' || k === 'P' || k === 'q' || k === 'Q' || k === 'Escape' ||
                             ((e.ctrlKey || e.metaKey) && (k === 'z' || k === 'Z'))) {
                             document.dispatchEvent(new KeyboardEvent('keydown', {
                                 key: k, ctrlKey: e.ctrlKey, metaKey: e.metaKey
@@ -298,8 +298,9 @@
                 if (e.target && /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName)) return;
                 if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') { e.preventDefault(); step(1); }
                 else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') { e.preventDefault(); step(-1); }
-                else if ((e.key === 'c' || e.key === 'C') && !e.ctrlKey && !e.metaKey) {
-                    // RF-03: com aparelho conectado o QR some; C reabre (e fecha)
+                else if ((e.key === 'q' || e.key === 'Q') && !e.ctrlKey && !e.metaKey) {
+                    // RF-03: com aparelho conectado o QR some; Q reabre (e fecha).
+                    // Q, e não C: C é do espelhamento da câmera dentro do deck.
                     if (role === 'stage') { qrForced = !qrForced; updateQr(); }
                 }
             });

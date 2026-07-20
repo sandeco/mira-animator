@@ -76,6 +76,7 @@ These produce extra files next to your deck without touching the original. See [
 | **mira-vertical** | `index-9x16.html` | 9:16 vertical |
 | **mira-thirds** | `index-thirds.html` | rule of thirds |
 | **mira-studio** | `decks/<name>/` | 9:16 recording deck with live embedded camera (OBS-ready) |
+| **mira-studio-full** | `decks/<name>/index-16x9.html` | 16:9 full-hd recording deck with embedded camera, roteiro.md-driven slides and out-of-video teleprompter |
 | **mira-transition-dissolve** | `index-dissolve.html` | dissolve transition |
 | **mira-slide-to-video** | `deck.mp4` | MP4 video of the slides' real animation |
 

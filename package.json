@@ -38,6 +38,7 @@
     "agents/mira-vertical",
     "agents/mira-thirds",
     "agents/mira-studio",
+    "agents/mira-studio-full",
     "agents/mira-transition-dissolve",
     "agents/mira-slide-to-video",
     "agents/mira-offline",
