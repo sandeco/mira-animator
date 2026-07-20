@@ -1,6 +1,6 @@
 {
   "name": "mira-animator",
-  "version": "0.1.45",
+  "version": "0.1.46",
   "description": "Agentes e templates para criação de slides animados com D3.js em HTML",
   "bin": {
     "mira": "bin/mira.js"
