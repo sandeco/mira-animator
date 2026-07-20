@@ -43,11 +43,19 @@ Fusão das antigas `mira-illustrator` (painéis 1920x800) e `mira-infographic` (
 
 ## Captura
 
-Para converter HTML em PNG use `scripts/capture.js` (Puppeteer):
+Para converter HTML em PNG use o script desta skill, `scripts/capture.cjs` (Puppeteer).
+O caminho é relativo à pasta da skill; da raiz do projeto:
 
 ```bash
-node scripts/capture.js <input.html> <output.png> <largura> <altura>
+node agents/mira-visuals/scripts/capture.cjs <input.html> <output.png> <largura> <altura>
 ```
+
+Instalado num projeto do usuário, o caminho vira `.claude/skills/mira-visuals/scripts/capture.cjs`.
+
+É `.cjs` de propósito (mesmo padrão do `mira-slide-to-video`): roda igual no repo-fonte, que é
+`"type": "module"`, e instalado, sem virar ESM. Se o `puppeteer` não estiver instalado, o script
+cai para `puppeteer-core` + o Chrome do cache; para forçar um binário, use
+`PUPPETEER_EXECUTABLE_PATH`.
 
 ## Checklist final
 

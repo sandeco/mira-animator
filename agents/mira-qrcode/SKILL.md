@@ -53,19 +53,28 @@ Descreva o loop em uma frase ("o cartão pulsa um brilho laranja e os quatro can
 
 - **Só o título + o QR.** Título no topo (sem ícone, máximo 6 palavras). **Sem legenda com o link por extenso** embaixo.
 - **QR grande e central.** Cartão branco com o QR ocupando boa parte da altura útil. No teste: `width: min(62vh, 80vw)`.
-- **Escaneabilidade manda no estilo:** módulos escuros (`#0a0a0a`) sobre **cartão branco**, zona de silêncio pelo padding (28px no teste). O laranja (`#FF904D`) fica **na moldura e no título**, nunca dentro dos módulos.
+- **Escaneabilidade manda no estilo:** módulos escuros (`#0a0a0a`) sobre **cartão branco**, zona de silêncio proporcional ao módulo (4 módulos, via --qr-quiet; padding fixo não cumpre a norma). O laranja (`#FF904D`) fica **na moldura e no título**, nunca dentro dos módulos.
 
 ## CSS + HTML canônico (gerar conforme o teste)
 
 ```html
 <style>
-  /* Cartão claro do QR: contraste alto e zona de silêncio embutida no padding */
+  /* Cartão claro do QR: contraste alto e zona de silêncio PROPORCIONAL AO MÓDULO.
+     A norma pede 4 módulos de margem em volta do QR. Padding fixo (ex.: 28px) NÃO cumpre
+     isso: num cartão de ~670px com 33 módulos, o módulo tem ~18px, e 4 módulos são ~74px.
+     Com padding fixo o QR ainda escaneia de perto, no celular novo, e falha justo onde
+     dói: projetado, de longe, com a câmera torta.
+     Ajuste --qr-modules para a versão real do seu QR (o pacote qrcode reporta; uma URL
+     típica com ECC M cai em 33 ou 37). */
   .qr-card {
+    --qr-modules: 33;                                   /* módulos por lado do QR gerado */
+    --qr-card-size: min(62vh, 80vw);
+    --qr-quiet: calc(4 * var(--qr-card-size) / (var(--qr-modules) + 8));  /* 4 módulos */
     position: relative;
     background: #ffffff;
     border-radius: 24px;
-    padding: 28px;
-    width: min(62vh, 80vw);
+    padding: var(--qr-quiet);
+    width: var(--qr-card-size);
     animation: qr-glow 3s ease-in-out infinite;   /* loop interno na moldura */
   }
   .qr-card svg { display: block; width: 100%; height: auto; }
@@ -110,7 +119,7 @@ Descreva o loop em uma frase ("o cartão pulsa um brilho laranja e os quatro can
 1. **Receber o destino + o dado.** Slide novo ou slide N do deck X, e o link/texto a codificar. Se faltar o dado, pergunte.
 2. **Gerar o QR localmente** (seção "Como o QR é gerado"): instalar `qrcode` em pasta temp (sem npx), rodar o one-liner Node, capturar o SVG.
 3. **Montar o card limpo:** título no topo (sem ícone, máx. 6 palavras, sem legenda do link), cartão branco com o QR inline grande e central, moldura com glow + cantos. Inserir como `<section>` no padrão do deck; preservar o sistema de navegação.
-4. **Conferir escaneabilidade:** módulos escuros sobre branco, não invertido, zona de silêncio (padding) preservada, nada animado por cima dos módulos.
+4. **Conferir escaneabilidade:** módulos escuros sobre branco, não invertido, zona de silêncio de 4 módulos preservada, nada animado por cima dos módulos. **Decodifique o QR de verdade** (ex.: `jsqr` sobre um print do cartão renderizado) antes de entregar: um QR bonito que não escaneia é um desastre em sala.
 5. **Reportar.** Caminho do arquivo, o dado codificado, o nível de correção (M/Q) e o loop interno em uma frase. Lembre que não há dependência de runtime nem servidor: abre direto, inclusive por file://.
 
 ## Checklist
@@ -118,7 +127,7 @@ Descreva o loop em uma frase ("o cartão pulsa um brilho laranja e os quatro can
 - [ ] QR gerado localmente (pacote `qrcode`), embutido como SVG inline; **não** usou `npx qrcode` nem CDN nem API externa.
 - [ ] Slide abre por `file://` sem nada externo (sem dependência de apresentação).
 - [ ] Módulos escuros (`#0a0a0a`) sobre cartão branco; cores não invertidas; ECC M (ou Q se for de longe).
-- [ ] Zona de silêncio preservada (padding do cartão); o QR não encosta na borda.
+- [ ] Zona de silêncio de **4 módulos** (`--qr-quiet`, não padding fixo); o QR não encosta na borda.
 - [ ] Card limpo: só título + QR; sem legenda com o link por extenso embaixo.
 - [ ] Título sem ícone, no máximo 6 palavras.
 - [ ] Loop interno só na moldura (glow + cantos); **nada animado sobre os módulos**; QR estático.

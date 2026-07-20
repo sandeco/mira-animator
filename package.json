@@ -81,5 +81,8 @@
     "inquirer": "^9.2.0",
     "ora": "^8.0.0",
     "yoctocolors-cjs": "^2.1.2"
+  },
+  "devDependencies": {
+    "puppeteer": "^25.3.0"
   }
 }

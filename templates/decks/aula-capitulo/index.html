@@ -149,6 +149,10 @@ body {
 
         /* @MIRA:THEME:END */
 
+        /* Diretriz de titulo da capa (CLAUDE.md): quebra equilibrada so no primeiro slide */
+        body > section:first-of-type h1,
+        body > section:first-of-type h2 { text-wrap: balance; }
+
         /* === CONTROLES DE SLIDE (passagem card-a-card) === */
         html { scroll-behavior: smooth; }
         /* Scroll discreto (padrao Mira): a navegacao e por teclado/botao e o
@@ -205,7 +209,7 @@ body {
                 Apresente seu capítulo<br>
                 <span class="primary-color">com movimento</span>
             </h1>
-            <p class="text-xl text-soft max-w-2xl mx-auto mb-10">Esqueleto de aula do Mira: capa, conceito central, pipeline, comparação, evolução e encerramento — tudo com loop interno.</p>
+            <p class="text-xl text-soft max-w-2xl mx-auto mb-10">Esqueleto de aula do Mira: capa, conceito central, pipeline, comparação, evolução e encerramento: tudo com loop interno.</p>
             <div class="flex items-center justify-center gap-3 text-softer text-sm">
                 <i data-lucide="user" class="w-4 h-4 primary-color"></i> [AUTOR]
                 <span class="opacity-40">|</span>
@@ -525,10 +529,10 @@ body {
 
     <!-- Modo edição (reordenar slides): tecla E ou ?edit=1 -->
     <script src="mira/mira-edit.js" defer></script>
-    <!-- mira-draw (desenhar sobre o slide): tecla P ou ?draw=1 -->
-    <script src="mira/mira-draw.js" defer></script>
     <!-- Edição livre estilo Canva (mover/redimensionar/rotacionar/duplicar/excluir/texto): tecla E -->
     <script src="mira/mira-edit-free.js" defer></script>
+    <!-- mira-draw (desenhar sobre o slide): tecla P ou ?draw=1 -->
+    <script src="mira/mira-draw.js" defer></script>
 </body>
 
 </html>

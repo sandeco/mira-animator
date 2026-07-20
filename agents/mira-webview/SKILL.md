@@ -27,7 +27,35 @@ O ponto difícil de embutir um site num deck não é o iframe, é a **convivênc
 
 1. **Foco / navegação.** Assim que o iframe pega foco, `ArrowRight/ArrowDown/PageDown` vão para o site, não para o deck, e o apresentador fica preso no slide. **Solução: guarda de interação.** Por padrão o site fica **visível mas não clicável** (uma camada transparente por cima). O apresentador **clica para interagir**; para voltar a navegar o deck, aperta **Esc** (ou clica fora). Simples e à prova de falha em qualquer navegador.
 
-2. **Sites que bloqueiam incorporação.** Google, YouTube (home), bancos, Instagram e muitos outros mandam `X-Frame-Options: DENY` ou `Content-Security-Policy: frame-ancestors` e aparecem **em branco / "recusou conectar"** dentro do iframe. Não dá para detectar isso de forma confiável por cross-origin. **Solução dupla:** (a) uma camada de **fallback** atrás do iframe com um link "abrir em nova aba"; (b) para apresentação crítica, **baixar o site para `assets/webview/<slug>/` e apontar o iframe para o arquivo local** (nunca bloqueia, funciona offline por `file://`).
+2. **Sites que bloqueiam incorporação.** Google, YouTube (home), bancos, Instagram e muitos outros mandam `X-Frame-Options: DENY` ou `Content-Security-Policy: frame-ancestors` e aparecem **em branco / "recusou conectar"** dentro do iframe.
+
+   **Duas verdades duras, apuradas na prática (ver `dev/BUGS.md`, B2):**
+
+   - **O bloqueio é indetectável em runtime.** Um iframe bloqueado e um iframe cross-origin
+     perfeitamente saudável lançam **o mesmo `SecurityError`** ao se tocar no `contentDocument`.
+     Não existe teste confiável dentro do navegador. Não tente.
+   - **Fallback ATRÁS do iframe não funciona.** O iframe bloqueado não fica transparente: o
+     Chrome desenha **a própria página de erro**, cinza e opaca, por cima. Quem está atrás
+     nunca aparece. O usuário vê "recusou conectar" e mais nada.
+
+   **Solução: decidir em tempo de AUTORIA, não em runtime.** Quem monta o slide confere o
+   domínio antes e declara o resultado no HTML:
+
+   ```bash
+   curl -sI https://exemplo.com | grep -iE 'x-frame-options|content-security-policy'
+   ```
+
+   Se bloquear, marque o container com `data-blocked` e o fallback é promovido **ACIMA** do
+   iframe (`z-index` maior), não atrás:
+
+   ```css
+   .webview[data-blocked] iframe          { display: none; }
+   .webview[data-blocked] .webview-fallback { display: flex; }   /* fica por cima, não atrás */
+   ```
+
+   Para apresentação crítica, o melhor continua sendo **baixar o site para
+   `assets/webview/<slug>/` e apontar o iframe para o arquivo local**: nunca bloqueia, funciona
+   offline por `file://`, e é o que combina com a ética offline-first do Mira.
 
 Antes de gerar, **avise o usuário** se o domínio for um dos que costumam bloquear e ofereça a opção local/offline.
 
@@ -77,7 +105,9 @@ Substitua `SLUG` por um id curto único (ex.: `demo-produto`), `URL` pela fonte 
   .webview-slide.interacting .webview-frame { pointer-events: auto; }
 
   /* Fallback: fica ATRAS do iframe. So aparece se o site recusar
-     incorporacao (X-Frame-Options) e o iframe ficar em branco. */
+     incorporacao (X-Frame-Options). NAO fica atras do iframe (a pagina de erro do Chrome e
+     opaca e cobriria o fallback): e promovido ACIMA dele via [data-blocked], declarado em
+     tempo de autoria depois de conferir o site no curl. */
   .webview-fallback {
     position: absolute; inset: 0; z-index: 0;
     display: flex; flex-direction: column; align-items: center; justify-content: center;

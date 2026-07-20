@@ -201,6 +201,10 @@ Objetivo: CRITÉRIO Nº 1, preencher a maior parte do box.
      Padrão (cinza à direita): tema nos 2/3, #333 no 1/3 direito.
      Para cinza à esquerda: inverta os stops (#333 até 33.333%, depois o tema). */
   body > section {
+    /* ALTURA DEFINIDA, não min-height. O template usa `min-h-screen` do Tailwind, que dá
+       min-height; sem `height`, a cadeia flex abaixo (flex: 1 1 auto) não tem o que
+       distribuir e o palco vaza para fora da tela. */
+    height: 100vh !important;
     align-items: var(--thirds-align) !important;
     background:
       linear-gradient(to right,
