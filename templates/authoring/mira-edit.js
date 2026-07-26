@@ -144,6 +144,17 @@
         var api = freeEditor();
         return !!(api && api.hasChanges && api.hasChanges());
     }
+    /* decks com fonte externa de ordem (ex.: roteiro.md no mira-studio-full)
+       registram window.miraOrderSource = { available(), commit(perm) }.
+       Quando existe, o Salvar delega a ORDEM a ele e não reordena o HTML. */
+    function orderSource() { return window.miraOrderSource || null; }
+    function orderBlocked() {
+        var api = orderSource();
+        if (!api || !api.available) return null;
+        var st = null;
+        try { st = api.available(); } catch (e) { return 'Fonte da ordem indisponível.'; }
+        return (st && st.ok) ? null : ((st && st.reason) || 'Reordenação indisponível agora.');
+    }
     function refreshSaveState() {
         var b = document.getElementById('me-save');
         if (!b) return;
@@ -262,11 +273,15 @@
     // move por índice na LISTA de slides (robusto a nós não-slide entre eles:
     // comentários-marcador, barra de progresso, botão "próximo", scripts, etc.)
     function moveUp(el) {
+        var blocked = orderBlocked();
+        if (blocked) { toast(blocked, 'err'); return; }
         var list = slides();
         var i = list.indexOf(el);
         if (i > 0) { el.parentNode.insertBefore(el, list[i - 1]); afterMove(el); }
     }
     function moveDown(el) {
+        var blocked = orderBlocked();
+        if (blocked) { toast(blocked, 'err'); return; }
         var list = slides();
         var i = list.indexOf(el);
         if (i > -1 && i < list.length - 1) { el.parentNode.insertBefore(list[i + 1], el); afterMove(el); }
@@ -455,6 +470,98 @@
         refreshSaveState();
     }
 
+    /* ---------- captura de evidência (memória semântica) ----------
+       O bloco <script id="mira-free-edits"> é CUMULATIVO: ele guarda tudo que
+       o deck já teve, não o que mudou neste Salvar. A baseline, portanto, é o
+       bloco que está no arquivo em disco (src), não a origem. O que vai para
+       o log é o delta ESTRUTURADO CRU; a ficha canônica é derivada e fica
+       para a consolidação. Nada aqui pode derrubar o Salvar. */
+
+    /* --- delta de evidência: bloco puro (sem DOM) --- */
+    var PREFS_SCHEMA = 'delta-cru-v1';
+    /* bookkeeping do crop, não intenção do usuário: fora da comparação */
+    var PREFS_IGNORE = { id: 1, baseT: 1, baseCor: 1, baseClip: 1, baseWebkitClip: 1 };
+
+    function prefsReadOps(src) {
+        var m = /<script id="mira-free-edits"[^>]*>([\s\S]*?)<\/script>/i.exec(src || '');
+        if (!m) return {};
+        var data;
+        try { data = JSON.parse(m[1]); } catch (e) { return {}; }
+        if (!data || !Array.isArray(data.ops)) return {};
+        var map = {};
+        data.ops.forEach(function (o) {
+            if (!o || !o.id) return;
+            var clean = {};
+            Object.keys(o).forEach(function (k) { if (!PREFS_IGNORE[k]) clean[k] = o[k]; });
+            map[o.id] = clean;
+        });
+        return map;
+    }
+    function prefsStable(op) {
+        return JSON.stringify(Object.keys(op).sort().map(function (k) { return [k, op[k]]; }));
+    }
+    function prefsSlide(id) {
+        var m = /^(?:me-dup-\d+-)*me-(\d+)-/.exec(String(id || ''));
+        return m ? parseInt(m[1], 10) : null;
+    }
+    /* remap: reordenar slides renumera os ids na gravação. Sem passar a
+       baseline pela mesma permutação, um reorder viraria "tudo removido,
+       tudo novo" e inflaria o log. */
+    function prefsDelta(src, out, remap) {
+        var antes = prefsReadOps(src);
+        var depois = prefsReadOps(out);
+        if (typeof remap === 'function') {
+            var movido = {};
+            Object.keys(antes).forEach(function (id) { movido[remap(id) || id] = antes[id]; });
+            antes = movido;
+        }
+        var itens = [];
+        Object.keys(depois).forEach(function (id) {
+            if (!antes[id]) itens.push({ op_id: id, slide: prefsSlide(id), tipo: 'novo', antes: null, depois: depois[id] });
+            else if (prefsStable(antes[id]) !== prefsStable(depois[id])) {
+                itens.push({ op_id: id, slide: prefsSlide(id), tipo: 'alterado', antes: antes[id], depois: depois[id] });
+            }
+        });
+        Object.keys(antes).forEach(function (id) {
+            if (!depois[id]) itens.push({ op_id: id, slide: prefsSlide(id), tipo: 'removido', antes: antes[id], depois: null });
+        });
+        return itens;
+    }
+    /* --- fim do bloco puro --- */
+
+    function prefsEpisodio() {
+        try { if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID(); } catch (e) {}
+        return 'ep-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+    }
+    function capturePrefs(src, out, perm, deckPath) {
+        try {
+            var api = freeEditor();
+            var remap = perm && api && api.remapId
+                ? function (id) { return api.remapId(id, perm); } : null;
+            var itens = prefsDelta(src, out, remap);
+            if (!itens.length) return;
+            fetch('/__mira_prefs', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    schema: PREFS_SCHEMA,
+                    episodio: prefsEpisodio(),
+                    fonte: 'edicao',
+                    ts: new Date().toISOString(),
+                    /* identidade do deck é o caminho absoluto: o relativo é
+                       /index.html em todo deck servido da própria raiz */
+                    deck: deckPath || targetFullPath || normalizedServerPath(),
+                    titulo: document.title || '',
+                    /* o total é o que permite traduzir ordinal em papel
+                       (último slide = encerramento) na consolidação */
+                    slides_total: slides().length,
+                    itens: itens
+                })
+            }).catch(function () { /* servidor sem o endpoint: captura só não acontece */ });
+        } catch (e) {
+            console.warn('[mira-edit] captura de evidência ignorada:', e);
+        }
+    }
+
     async function saveAll() {
         var orderChanged = dirty;
         var freeChanged = freeHasChanges();
@@ -464,20 +571,34 @@
         if (button) button.disabled = true;
         try {
             if (location.protocol === 'http:' || location.protocol === 'https:') {
-                var target = normalizedServerPath();
-                var resp = await fetch(target, { cache: 'no-store' });
-                if (!resp.ok) throw new Error('Não consegui ler ' + target + ' (HTTP ' + resp.status + ').');
-                var src = await resp.text();
-                validateDeckSource(src);
-                var out = composeSource(src, perm, orderChanged, freeChanged);
-                var saved = await fetch('/__mira_save', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ path: target, content: out })
-                });
-                if (!saved.ok) throw new Error('Servidor recusou a gravação (HTTP ' + saved.status + ').');
-                var info = null;
-                try { info = await saved.json(); } catch (e) {}
-                if (info && info.path) showTarget(info.path);
+                var api = orderSource();
+                var delegated = orderChanged && api && api.commit;
+                if (delegated) {
+                    var blocked = orderBlocked();
+                    if (blocked) throw new Error(blocked);
+                }
+                if (!delegated || freeChanged) {
+                    var target = normalizedServerPath();
+                    var resp = await fetch(target, { cache: 'no-store' });
+                    if (!resp.ok) throw new Error('Não consegui ler ' + target + ' (HTTP ' + resp.status + ').');
+                    var src = await resp.text();
+                    validateDeckSource(src);
+                    var reordena = delegated ? false : orderChanged;
+                    var out = composeSource(src, perm, reordena, freeChanged);
+                    var saved = await fetch('/__mira_save', {
+                        method: 'POST', headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ path: target, content: out })
+                    });
+                    if (!saved.ok) throw new Error('Servidor recusou a gravação (HTTP ' + saved.status + ').');
+                    var info = null;
+                    try { info = await saved.json(); } catch (e) {}
+                    if (info && info.path) showTarget(info.path);
+                    /* mesma permutação que o composeSource usou para renumerar os ops */
+                    if (freeChanged) capturePrefs(src, out, reordena ? perm : null, info && info.path);
+                }
+                /* a ordem vai para a fonte externa (ex.: roteiro.md); o commit
+                   grava com verificação de revisão e recarrega a página */
+                if (delegated) await api.commit(perm);
             } else {
                 if (!('showOpenFilePicker' in window)) throw new Error('Use o Chrome ou sirva o deck com node lib/mira-serve.js.');
                 var handle = await getHandle();

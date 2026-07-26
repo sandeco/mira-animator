@@ -62,11 +62,20 @@ Each orchestrator **pauses between agents** and keeps you in control. The planne
 Once the deck is built, you can shape the motion:
 
 - **Size** — *"put the animations at 6/10"* or *"this slide is too small, make it 7/10"*. The `mira-size-animator` agent scales the perceived size of each animation on a 1–10 scale (the default that `mira-animator` produces is 3/10).
-- **Metaphor** — *"turn this concept into an animated metaphor"*. The `mira-animated-metaphor` agent replaces a slide's animation with a concrete everyday analogy, keeping the title and pills.
+- **Metaphor** — *"turn this concept into an animated metaphor"*. `mira-animator` itself replaces a slide's animation with another concrete everyday analogy, in place, keeping the title and pills.
 - **Visuals** — ask `mira-visuals` for static panels, diagrams or infographics, or `mira-chart` for data charts from a CSV/JSON, an image, or even a hand-drawn sketch, or `mira-chart-race` to make temporal data race over time (bars reordering by rank or lines drawing in).
 - **3D, QR, quizzes & images:** drop a real, auto-rotating 3D element with `/mira-3d`, a scannable QR code (from a link or text) with `/mira-qrcode`, a live quiz with presenter-controlled correct-answer reveal using `/mira-quiz`, or an image you already have with `/mira-image`. A 3D slide that loads a `.glb` needs a local server (the agent starts one and writes a double-click launcher); everything else opens from `file://`.
 - **Shape morphing:** make one SVG shape morph into another in a loop with `/mira-svg-morph` (you pass the files), or `/mira-icon-morph` to do it from concepts in words, with icons sourced and licensed from Iconify.
 - **Animate an SVG:** make an SVG you provide move (flap, spin, slide, pulse, draw) with `/mira-svg-animator`; if it is a single merged path, it splits the part to animate.
+
+## 4.5 The deck learns your taste
+
+Mira keeps a local memory of your corrections. Every time you save in edit mode (key `E`), the delta between what the builder generated and what you fixed is appended to `~/.mira-memory/evidencia.jsonl`. Nothing leaves your machine.
+
+- **Dictate a rule now:** `npx mira-animator memoria nota "less text per slide" --eixo densidade`. It becomes an active note immediately and the builder follows it on the next deck.
+- **Let it learn on its own:** `npx mira-animator memoria consolidar` turns what repeated (3 episodes, 3 distinct decks, 2 sessions) into a **candidate** note. A candidate is never applied until you activate it with `memoria estado <file> ativo`.
+- **Notes are yours:** they are plain markdown in `~/.mira-memory/notas/`. Open, edit, or revoke them. Revoking is a state, never a delete.
+- **The brand always wins:** `#FF904D`, cover balance and safe area override anything the memory learned.
 
 ## 5. Open and present
 

@@ -62,11 +62,20 @@ Cada orquestador **pausa entre los agentes** y te mantiene en control. El planne
 Con el deck montado, puedes moldear el movimiento:
 
 - **Tamaño** — *"pon las animaciones en 6/10"* o *"este slide está pequeño, déjalo en 7/10"*. El agente `mira-size-animator` escala la percepción de tamaño de cada animación en una escala de 1 a 10 (el valor por defecto que genera `mira-animator` es 3/10).
-- **Metáfora** — *"convierte este concepto en una metáfora animada"*. El agente `mira-animated-metaphor` reemplaza la animación de un slide por una analogía concreta de la vida diaria, manteniendo el título y las píldoras.
+- **Metáfora** — *"convierte este concepto en una metáfora animada"*. El propio `mira-animator` reemplaza la animación de un slide por otra analogía concreta de la vida diaria, en el lugar, manteniendo el título y las píldoras.
 - **Visuales** — pide a `mira-visuals` paneles estáticos, diagramas o infografías, o a `mira-chart` gráficos de datos a partir de un CSV/JSON, una imagen, o incluso un boceto a mano, o a `mira-chart-race` para datos temporales que corren en el tiempo (barras que se reordenan o líneas que se dibujan).
 - **3D, QR, quizzes e imágenes:** coloca un elemento 3D real y auto-rotante con `/mira-3d`, un código QR escaneable (a partir de un enlace o texto) con `/mira-qrcode`, un quiz en vivo con revelación de respuesta correcta controlada por el presentador usando `/mira-quiz`, o una imagen que ya tienes con `/mira-image`. Un slide 3D que carga un `.glb` necesita un servidor local (el agente arranca uno y escribe un lanzador de doble clic); todo lo demás se abre desde `file://`.
 - **Morph de formas:** haz que una forma SVG se transforme en otra en bucle con `/mira-svg-morph` (pasas los archivos), o `/mira-icon-morph` para hacerlo a partir de conceptos en palabras, con íconos buscados y licenciados en Iconify.
 - **Animar un SVG:** haz que un SVG que provees se mueva (batir, girar, deslizar, pulsar, dibujar) con `/mira-svg-animator`; si es un path único fusionado, separa la parte a animar.
+
+## 4.5 El deck aprende tu gusto
+
+Mira guarda una memoria local de tus correcciones. En cada Guardar del modo edición (tecla `E`), la diferencia entre lo que generó el builder y lo que corregiste se añade a `~/.mira-memory/evidencia.jsonl`. Nada sale de tu máquina.
+
+- **Dictar una regla ahora:** `npx mira-animator memoria nota "menos texto por slide" --eixo densidade`. Se convierte en nota activa al instante y el builder la sigue en el próximo deck.
+- **Dejar que aprenda solo:** `npx mira-animator memoria consolidar` convierte lo que se repitió (3 episodios, 3 decks distintos, 2 sesiones) en nota **candidata**. Una candidata nunca se aplica hasta que la actives con `memoria estado <archivo> ativo`.
+- **Las notas son tuyas:** markdown plano en `~/.mira-memory/notas/`. Ábrelas, edítalas o revócalas. Revocar es un estado, nunca un borrado.
+- **La marca siempre manda:** `#FF904D`, equilibrio de la portada y área segura están por encima de lo aprendido.
 
 ## 5. Abre y presenta
 

@@ -15,7 +15,7 @@ description: >-
 
 Ativa num deck existente a camada do **mira-remote**: um servidor leve serve o deck pela LAN e sincroniza estado entre os aparelhos. O notebook é o palco; o primeiro celular que escanear o QR vira o controle (e caneta); os demais entram como espelho.
 
-> **Fonte da verdade:** specs em `specs/remote-control/mira-remote.md` (produto) e `specs/remote-control/protocolo.md` (canal). Os arquivos prontos vivem em `mira-templates/remote/` (no repo fonte: `templates/remote/`). Não reescreva o servidor nem a shell: copie.
+> **Fonte da verdade:** specs em `_reversa_sdd/remote-control/mira-remote.md` (produto) e `_reversa_sdd/remote-control/protocolo.md` (canal). Os arquivos prontos vivem em `mira-templates/remote/` (no repo fonte: `templates/remote/`). Não reescreva o servidor nem a shell: copie.
 
 ## Modelo mental
 

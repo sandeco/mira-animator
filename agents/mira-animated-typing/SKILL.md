@@ -12,7 +12,7 @@ description: >-
 
 # Skill: Texto de Comando Digitado em Zoom
 
-Slide autocontido que encena a digitação de um comando de agent harness em **zoom**. Spec completa em `specs/animated-typing/mira-animated-typing-spec.md`.
+Slide autocontido que encena a digitação de um comando de agent harness em **zoom**. Spec completa em `_reversa_sdd/animated-typing/mira-animated-typing-spec.md`.
 
 ## REGRA DE IDIOMA
 

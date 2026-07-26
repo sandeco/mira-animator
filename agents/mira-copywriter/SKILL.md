@@ -1,56 +1,56 @@
 ---
 name: mira-copywriter
 description: >
-  Diretor criativo que refina o plano de slides do /mira-planner: reescreve titulos,
-  descricoes e conteudo com tecnicas de copywriting e avalia/melhora as imagens, chamando
+  Diretor criativo que refina o plano de slides do /mira-planner: reescreve títulos,
+  descrições e conteúdo com técnicas de copywriting e avalia/melhora as imagens, chamando
   /mira-visuals para gerar as que faltam. Use SEMPRE que o /mira-planner terminar de gerar
-  um plano, ou quando o usuario quiser melhorar o texto de uma apresentacao, refinar as
-  frases dos slides, aplicar copywriting, ou reescrever conteudo de slides para ficar mais impactante.
+  um plano, ou quando o usuário quiser melhorar o texto de uma apresentação, refinar as
+  frases dos slides, aplicar copywriting, ou reescrever conteúdo de slides para ficar mais impactante.
 ---
 
 # Skill: Copywriter de Slides
 
 ## Objetivo
 
-Transformar o plano de slides do `/mira-planner` em conteudo de alto impacto, refinando cada slide em tres dimensoes: texto (copywriting), visual (selecao e criacao de imagens) e narrativa (arco da apresentacao).
+Transformar o plano de slides do `/mira-planner` em conteúdo de alto impacto, refinando cada slide em três dimensões: texto (copywriting), visual (seleção e criação de imagens) e narrativa (arco da apresentação).
 
-## Quando esta skill e chamada
+## Quando esta skill é chamada
 
-1. **Automaticamente** pelo `/mira-planner` apos gerar o plano aprovado
-2. **Manualmente** pelo usuario para refinar slides existentes
+1. **Automaticamente** pelo `/mira-planner` após gerar o plano aprovado
+2. **Manualmente** pelo usuário para refinar slides existentes
 
 ## Principios de Copywriting para Slides
 
-Slides nao sao artigos. Cada card tem 3-5 segundos para capturar atencao e funciona como um outdoor: impacto imediato, sem ambiguidade.
+Slides não são artigos. Cada card tem 3-5 segundos para capturar atenção e funciona como um outdoor: impacto imediato, sem ambiguidade.
 
 ### Regras fundamentais
 
-1. **Titulos como manchetes.** Cada titulo deve provocar curiosidade ou entregar um insight. "Requisitos do Sistema" vira "O Que Seu Sistema Realmente Precisa"; "Comparativo de Custos" vira "Onde Seu Orcamento Sangra".
+1. **Títulos como manchetes.** Cada título deve provocar curiosidade ou entregar um insight. "Requisitos do Sistema" vira "O Que Seu Sistema Realmente Precisa"; "Comparativo de Custos" vira "Onde Seu Orçamento Sangra".
 
-2. **Numeros antes de palavras.** "O custo aumenta muito" e fraco; "O custo sobe 10x apos o deploy" e forte. Havendo dados, lidere com o numero.
+2. **Números antes de palavras.** "O custo aumenta muito" é fraco; "O custo sobe 10x após o deploy" é forte. Havendo dados, lidere com o número.
 
-3. **Verbos de acao, nao de estado.** "A arquitetura e modular" e passivo; "Quebre sua arquitetura em modulos" e ativo. Prefira imperativos e verbos de movimento.
+3. **Verbos de ação, não de estado.** "A arquitetura é modular" é passivo; "Quebre sua arquitetura em módulos" é ativo. Prefira imperativos e verbos de movimento.
 
-4. **Uma ideia por card.** Se o card precisa de "e tambem", divida em dois. O slide que tenta dizer tudo nao diz nada.
+4. **Uma ideia por card.** Se o card precisa de "e também", divida em dois. O slide que tenta dizer tudo não diz nada.
 
-5. **Subtitulos que completam.** O subtitulo nao repete o titulo; adiciona contexto: quem, quando ou a consequencia.
+5. **Subtítulos que completam.** O subtítulo não repete o título; adiciona contexto: quem, quando ou a consequência.
 
-6. **Frases curtas.** Descricoes de slide com no maximo 2 linhas. Se precisar de mais, o visual (tabela, grafico, lista) carrega a informacao.
+6. **Frases curtas.** Descrições de slide com no máximo 2 linhas. Se precisar de mais, o visual (tabela, gráfico, lista) carrega a informação.
 
-7. **Gancho emocional.** Ao menos o primeiro e o ultimo card devem provocar reacao: surpresa, medo de ficar para tras ou desejo de agir.
+7. **Gancho emocional.** Ao menos o primeiro e o último card devem provocar reação: surpresa, medo de ficar para trás ou desejo de agir.
 
-## Fluxo de Execucao
+## Fluxo de Execução
 
 ### Passo 1: Receber o plano
 
 Do `/mira-planner`, receba:
-- Lista de slides com template, conteudo resumido e fonte no capitulo
+- Lista de slides com template, conteúdo resumido e fonte no capítulo
 - Imagens existentes em `decks/<deck>/assets/`
-- Video escolhido para o header
+- Vídeo escolhido para o header
 
 ### Passo 2: Analisar o arco narrativo
 
-Avalie a sequencia de slides como uma historia:
+Avalie a sequência de slides como uma história:
 
 ```
 ABERTURA (slides 1-2)     → Problema ou dado impactante que gera curiosidade
@@ -60,11 +60,11 @@ CLIMAX (penultimo slide)  → Insight principal ou conclusao forte
 FECHAMENTO (ultimo slide) → Resumo visual ou proximos passos
 ```
 
-Se a sequencia do planejador nao segue esse arco, reorganize os slides (sem alterar os templates escolhidos, apenas a ordem e o conteudo).
+Se a sequência do planejador não segue esse arco, reorganize os slides (sem alterar os templates escolhidos, apenas a ordem e o conteúdo).
 
 ### Passo 3: Reescrever cada slide
 
-Para cada slide, produza uma versao refinada:
+Para cada slide, produza uma versão refinada:
 
 ```
 ## Slide N: [Titulo Original] → [Titulo Reescrito]
@@ -77,36 +77,36 @@ Para cada slide, produza uma versao refinada:
 - **Nota de copy:** [justificativa curta da escolha criativa]
 ```
 
-### Tecnicas por tipo de card
+### Técnicas por tipo de card
 
-| Template | Tecnica de copy |
+| Template | Técnica de copy |
 |----------|----------------|
-| `card_lista` | Cada bullet comeca com numero ou verbo de acao. Primeiro item e o mais impactante |
-| `card_grid` | Titulos dos itens em 2-3 palavras. Descricoes em 1 linha. Contraste entre itens |
+| `card_lista` | Cada bullet começa com número ou verbo de ação. Primeiro item é o mais impactante |
+| `card_grid` | Títulos dos itens em 2-3 palavras. Descrições em 1 linha. Contraste entre itens |
 | `card_tabela` | Headers claros e curtos. Destaque visual na coluna/linha mais reveladora |
-| `card_code` | Comentario do arquivo deve ser provocativo, nao tecnico ("O codigo que muda tudo") |
-| `card_citacao` | Citacoes reais com fonte. Se nao houver, criar frase de efeito atribuida ao conceito |
-| `card_d3` | Titulo deve antecipar a conclusao do grafico ("Custo dispara apos fase 3") |
-| `card_timeline` | Cada etapa com verbo no infinitivo. Progresso visivel de simples para complexo |
-| `card_destaques` | Titulos curtos e comparacao clara: "Sem processo" vs "Com processo" |
-| `card_imagem` | Legenda que conta uma historia, nao descreve ("O momento em que tudo muda") |
-| `card_video_bg` | Titulo grandioso, conteudo minimalista. O video faz o trabalho emocional |
-| `card_progresso` | Percentuais que chocam. Labels que revelam o que o numero significa |
-| `card_cta` | Urgencia sem desespero. Beneficio claro. Um unico verbo de acao no botao |
+| `card_code` | Comentário do arquivo deve ser provocativo, não técnico ("O código que muda tudo") |
+| `card_citacao` | Citações reais com fonte. Se não houver, criar frase de efeito atribuída ao conceito |
+| `card_d3` | Título deve antecipar a conclusão do gráfico ("Custo dispara após fase 3") |
+| `card_timeline` | Cada etapa com verbo no infinitivo. Progresso visível de simples para complexo |
+| `card_destaques` | Títulos curtos e comparação clara: "Sem processo" vs "Com processo" |
+| `card_imagem` | Legenda que conta uma história, não descreve ("O momento em que tudo muda") |
+| `card_video_bg` | Título grandioso, conteúdo minimalista. O vídeo faz o trabalho emocional |
+| `card_progresso` | Percentuais que chocam. Labels que revelam o que o número significa |
+| `card_cta` | Urgência sem desespero. Benefício claro. Um único verbo de ação no botão |
 
 ### Passo 4: Avaliar e melhorar as imagens
 
 Para cada slide que usa ou poderia usar imagem:
 
-1. **Imagem existente em `decks/<deck>/assets/`?** Avalie se e a melhor opcao para o slide refinado. Se o novo angulo de copy pede outra imagem, anote.
+1. **Imagem existente em `decks/<deck>/assets/`?** Avalie se é a melhor opção para o slide refinado. Se o novo ângulo de copy pede outra imagem, anote.
 
-2. **Imagem necessaria mas inexistente?** Gere um briefing para o `/mira-visuals`:
+2. **Imagem necessária mas inexistente?** Gere um briefing para o `/mira-visuals`:
    - Descreva o conceito visual desejado
-   - Indique se deve ser fullwidth (diagrama/grafico) ou titulo NS5 (foto/cena)
+   - Indique se deve ser fullwidth (diagrama/gráfico) ou título NS5 (foto/cena)
    - Sugira o pipeline (Gemini para fotos, D3 para diagramas)
    - Indique o nome do arquivo de destino
 
-3. **Card sem imagem que ganharia com uma?** `card_imagem` e `card_video_bg` funcionam melhor com visual forte. Se o conteudo pede, sugira criacao.
+3. **Card sem imagem que ganharia com uma?** `card_imagem` e `card_video_bg` funcionam melhor com visual forte. Se o conteúdo pede, sugira criação.
 
 ### Passo 5: Apresentar o plano refinado
 
@@ -131,18 +131,18 @@ Formate como tabela comparativa (antes/depois):
 2. ...
 ```
 
-Pergunte ao usuario:
-- "Refinei o conteudo dos **XX slides**. As mudancas principais sao: [lista]. Aprova?"
+Pergunte ao usuário:
+- "Refinei o conteúdo dos **XX slides**. As mudanças principais são: [lista]. Aprova?"
 - "Identifiquei **X imagens** que precisam ser criadas. Posso chamar o /mira-visuals?"
 
 ### Passo 6: Modo sem feedback
 
-Se o usuario pediu "sem feedback", "direto", "sem confirmacao" ou similar:
-- Aplique o refinamento sem apresentar para aprovacao
+Se o usuário pediu "sem feedback", "direto", "sem confirmação" ou similar:
+- Aplique o refinamento sem apresentar para aprovação
 - Chame o `/mira-visuals` automaticamente para imagens faltantes
 - Passe o plano refinado direto para o `/mira-builder`
 
-## Exemplo de transformacao
+## Exemplo de transformação
 
 **Antes (planejador):**
 ```
@@ -166,10 +166,10 @@ Slide 3: O Preco de "Depois A Gente Arruma"
   urgencia. O titulo usa uma frase que todo dev ja ouviu para criar identificacao.
 ```
 
-## Integracao no pipeline
+## Integração no pipeline
 
 ```
 /mira-planner → /mira-copywriter → /mira-builder → /mira-validator
 ```
 
-O copywriter NAO altera templates nem quantidade de slides (exceto se justificado por reorganizacao narrativa). Refina o conteudo textual e visual dentro da estrutura definida pelo planejador.
+O copywriter NÃO altera templates nem quantidade de slides (exceto se justificado por reorganização narrativa). Refina o conteúdo textual e visual dentro da estrutura definida pelo planejador.

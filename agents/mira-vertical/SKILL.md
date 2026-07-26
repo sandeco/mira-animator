@@ -20,7 +20,7 @@ Transforma um deck 16:9 do Mira numa versão **vertical generalista para a tela 
 - **Modo conversão (padrão quando existe deck 16:9):** reformula um deck existente, slide a slide, conforme o playbook abaixo.
 - **Modo criação nativa (quando NÃO existe deck de origem, ou o usuário pede um slide novo já vertical):** cria o slide do zero direto na geometria retrato, sem passar pelo 16:9. Veja a seção "Criação do zero na geometria nativa".
 
-> **Fonte da verdade:** o padrão desta skill foi validado e aprovado no deck de referência `specs/slides-verticais/index-9x16.html`, e as regras estão congeladas na spec `specs/slides-verticais/mira-vertical-9x16-spec.md` (com o comparativo elemento por elemento em `mira-vertical-comparacao.md`). Quando em dúvida sobre um valor exato, o resultado deve ficar **idêntico ao deck de referência**.
+> **Fonte da verdade:** o padrão desta skill foi validado e aprovado no deck de referência `_reversa_sdd/slides-verticais/index-9x16.html`, e as regras estão congeladas na spec `_reversa_sdd/slides-verticais/mira-vertical-9x16-spec.md` (com o comparativo elemento por elemento em `mira-vertical-comparacao.md`). Quando em dúvida sobre um valor exato, o resultado deve ficar **idêntico ao deck de referência**.
 
 ## O resultado, em uma frase
 
@@ -193,7 +193,7 @@ O canvas alto padrão é aplicado em todos os slides automaticamente. Estes ajus
 
 ## Passos
 
-1. **Localizar o deck.** Ache o `index.html` do deck (em `decks/<deck>/` ou `slides/<tema>/`). Se houver mais de um deck e o usuário não disser qual, pergunte. Se faltar `index.html`, ou ele não tiver `.glass-card` / `.anim-stage` / `<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
+1. **Localizar o deck.** Ache o `index.html` do deck (em `decks/<deck>/` ou `decks/<tema>/`). Se houver mais de um deck e o usuário não disser qual, pergunte. Se faltar `index.html`, ou ele não tiver `.glass-card` / `.anim-stage` / `<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
 2. **Copiar para o novo arquivo.** Copie `index.html` para `index-9x16.html` na mesma pasta (mesma pasta = caminhos relativos de logo, vídeo e imagens continuam válidos). O `index.html` fica byte a byte igual.
 3. **Injetar a moldura + composição.** Logo antes de `</head>` do `index-9x16.html`, como último bloco de estilo (depois do Tailwind, para vencer a especificidade), insira o bloco `<style id="mira-formato-9x16">` canônico (abaixo): quadro 9:16, fundo #333333 fora da coluna, composição só título + animação, título base 7/10, canvas alto 128/203.
 4. **Injetar o script de auto-ajuste de título.** Adicione o IIFE `fitTitles` (acima) no bloco de scripts, antes de `lucide.createIcons()`.

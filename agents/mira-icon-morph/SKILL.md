@@ -7,7 +7,7 @@ description: Gera num slide do Mira uma forma que morfa em outra(s) em loop a pa
 
 Gera um slide de morph quando o usuário tem só a ideia em palavras ("nuvem virando lâmpada"), sem os arquivos. Acha os ícones, valida a licença e monta o morph. Irmão do `mira-svg-morph`: mesma renderização, fonte diferente.
 
-> **Fonte da verdade:** o render é o do `mira-svg-morph` (`agents/mira-svg-morph/SKILL.md`), validado em `decks/apresentacao-mira-gsap/` (ícones da Iconify, conjunto MDI). Spec completa em `specs/GSAP/mira-icon-morph-spec.md`; sourcing/licença em `specs/GSAP/mira-gsap-contexto.md` (seção 4).
+> **Fonte da verdade:** o render é o do `mira-svg-morph` (`agents/mira-svg-morph/SKILL.md`), validado em `decks/apresentacao-mira-gsap/` (ícones da Iconify, conjunto MDI). Spec completa em `_reversa_sdd/GSAP/mira-icon-morph-spec.md`; sourcing/licença em `_reversa_sdd/GSAP/mira-gsap-contexto.md` (seção 4).
 
 ## Por que Iconify (e não raspar SVG da web)
 

@@ -39,7 +39,7 @@ El pipeline de agentes lee la fuente, planifica los slides, escribe el texto, mo
 
 - **Fuentes vinculadas, no invasión.** Mira lee de las fuentes que vinculas, pero escribe solo en `decks/`. Tus proyectos de origen nunca se tocan.
 - **Todo se mueve.** Cada slide de concepto recibe una animación en bucle continuo. La regla de oro de Mira: ninguna animación es estática — *entra* con coreografía y *después* entra en bucle.
-- **Metáforas, no viñetas.** El agente `mira-animated-metaphor` convierte conceptos abstractos en analogías concretas y animadas de la vida diaria.
+- **Metáforas, no viñetas.** El agente `mira-animator` convierte conceptos abstractos en analogías concretas y animadas de la vida diaria.
 - **Varios formatos desde un solo deck.** Un deck 16:9 se convierte en versiones 1:1, 9:16, regla de los tercios y transición disolvencia — sin tocar el original.
 - **Más que slides.** Coloca un **elemento 3D** real (auto-rotante, arrastrable) o un **código QR** escaneable directo en un card, con `/mira-3d` y `/mira-qrcode`.
 - **Corre en cualquier lugar.** La salida es HTML puro. Doble clic en el archivo. Sin servidor, sin toolchain.

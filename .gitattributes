@@ -9,3 +9,7 @@ templates/vendor/** -text
 
 # Este arquivo já é versionado em CRLF; não trate o CR como whitespace inválido.
 lib/installer/writer.js whitespace=cr-at-eol
+
+# Skills do Mira: sempre LF, para os SKILL.md não regredirem a CRLF entre
+# editores/plataformas (o padrão agentskills.io e o parsing pedem consistência).
+agents/**/*.md text eol=lf

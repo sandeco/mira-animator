@@ -752,6 +752,13 @@
                     out.push(slide);
                 });
                 window.__miraMdHeaders = hdrs;
+                /* id estável por slide: <!-- mira-slide-id: ... --> logo após o
+                   cabeçalho; identifica o bloco mesmo com título/número editados */
+                window.__miraMdIds = list.map(function (h, k) {
+                    var end = k + 1 < list.length ? list[k + 1].at : t.length;
+                    var mid = /<!--\s*mira-slide-id:\s*([^\s>]+)\s*-->/.exec(t.slice(h.at, end));
+                    return mid ? mid[1] : '';
+                });
                 return out;
             }
             function tituloFrag(t) {
@@ -1048,11 +1055,16 @@
             var mdHttp = location.protocol === 'http:' || location.protocol === 'https:';
             var mdLast = null, mdPushTimer = null, mdSaving = false;
             function mdBuild() {
-                /* preserva a intro e os cabeçalhos (layout | título | animação)
-                   capturados pelo builder no load: o push só troca os TEXTOS */
+                /* preserva a intro, os cabeçalhos (layout | título | animação) e
+                   os ids capturados pelo builder no load: o push só troca os TEXTOS */
                 var hdrs = window.__miraMdHeaders || [];
+                var ids = window.__miraMdIds || [];
                 var out = window.__miraMdIntro || '# Roteiro · Mira Studio 16:9\n\n';
-                for (var i = 0; i < secs.length; i++) out += (hdrs[i] || ('## Slide ' + (i + 1))) + '\n\n' + (curText(i) || '').trim() + '\n\n';
+                for (var i = 0; i < secs.length; i++) {
+                    out += (hdrs[i] || ('## Slide ' + (i + 1))) + '\n';
+                    if (ids[i]) out += '<!-- mira-slide-id: ' + ids[i] + ' -->\n';
+                    out += '\n' + (curText(i) || '').trim() + '\n\n';
+                }
                 return out;
             }
             function mdParse(t) {
@@ -1063,7 +1075,10 @@
                 while ((m = re.exec(t))) list.push({ start: m.index, at: m.index + m[0].length });
                 for (var k = 0; k < list.length; k++) {
                     var end = (k + 1 < list.length) ? list[k + 1].start : t.length;
-                    map[k] = t.slice(list[k].at, end).trim();
+                    /* o comentário de id é metadado, nunca fala */
+                    map[k] = t.slice(list[k].at, end)
+                        .replace(/<!--\s*mira-slide-id:[^>]*-->\s*/g, '')
+                        .trim();
                 }
                 return map;
             }
@@ -1080,7 +1095,9 @@
                 if (ovBody) ovBody.textContent = tx;
             }
             function mdPush() {
-                if (!mdHttp) return;
+                /* modo edição (me-on) congela a sincronização: uma reordenação
+                   pendente deixaria o push casar fala com cabeçalho errado */
+                if (!mdHttp || document.body.classList.contains('me-on')) return;
                 var content = mdBuild();
                 if (content === mdLast) return;
                 mdSaving = true;
@@ -1094,12 +1111,15 @@
             function mdPoll() {
                 if (!mdHttp || mdSaving) return;
                 if (document.documentElement.hasAttribute('data-mira-recording')) return;
+                if (document.body.classList.contains('me-on')) return;
                 fetch(MD_PATH, { cache: 'no-store' }).then(function (r) {
                     /* sem arquivo ainda: cria a partir dos textos atuais */
                     if (r.status === 404) { if (mdLast === null) { mdLast = ''; mdPush(); } return null; }
                     return r.ok ? r.text() : null;
                 }).then(function (t) {
                     if (t == null || t === mdLast) return;
+                    /* resposta em voo que chegou depois de entrar no modo edição */
+                    if (document.body.classList.contains('me-on')) return;
                     mdLast = t;
                     mdApply(t);
                 }).catch(function () { });
@@ -1107,6 +1127,99 @@
             /* o builder já buscou o roteiro.md no load: aplica sem esperar o poll */
             if (mdHttp && window.__miraMdText) { mdLast = window.__miraMdText; mdApply(window.__miraMdText); }
             if (mdHttp) { mdPoll(); setInterval(mdPoll, 1500); }
+
+            /* ---------- fonte da ordem: adaptador para o mira-edit ----------
+               Neste deck os slides nascem do roteiro.md, então a ORDEM mora lá.
+               O Salvar do modo E delega para cá: reordenamos os blocos "## Slide"
+               inteiros (cabeçalho + id + fala viajam juntos), gravamos com
+               verificação de revisão (baseSha) e recarregamos na nova ordem. */
+            function sha256Hex(text) {
+                return crypto.subtle.digest('SHA-256', new TextEncoder().encode(text)).then(function (buf) {
+                    return Array.prototype.map.call(new Uint8Array(buf), function (b) {
+                        return ('0' + b.toString(16)).slice(-2);
+                    }).join('');
+                });
+            }
+            function novoId() {
+                var bytes = new Uint8Array(16);
+                crypto.getRandomValues(bytes);
+                return Array.prototype.map.call(bytes, function (b) {
+                    return ('0' + b.toString(16)).slice(-2);
+                }).join('');
+            }
+            function remapPorPosicao(key, perm) {
+                /* estados guardados por índice de slide seguem o slide na nova ordem */
+                try {
+                    var velho = JSON.parse(localStorage.getItem(key) || '{}') || {};
+                    var novo = {};
+                    perm.forEach(function (orig, posNova) {
+                        if (velho[orig] != null) novo[posNova] = velho[orig];
+                    });
+                    localStorage.setItem(key, JSON.stringify(novo));
+                } catch (e) { }
+            }
+            if (mdHttp) window.miraOrderSource = {
+                available: function () {
+                    if (document.documentElement.hasAttribute('data-mira-recording')) {
+                        return { ok: false, reason: 'Pare a gravação antes de reordenar os slides.' };
+                    }
+                    return { ok: true };
+                },
+                commit: function (perm) {
+                    return fetch(MD_PATH, { cache: 'no-store' }).then(function (r) {
+                        if (!r.ok) throw new Error('Não consegui ler o roteiro.md (HTTP ' + r.status + ').');
+                        return r.text();
+                    }).then(function (base) {
+                        var re = /^##\s*Slide[^\n]*$/gm, m, marks = [];
+                        while ((m = re.exec(base))) marks.push(m.index);
+                        if (marks.length !== perm.length) {
+                            throw new Error('O roteiro.md tem ' + marks.length + ' slides e a tela tem ' +
+                                perm.length + '. Recarregue a página e refaça a ordem.');
+                        }
+                        var intro = base.slice(0, marks[0]);
+                        var blocks = marks.map(function (s, k) {
+                            var raw = base.slice(s, k + 1 < marks.length ? marks[k + 1] : base.length);
+                            if (!/\n$/.test(raw)) raw += '\n';
+                            if (!/<!--\s*mira-slide-id:/.test(raw)) {
+                                raw = raw.replace(/^(##[^\n]*\n)/, '$1<!-- mira-slide-id: ' + novoId() + ' -->\n');
+                            }
+                            return raw;
+                        });
+                        var content = intro + perm.map(function (k) { return blocks[k]; }).join('');
+                        return sha256Hex(base).then(function (baseSha) {
+                            return fetch('/__mira_save', {
+                                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                                body: JSON.stringify({ path: MD_PATH, content: content, baseSha: baseSha })
+                            });
+                        });
+                    }).then(function (r) {
+                        if (r.status === 409) {
+                            throw new Error('O roteiro.md mudou por fora durante a edição. Nada foi gravado: ' +
+                                'recarregue a página e refaça a ordem sobre a versão nova.');
+                        }
+                        if (!r.ok) throw new Error('O servidor recusou a gravação (HTTP ' + r.status + ').');
+                        remapPorPosicao(TXTKEY, perm);
+                        remapPorPosicao(POSKEY, perm);
+                        /* volta para o mesmo slide após o reload (o DOM já está na ordem nova) */
+                        try {
+                            var mid = window.scrollY + window.innerHeight * 0.5, atual = 0;
+                            var list = document.querySelectorAll('body > section');
+                            for (var k = 0; k < list.length; k++) if (list[k].offsetTop <= mid) atual = k;
+                            sessionStorage.setItem('mira-studio-slide', String(atual));
+                        } catch (e) { }
+                        setTimeout(function () { location.reload(); }, 350);
+                    });
+                }
+            };
+            /* pós-reload do reorder: reposiciona no slide em que o usuário estava */
+            try {
+                var restaura = sessionStorage.getItem('mira-studio-slide');
+                if (restaura != null) {
+                    sessionStorage.removeItem('mira-studio-slide');
+                    var alvo = document.querySelectorAll('body > section')[+restaura];
+                    if (alvo) setTimeout(function () { alvo.scrollIntoView(); }, 80);
+                }
+            } catch (e) { }
 
             function render() {
                 var i = current();

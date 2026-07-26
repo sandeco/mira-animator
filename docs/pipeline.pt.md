@@ -8,7 +8,7 @@ flowchart TD
     E --> P[mira-planner<br/>planeja os slides]
     P --> C[mira-copywriter<br/>refina texto e imagens]
     C --> B[mira-builder<br/>monta o HTML]
-    B --> A[mira-animator<br/>coreografa as animações]
+    B --> A[mira-animator<br/>metáforas animadas]
     A --> V[mira-validator<br/>relatório de conformidade]
 ```
 
@@ -21,7 +21,7 @@ flowchart TD
 | 2 | **mira-planner** | Analisa o briefing e propõe um **plano de slides** detalhado, e espera sua aprovação antes de montar qualquer coisa. |
 | 3 | **mira-copywriter** | Refina o texto para a altura de slide e especifica imagens. |
 | 4 | **mira-builder** | O motor de montagem. Monta HTML/Tailwind interativo a partir de cards glassmorphism modulares com navegação card a card. |
-| 5 | **mira-animator** | Adiciona o movimento. Todo slide de conceito ganha uma animação criativa com **loop interno obrigatório** — entra com coreografia e depois entra em loop. Estampa cada animação com o marcador `<!-- @MIRA:SIZE 3/10 -->`. |
+| 5 | **mira-animator** | Adiciona o movimento, e a metáfora. Todo slide de conceito vira uma **analogia concreta do cotidiano** animada, com **loop interno obrigatório**: entra com coreografia e depois entra em loop. Também substitui a animação de um slide existente no lugar. Estampa cada animação com o marcador `<!-- @MIRA:SIZE 3/10 -->`. |
 | 6 | **mira-validator** | Analisa o HTML gerado e produz um relatório de conformidade: checagens visuais, estruturais e de assets. |
 
 ## Agentes de ajuste de movimento
@@ -30,8 +30,8 @@ Estes rodam por cima de um deck existente.
 
 | Agente | O que faz |
 |---|---|
+| **mira-animated-metaphor** | Atalho compatível do `mira-animator` (modo substituir), mantido por estar citado em material publicado. |
 | **mira-size-animator** | Lê o marcador `@MIRA:SIZE N/10` e escala a percepção de tamanho das animações (raios, comprimentos, espaçamentos, fontes internas, glow) numa escala de 1 a 10, sem mudar a altura do palco nem quebrar o loop. *"Coloca as animações em 6/10."* |
-| **mira-animated-metaphor** | Transforma a animação de um slide numa **metáfora visual** animada — uma analogia concreta do cotidiano para o conceito — mantendo título, subtítulo e pílulas. |
 
 ## Agentes visuais / de imagem
 

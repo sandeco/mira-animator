@@ -38,7 +38,7 @@ Regras do marcador:
 
 ## Onde estão as animações
 
-O deck fica em `decks/<deck>/index.html` ou `slides/<tema>/index.html` (os dois caminhos existem conforme o fluxo). Uma "animação" é todo card com `.anim-stage` + `<svg>` D3. Havendo mais de um deck e o usuário não dizendo qual, **pergunte qual deck** antes de editar.
+O deck fica em `decks/<deck>/index.html` ou `decks/<tema>/index.html` (os dois caminhos existem conforme o fluxo). Uma "animação" é todo card com `.anim-stage` + `<svg>` D3. Havendo mais de um deck e o usuário não dizendo qual, **pergunte qual deck** antes de editar.
 
 ## Dois modos de uso
 
@@ -149,7 +149,7 @@ Cada linha alterada é só geometria, viewBox ou o marcador. Nada além disso.
 
 ## Workflow de Execução
 
-1. **Localizar o deck** (`decks/<deck>/index.html` ou `slides/<tema>/index.html`). Se ambíguo, perguntar qual.
+1. **Localizar o deck** (`decks/<deck>/index.html` ou `decks/<tema>/index.html`). Se ambíguo, perguntar qual.
 2. **Enumerar as animações** (cards com `.anim-stage` + `<svg>`) e ler o marcador `@MIRA:SIZE` de cada uma (3/10 se faltar).
 3. **Sem alvo** → reportar a tabela de níveis e parar.
 4. **Com alvo** → resolver o escopo (deck inteiro ou slide específico).

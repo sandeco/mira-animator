@@ -53,7 +53,7 @@ Porta de entrada única para gráficos de dados no Mira: pega o que o usuário t
 | Modo | Quando | Como |
 |---|---|---|
 | Slide interativo | O gráfico vai num deck Mira | Preencher `agents/mira-builder/templates/card_d3.html` |
-| Imagem PNG | Uso fora do deck, export, thumbnail | HTML standalone + `node agents/mira-visuals/scripts/capture.js <in.html> <out.png> <w> <h>` |
+| Imagem PNG | Uso fora do deck, export, thumbnail | HTML standalone + `node agents/mira-visuals/scripts/capture.cjs <in.html> <out.png> <w> <h>` |
 | Animado | Usuário pediu animação | Gerar a versão estática aqui e encadear /mira-animator |
 
 ## Princípios de design (beleza, impacto, leveza)

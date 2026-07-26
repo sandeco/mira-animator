@@ -117,6 +117,10 @@
             '#mef-actions button{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;',
             'border:none;border-radius:7px;cursor:pointer;color:#fff;background:rgba(255,255,255,.08);transition:all .15s}',
             '#mef-actions button:hover{background:' + ACCENT + ';color:#101010}',
+            '#mef-cor{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;',
+            'border-radius:8px;border:1px solid #3a3a3a;background:#1b1b1b;cursor:pointer;overflow:hidden}',
+            '#mef-cor:hover{border-color:' + ACCENT + '}',
+            '#mef-cor input{width:40px;height:40px;border:0;padding:0;background:none;cursor:pointer}',
             /* elemento sendo editado como texto */
             'body.mef-text-editing #mef-overlay,body.mef-text-editing #mef-actions{display:none!important}',
             '.mef-editing{position:relative;z-index:99993;outline:2px dashed ' + ACCENT + ' !important;',
@@ -238,6 +242,76 @@
         el.style.transformOrigin = 'center center';
     }
 
+    /* ---------- cor ----------
+       Eixo `cor` da memória de preferências: sem edição de cor não existe
+       delta de cor para capturar. Mexe só na cor do TEXTO (`color`), que é
+       o gesto que se repete; fundo e borda ficam de fora de propósito. */
+    /* --- bloco da cor (testado em Node com stubs) --- */
+    function ensureBaseCor(el, op) {
+        if (op.baseCor == null) op.baseCor = el.style.color || '';
+    }
+    function applyCor(el, op) {
+        ensureBaseCor(el, op);
+        el.style.color = op.cor || op.baseCor || '';
+    }
+    function corAtual(el) {
+        try {
+            var c = getComputedStyle(el).color;
+            var m = /rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(c);
+            if (!m) return '#ffffff';
+            return '#' + [m[1], m[2], m[3]].map(function (n) {
+                return ('0' + Number(n).toString(16)).slice(-2);
+            }).join('');
+        } catch (e) { return '#ffffff'; }
+    }
+    /* cor de antes do gesto INTEIRO. Sem isso, o 'change' leria como
+       "anterior" a última posição do arraste no seletor: o Ctrl+Z voltaria
+       para uma cor intermediária, e voltar ao ponto de partida ainda assim
+       gravaria um episódio de um gesto que não mudou nada. O log de
+       evidência é append-only: episódio fantasma não sai depois. */
+    var corAntesDoGesto = null;
+    function iniciarGestoCor() {
+        if (!sel) return;
+        var op = getOp(sel.dataset.meId, false) || {};
+        /* guarda também a cor EFETIVA, que é com a qual o seletor abre.
+           Sem ela, fechar o seletor no mesmo tom que o elemento já tinha
+           gravaria um `cor` explícito onde antes não havia nenhum: um
+           episódio de um gesto que não mudou pixel nenhum. */
+        corAntesDoGesto = { id: sel.dataset.meId, cor: op.cor, efetiva: op.cor || corAtual(sel) };
+    }
+    function setCor(valor, registrar) {
+        if (!sel) return;
+        var el = sel, op = getOp(el.dataset.meId, true);
+        ensureBaseCor(el, op);
+        if (!registrar) {
+            if (!corAntesDoGesto || corAntesDoGesto.id !== el.dataset.meId) iniciarGestoCor();
+            op.cor = valor;
+            applyCor(el, op);
+            return;
+        }
+        var gesto = corAntesDoGesto && corAntesDoGesto.id === el.dataset.meId ? corAntesDoGesto : null;
+        var anterior = gesto ? gesto.cor : op.cor;
+        var efetiva = gesto ? gesto.efetiva : anterior;
+        corAntesDoGesto = null;
+        var iguais = anterior === valor ||
+            (anterior == null && String(efetiva || '').toLowerCase() === String(valor).toLowerCase());
+        if (iguais) {                       // arrastou e voltou: nada aconteceu
+            if (anterior == null) delete op.cor; else op.cor = anterior;
+            applyCor(el, op);
+            return;
+        }
+        op.cor = valor;
+        applyCor(el, op);
+        pushHist(function () {
+            var o = getOp(el.dataset.meId, true);
+            if (anterior == null) delete o.cor; else o.cor = anterior;
+            applyCor(el, o);
+            reselect(el);
+        });
+        markDirty();
+    }
+    /* --- fim do bloco da cor --- */
+
     function cropState(op) {
         return {
             t: op.cropT || 0,
@@ -329,6 +403,7 @@
         actions.id = 'mef-actions';
         actions.setAttribute('data-me-chrome', '1');
         actions.innerHTML =
+            '<label id="mef-cor" title="Cor do texto"><input type="color" data-act="cor"></label>' +
             '<button data-act="dup" title="Duplicar">' + icon(ICONS.copy, 16) + '</button>' +
             '<button data-act="del" title="Excluir">' + icon(ICONS.trash, 16) + '</button>';
         document.body.appendChild(actions);
@@ -338,6 +413,14 @@
             if (b.dataset.act === 'dup') duplicateSel();
             if (b.dataset.act === 'del') deleteSel();
         });
+        /* 'input' pinta ao vivo enquanto o usuário arrasta no seletor;
+           'change' (uma vez, no fim) é o que entra no histórico, senão
+           um único gesto empilharia dezenas de undos */
+        var corInput = actions.querySelector('input[data-act="cor"]');
+        corInput.addEventListener('pointerdown', iniciarGestoCor);
+        corInput.addEventListener('focus', iniciarGestoCor);
+        corInput.addEventListener('input', function () { setCor(corInput.value, false); });
+        corInput.addEventListener('change', function () { setCor(corInput.value, true); });
     }
 
     function positionOverlay() {
@@ -386,6 +469,10 @@
             return;
         }
         getOp(el.dataset.meId, true);
+        /* o seletor abre já na cor atual do elemento, senão o primeiro
+           clique jogaria tudo para preto */
+        var corInput = actions && actions.querySelector('input[data-act="cor"]');
+        if (corInput) corInput.value = (getOp(el.dataset.meId, false) || {}).cor || corAtual(el);
         positionOverlay();
         syncCropMode();
     }
@@ -679,7 +766,7 @@
     }
     function meaningfulOps() {
         return opsArr.filter(function (o) {
-            return o.deleted || o.dupOf || o.text != null || o.html != null ||
+            return o.deleted || o.dupOf || o.text != null || o.html != null || o.cor ||
                 (o.tx && o.tx !== 0) || (o.ty && o.ty !== 0) ||
                 (o.rot && o.rot !== 0) || (o.sx != null && o.sx !== 1) || (o.sy != null && o.sy !== 1) ||
                 o.cropT || o.cropR || o.cropB || o.cropL;
@@ -716,6 +803,8 @@
             if (o.cropR) out.cropR = o.cropR;
             if (o.cropB) out.cropB = o.cropB;
             if (o.cropL) out.cropL = o.cropL;
+            if (o.cor) out.cor = o.cor;
+            if (o.baseCor) out.baseCor = o.baseCor;
             if (o.baseT) out.baseT = o.baseT;
             if (o.baseClip) out.baseClip = o.baseClip;
             if (o.baseWebkitClip) out.baseWebkitClip = o.baseWebkitClip;
@@ -749,6 +838,9 @@
     function exposeApi() {
         window.miraEditFree = {
             hasChanges: function () { return stateDirty; },
+            /* o mira-edit precisa renumerar a baseline do delta com a mesma
+               permutação usada aqui na gravação */
+            remapId: function (id, permutation) { return remapId(id, permutation); },
             changeCount: function () { return stateDirty ? meaningfulOps().length : 0; },
             injectIntoSource: function (src, options) {
                 commitActiveTextEdit();   // salvar no meio de uma edição de texto inclui (e encerra) a edição
@@ -779,6 +871,7 @@
             var op = getOp(o.id, true); Object.assign(op, o);
             if (o.html != null) el.innerHTML = o.html;
             else if (o.text != null) el.textContent = o.text;
+            applyCor(el, op);
             applyTransform(el, op);
             applyCrop(el, op);
         });
@@ -794,6 +887,7 @@
                 if (o.html != null) clone.innerHTML = o.html;
                 else if (o.text != null) clone.textContent = o.text;
                 var opC = getOp(o.id, true); Object.assign(opC, o);
+                applyCor(clone, opC);
                 applyTransform(clone, opC);
                 applyCrop(clone, opC);
                 var match = /^me-dup-(\d+)-/.exec(o.id);

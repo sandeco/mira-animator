@@ -17,7 +17,7 @@ description: >-
 
 Gera um slide onde uma silhueta vetorial vira outra diante do espectador, em loop. É o ato visual de uma metáfora: o abstrato vira concreto, ou uma coisa revela a outra. O usuário traz os arquivos `.svg`; a skill faz o morph.
 
-> **Fonte da verdade:** padrão validado em `decks/apresentacao-mira-gsap/` na sessão de 2026-06-19. `morph-demo.html` (dois SVGs, ida e volta), `morph-sequencia.html` (vários SVGs encadeados) e o GSAP já vendorado em `assets/gsap/`. A spec completa está em `specs/GSAP/mira-svg-morph-spec.md`. Quando em dúvida sobre o scaffold, copie desses arquivos.
+> **Fonte da verdade:** padrão validado em `decks/apresentacao-mira-gsap/` na sessão de 2026-06-19. `morph-demo.html` (dois SVGs, ida e volta), `morph-sequencia.html` (vários SVGs encadeados) e o GSAP já vendorado em `assets/gsap/`. A spec completa está em `_reversa_sdd/GSAP/mira-svg-morph-spec.md`. Quando em dúvida sobre o scaffold, copie desses arquivos.
 
 ## Como o morph funciona
 

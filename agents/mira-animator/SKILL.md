@@ -1,119 +1,174 @@
 ---
 name: mira-animator
-description: Cria slides animados com looping interno obrigatório (D3.js v7+ ou 3D CSS), no padrão dos decks em mira-templates/decks/ e do esqueleto visual do mira-builder (glass-card, icon-hero, attribute-pills, replay-btn). Use SEMPRE que o usuário disser, "criar slide animado", "novo slide com animação", "adicionar card com D3", "/mira-animator", "slide criativo para o deck", "slide com flip cards", "slide com battle arena", "slide com staircase", ou pedir explicitamente "looping na animação", "animação contínua", "movimento contínuo no slide". Também use quando o usuário enviar uma imagem e pedir "transforme isso em um slide animado" ou "anima essa figura".
+description: >-
+  Cria e evolui a animação de um slide como METÁFORA visual animada (o M de MIRA): destila o conceito, acha uma analogia concreta do cotidiano e a anima com loop interno obrigatório, em D3.js v7+ ou CSS 3D, no padrão dos decks de mira-templates/decks/ (glass-card, icon-hero, attribute-pills, replay-btn). Dois modos, CRIAR um slide animado novo e SUBSTITUIR a animação de um slide existente no lugar. Use SEMPRE que o usuário disser "/mira-animator", "criar slide animado", "novo slide com animação", "adicionar card com D3", "anima essa figura", "transforma isso num slide animado", "slide criativo para o deck", "looping na animação", "animação contínua", "metáfora animada", "transforma em metáfora", "cria uma analogia", "vira metáfora", "quero uma metáfora pra esse conceito", "metáfora visual", ou pedir para animar, reanimar ou reexpressar um conceito do deck.
 ---
 
-# Skill: Slides com Animação Criativa e Looping Interno
+# Skill: Metáfora Animada com Looping Interno
 
-## REGRA ZERO, Loop Interno Obrigatório
+MIRA é **Metáforas Inteligentes Responsivas Animadas**. A metáfora não é um modo especial desta skill, é o produto dela.
 
-**Toda animação criada por esta skill DEVE ter um loop interno contínuo.** Uma animação que só entra com fade-up e para é proibida: o slide continua respirando depois da entrada, com algo em movimento perpétuo. Exemplos válidos:
+## REGRA ZERO
 
-- Partícula viajando por uma linha de A para B repetidamente
-- Pulso radial em um elemento central (raio expande e contrai)
-- Anel orbital com `stroke-dashoffset` girando
-- Spotlight sequencial percorrendo elementos um por um
-- Cards flipados pulsando em cascata
-- Climber/orbe percorrendo um caminho e reiniciando
-- Música/agente piscando em uníssono aleatório
+Toda animação DEVE ser **uma metáfora**, DEVE ser **uma história** e DEVE ter **loop interno perpétuo**.
 
-Se você não consegue descrever o loop em uma frase ("uma esfera laranja sobe a escada e volta ao começo"), a animação está incompleta.
+- **Metáfora:** analogia concreta do cotidiano, nunca o diagrama do próprio conceito.
+- **História:** começo, transformação e desfecho. Se a cena couber em "o ícone A vira o ícone B" ou "os elementos pulsam", está rasa. Morph, draw e motion path são vocabulário a serviço da história, não a história.
+- **Loop:** entrar com fade-up e parar é proibido. Algo continua em movimento depois da entrada.
 
-## REGRA DE LIBERDADE CRIATIVA
+Antes de codar você tem que conseguir dizer as três frases. Ex.: *"débito técnico é uma torre que ganha um bloco sozinha"*, *"ela inclina até alguém tirar um bloco"*, *"a cada ciclo entra um bloco novo"*.
 
-**Varie a metáfora visual** conforme o conceito do slide; não use sempre o mesmo formato:
+## Método obrigatório: A/B, portões, escolha
 
-- Conceito hierárquico, hub-and-spoke (SPEC no centro, satélites ao redor)
-- Conceito evolutivo, staircase com climber
-- Conceito comparativo, battle arena com VS badge e duelos
-- Conceito de revelação, flip cards 3D
-- Conceito de orquestração, pontos pulsando em uníssono
-- Conceito de fluxo, partículas viajando entre nós
-- Conceito com objeto concreto, o ícone real do objeto como ator (não um círculo que o representa)
+Rode ANTES de qualquer linha de código, em qualquer modo e template. **É proibido implementar a primeira metáfora plausível**, e o custo disso é baixo de propósito: um A/B, não um brainstorm.
 
-Não caia em "8 cards retangulares enfileirados" (o usuário já reclamou). Cada slide é uma micro-narrativa visual.
+1. **Dinâmica como causa:** `Quando [causa], [estado] muda de [A] para [B] porque [mecanismo]. Se [falha], [consequência].`
+2. **A/B, duas candidatas e só.** **A** é a que veio à cabeça primeiro, anote sem julgar. **B** é obrigatoriamente de **outra família de domínio** (casa, rua, trabalho manual, natureza, corpo, transporte, comércio, jogo): se A é cozinha, B não pode ser restaurante. Proibido pensar em coreografia ou técnica aqui, só sistemas do mundo. É a distância entre as famílias que mata o clichê, não a quantidade de candidatas.
+3. **Mapeie** papel, estado, ação causal e evidência visual de cada uma. ❌ *Rejeite quem preserva os substantivos mas troca direção, condição, ordem ou consequência, e quem deixa parte sem correspondente dos dois lados.*
+4. **Contrafactual:** a MESMA cena mostra o que acontece se uma parte falha, atrasa ou não age. ❌ *Se precisar de outra analogia para mostrar a falha, é rasa.*
+5. **Especificidade.** ❌ *Se a cena servir sem alteração para três conceitos não relacionados, é decoração.*
+6. **Distância útil.** ❌ *A associação lexical imediata (orquestração → maestro, fluxo → rio, memória → gaveta) perde o desempate: só vence se a outra falhar num portão duro.*
+7. **História:** estado inicial, causa, transformação, consequência, recuperação. ❌ *Se só der "A vira B" ou "tudo pulsa", volte ao passo 2.*
+8. **Loop da AÇÃO PRINCIPAL** em uma frase. Ambiente, brilho, órbita e pulso não contam. ❌ *Sem loop descritível, não serve.*
 
-## REGRA DE VOCABULÁRIO VISUAL, ÍCONE REAL EM VEZ DE CÍRCULO
+Compare A e B nos portões e implemente quem ganhar. **A pode vencer**, desde que vença; proibido é implementar A sem olhar para B. Gere uma terceira candidata só se as duas falharem ou empatarem de verdade, de família ainda não usada. Rodada extra por hábito é token à toa.
 
-O círculo (dot, partícula, satélite, anel, pulso radial) virou muleta. Ele é legítimo só para conceitos **genuinamente abstratos**: fluxo, energia, sinal, conexão, pulso, propagação. Para o resto, empobrece a cena.
+**Se o usuário rejeitar a metáfora entregue**, não conserte a animação: a analogia é que está errada. Volte ao passo 2, descarte a família inteira e traga outra. Polir metáfora reprovada é polir o erro.
 
-**Quando o conceito tem referente concreto, o ator da animação é um ícone reconhecível, não um círculo.** Se dá para nomear o objeto (livro, cérebro, engrenagem, foguete, banco de dados, chave, escudo, moeda, nuvem, robô, funil, alvo, bússola), anime o objeto.
+## Exemplo de calibração
 
-**Estilo flat, não outline.** "Flat" aqui é o estilo: silhueta cheia (preenchida), cantos suaves, formas sólidas, pouco detalhe, leitura instantânea à distância e na projeção. É o oposto do traço fino vazado do Lucide, que continua só na moldura do card (header, pílulas). Um ícone flat lê como objeto; um outline fininho some no palco.
+**Conceito:** orquestração de agentes. **Candidata A:** maestro e naipes pulsando em uníssono. Parece boa, e é fraca: é a associação lexical de "orquestração" (passo 6), mostra sincronia e não integração de entregas parciais (passo 3), nada acontece se um naipe atrasa (passo 4), e "todos pulsam juntos" serve igual para colaboração, consenso ou rede (passo 5).
 
-Como fazer, sem quebrar nada:
+**Candidata B:** cozinha profissional com passe de expedição. Comanda = tarefa, estações = agentes, expedidor = orquestrador, componentes do prato = dependências, prato completo = resultado, espaço vazio no prato = falha. **História:** a comanda entra, cada estação faz sua parte no próprio ritmo, o expedidor monta o prato, vê uma parte faltando, segura a saída, recebe o atrasado e libera. **Loop:** o prato sai e outra comanda entra. Carrega dependência, atraso e consequência, que a orquestra não carrega.
 
-1. **Traga o ícone como `<path>` inline** no mesmo `<svg>` da animação. A regra "dentro do SVG, desenhe com path/rect/line" continua valendo; o path agora vem de um ícone real em vez de um círculo desenhado à mão.
-2. **O ícone é o ator do loop interno** (Regra Zero intacta): orbita, viaja pela linha, pulsa, se desenha via `stroke-dashoffset`, entra em cascata. Ícone parado no centro é proibido igual a qualquer animação estática.
-3. **Cor segue a paleta do deck, o preenchimento flat permanece.** No deck card laranja/preto, recolore o ícone para laranja e neutros mantendo-o cheio; no template de animação pura (multicor), a cor cheia do ícone é bem-vinda. Nunca introduza cor fora do tema num deck card. O tamanho segue a composição.
+Isto é padrão de **processo**, não biblioteca: não reutilize cozinha, comanda ou passe sem justificativa causal própria.
 
-Fonte e licença, mesmo rigor do `mira-icon-morph`:
+## Deck inteiro: método em lote
 
-- Puxe ícones planos de **fontes abertas**, só licenças **MIT, Apache-2.0, CC0 ou CC-BY**. Duas de primeira linha: **Google Material Symbols/Icons** (fonts.google.com/icons, Apache-2.0, com eixo *fill* para a versão preenchida, que é a cara do flat) e a **API do Iconify** (agrega Material, MDI e centenas de sets flat). Prefira ícone de path único, viewBox `0 0 24 24` (anima limpo).
-- **Embuta inline**; o deck continua offline, por `file://`. A internet é usada só na geração.
-- Se a licença pedir, **registre a atribuição no `CREDITS.md`** do deck. Recuse IP protegida (personagem de franquia) e sugira arte original.
-- Slide inteiro feito de morph de ícones já é o `/mira-icon-morph`; aqui o ícone entra como mais um elemento da cena.
+Escopo de um slide só: rode o método normal. Escopo do deck todo (caso comum do modo SUBSTITUIR sem slide indicado): **não repita o método inteiro slide a slide**, isso estoura o contexto e o método vira teatro. Faça em duas passadas. **O lote muda ONDE cada portão roda, nunca dispensa nenhum.**
 
-Círculo continua ótimo para o abstrato. A regra: **não desenhe uma bolinha quando existe um objeto óbvio para desenhar.**
+**Passada 1, quadro de metáforas do deck**, uma vez só, rodando os passos 1, 2, 3, 5 e 6:
 
-## REGRA DE IDIOMA
+1. Frase causal de cada slide.
+2. Com as frases lado a lado, **distribua as famílias de domínio** entre os slides antes de inventar qualquer cena. O deck não pode morar em duas famílias.
+3. A/B de cada slide, **compartilhando o pool**: candidata já usada em outro slide está queimada, e isso só se vê com o quadro montado.
+4. Aplique os portões baratos (mapeamento, especificidade, distância lexical). São eles que ELEGEM a metáfora; escolher antes inverte o método.
+5. Feche o quadro: slide, frase causal, metáfora eleita, família, verbo causal, assinatura temporal. O quadro já é o ledger preenchido, planejado em vez de checado depois.
 
-Textos visíveis em português brasileiro, acentuação 100% correta, UTF-8 direto:
-- "não", "é", "código", "função", "também", "está", "à medida que"
-- NUNCA usar Unicode escapes (`é`) ou entidades HTML (`&eacute;`) no body
-- Charset declarado: `<meta charset="UTF-8">`
+**Passada 2, slide a slide**, com os passos 4, 7 e 8 sobre a metáfora eleita (contrafactual, história, loop), depois beat sheet, rubrica e código.
 
-## REGRA DE FORMATAÇÃO
+Reprovou na passada 2? Use a candidata perdedora do A/B daquele slide, se for de família livre, ou gere uma substituta dentro da família atribuída. O quadro segue válido; só reapresente se a própria família mudar. **Acima de 4 slides, apresente o quadro ao usuário antes de codar**: vetar ali é barato, depois de implementado é caro.
 
-- Proibido travessão (—) em qualquer texto. Substituir por vírgula, dois-pontos ou reescrever.
-- Proibido `\destaque{}` ou `\textcolor{}` em LaTeX. Aqui é HTML, mas a regra geral é: títulos limpos, ênfase via `<span class="primary-color italic">`.
+## Ledger de diversidade
 
-## REGRA DE TÍTULO
+Antes de aprovar, anote de cada slide animado do **mesmo deck**: sistema do cotidiano, família de domínio, verbo causal, silhueta dominante, organização espacial, movimento principal e assinatura temporal. Assinaturas possíveis: acumulação com colapso, rajada com pausa, fluxo interrompido, alternância, onda em cascata, perseguição, compressão e liberação.
 
-- **Sem ícone no título.** Não coloque `icon-hero` nem qualquer `<i data-lucide>` acima ou ao lado do `<h2>` do slide. O título é só texto (com ênfase via `<span class="primary-color italic">`). Ícones continuam permitidos dentro do card (header da animação, pílulas de atributo), nunca no título.
-- **No máximo 6 palavras no título**, a não ser que o usuário peça explicitamente mais. Se o título natural passar de 6 palavras, encurte mantendo o sentido.
-- **Título colado no topo.** A `<section>` usa `px-6 pt-3 pb-6` e o wrapper do card não leva `pt-10 md:pt-16`. O bloco do título fecha com `mb-2`.
-- **Título da CAPA com quebra equilibrada (diretiva).** O título do primeiro slide (a capa, o "header" do deck) segue `agents/_shared/titulo-capa.md`: o CSS base do deck deve levar `text-wrap: balance` escopado só à capa (`body > section:first-of-type h1, body > section:first-of-type h2`), para nunca quebrar com artigo/preposição solto. Vale só para a capa; os slides de conteúdo não precisam.
+**Rejeite** a candidata que: reutiliza sistema do cotidiano de qualquer outro slide; repete a família de um vizinho; coincide com um vizinho em 4 dos 6 eixos (verbo, silhueta, espaço, movimento, tempo, reinício); repete o movimento dominante de um adjacente; ou usa partícula, órbita ou pulso como movimento dominante quando outro slide do deck já usa.
 
-## Quando o Usuário Aciona a Skill
+Repetição só vale como motivo narrativo pedido pelo usuário, e aí varia mecanismo, consequência, enquadramento e ritmo. Ao entregar, informe a assinatura: `domínio | verbo | silhueta | espaço | movimento | tempo`.
 
-1. Usuário aciona com `/mira-animator` ou frase equivalente.
-2. Usuário normalmente envia uma imagem de referência (figura de livro, diagrama do projeto, print), ou descreve o conceito que quer animar.
-3. Você decide a metáfora visual mais forte para esse conceito.
-4. Você implementa diretamente (não pede aprovação prévia se o usuário já deu contexto suficiente).
+## Direção de movimento
 
-## Onde o Slide é Inserido
+Antes de codar, escreva uma **beat sheet de 5 a 7 momentos** com acontecimento, ator focal, duração, easing ou física, estado resultante. O ciclo costuma durar de 4,5 a 8 segundos.
 
-Como um novo card dentro do deck do tema, em `slides/<tema>/index.html`. Se o deck ainda não existir, crie a partir de um esqueleto em `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica, sandeco-just-animation-template ou mira-perfect), respeitando a estrutura do template escolhido.
+1. **Uma ação por vez.** Em qualquer janela de 500 ms, no máximo um acontecimento focal. O resto apoia.
+2. **Causa antes do efeito.** O efeito começa 120 a 400 ms depois da causa. Mesmo frame vira decoração sincronizada.
+3. **Antecipação.** Preparação curta antes da ação (recuo, compressão, inclinação, pausa), 8% a 15% do tempo dela.
+4. **Peso.** Pesado acelera devagar, arco menor, quase sem overshoot. Leve acelera rápido, admite overshoot e follow-through maior.
+5. **Easing semântico.** Fluxo uniforme linear; queda ease-in; chegada e dissipação ease-out; orgânico sine-in-out; elástico só em objeto leve. Nunca o mesmo easing em tudo.
+6. **Hierarquia.** Um ator primário e no máximo dois movimentos secundários. Durante a ação principal o ambiente perde contraste, amplitude e velocidade.
+7. **Leitura da consequência.** Segure o estado resultante 400 a 900 ms antes de reiniciar.
+8. **Follow-through.** Depois de impacto ou parada, partes flexíveis e rastros continuam 150 a 500 ms.
+9. **Arcos.** Objeto transportado, lançado ou articulado não anda em reta sem justificativa mecânica.
+10. **Loop invisível.** Reinicie na saída de quadro, oclusão, retorno natural ou troca de ciclo. Nunca teletransporte o estado inteiro na cara do espectador.
 
-## Variante: sandeco-just-animation-template (animação pura, multi-slide)
+Movimento ambiente não é narrativa. Se a beat sheet puder ser trocada por "tudo pulsa", volte à metáfora.
 
-Quando o deck usa este template, ele NÃO é feito de cards. As regras de card desta skill (título, subtítulo, pílulas, glass-card, icon-hero, .anim-stage) ficam SUSPENSAS e valem estas:
+## Autoavaliação antes de entregar
 
-- **Sem texto sobreposto.** Nada de título, subtítulo ou pílulas. Cada slide é só a animação de tela cheia sobre fundo preto. Labels mínimos DENTRO do SVG (parte da metáfora) são permitidos; título de slide, não.
-- **Cada slide é uma `<section class="slide">`** filha direta do `<body>`, com um `<svg class="stage">` full-bleed (`position: absolute; inset: 0`).
-- **Tamanho e enquadramento fixos:** `viewBox="155.15 87.27 969.70 545.45"` (nível 5/10) com `preserveAspectRatio="xMidYMid slice"`, e o marcador `<!-- @MIRA:SIZE 5/10 -->` na linha acima do svg. Componha o conteúdo centrado em (640, 360) ocupando o palco inteiro; não reserve espaço no topo, porque não há título.
-- **Cor: paleta LIVRE multicor**, alto contraste com o preto, NENHUMA cor predominante. NÃO trave em `var(--mira-primary)` nem no laranja do tema. Distribua a paleta (`#00E5FF`, `#7CFF6B`, `#FFD166`, `#FF5C8A`, `#B388FF`, `#FF904D`, mais branco para neutros) entre os elementos.
-- **Mantém** o loop interno perpétuo, o anti-vazamento por geração (`window.__slugGen`), o trigger por `IntersectionObserver` e o botão Replay.
-- Para adicionar um slide, duplique uma `<section class="slide">` e registre a função em `ANIM.sN`.
+Pontue com uma evidência concreta por linha. Polimento não compensa causalidade fraca.
 
-## Variante: mira-perfect (animação de tela cheia + título/header)
+| Critério | Peso | Veto |
+|---|---|---|
+| **Fidelidade causal.** Papéis, direção, condição, ordem e mecanismo correspondem. | 25 | Só associação temática ou lexical. |
+| **Consequência e contrafactual.** A causa muda estado visível, e a cena aguenta a falha. | 20 | Movimento sem mudança de estado. |
+| **Ganho pedagógico e especificidade.** Ensina o que o título não dá, não serve para conceito alheio. | 20 | Cena intercambiável. |
+| **História e loop.** Estado inicial, causa, transformação, consequência e reinício legíveis, corte escondido. | 15 | Entrada seguida de ambiente. |
+| **Direção de movimento.** Timing, antecipação, peso, easing, hierarquia e follow-through coerentes. | 10 | Tudo junto ou mesmo easing em tudo. |
+| **Diversidade.** Passa no ledger e contrasta com os vizinhos. | 10 | Repete domínio, silhueta, composição e movimento. |
 
-Design do deck de lançamento do MIRA. As regras de card também ficam SUSPENSAS; vale a estrutura do sandeco-just-animation-template (seção acima: `<section class="slide">`, `<svg class="stage">` full-bleed, viewBox 5/10 com `@MIRA:SIZE`, loop perpétuo, anti-vazamento por geração, Replay), com estas diferenças:
+**Corte: 85 de 100 e nenhum veto.** Abaixo disso, volte ao A/B ou à beat sheet. Não entregue "o que deu para fazer".
 
-- **Cada slide de conteúdo leva TÍTULO e HEADER sobrepostos** num `<div class="slide-head">` (kicker + `<h2>` com `<em>` na palavra de ênfase + parágrafo curto), legíveis pelo scrim do topo. Componha a animação levemente abaixo do centro (o template usa `CY + 40`) para respirar sob o header.
-- **A capa é a assinatura do deck:** `<section class="slide slide-cover">` com `<div class="cover-head">` (kicker + `<h1>` gigante em gradiente + tagline) sobre uma animação ambiente discreta.
-- **Cor: UMA cor de marca dominante**, não paleta livre. A paleta JS (`OR`, `DEEP`, `AM`, `GOLD`) deriva de `--mira-primary`/`--mira-primary-deep`/`--mira-accent-2` do bloco `@MIRA:THEME`; use `COLD`/`COLD2` (aço) SOMENTE para "material bruto / estático / fonte protegida". Sem arco-íris.
-- **Camada cinematográfica compartilhada:** `play()` já envolve todo slide com `cineUnder` (brasas quentes ao fundo) e `cineOver` (vinheta + flash de revelação). Não recrie isso por slide; se um slide precisa de campo limpo, adicione a chave em `NOEMBERS`.
+**A nota é sobre o plano**, antes de codar. Não invente que assistiu à animação: a conferência no navegador é do usuário. Ao entregar, diga o que ele deve olhar (a história aparece com o título escondido? o corte do loop aparece? o Replay deixa dois atores correndo juntos?).
 
-## Estrutura Obrigatória do Card
+## Os dois modos
+
+Mesma skill nos dois casos, o que muda é onde o resultado pousa.
+
+**CRIAR** (padrão, etapa 5 do pipeline): slide novo em `decks/<tema>/index.html` (ou `decks/<tema>/index.html`, conforme o fluxo). Você monta o card inteiro. Se o deck não existir, crie a partir de um esqueleto de `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica, sandeco-just-animation-template, mira-perfect).
+
+**SUBSTITUIR** (retrofit de palco existente, "transforma esses slides em metáforas", "essa animação está fraca"):
+
+- Troca a animação **no lugar**: mesmo id de stage (`#st-XXXX` / `#sv-XXXX`), mesmo título, subtítulo e pílulas. Só o palco muda, com no máximo um ajuste leve de subtítulo para amarrar a analogia.
+- Não reescreve título, pílulas nem cores, não reordena o deck, não cria slide novo.
+- Reescreva a função daquele stage no `<script>`, mantendo trigger e Replay, e **reinicie o marcador para `<!-- @MIRA:SIZE 3/10 -->`**.
+- Escopo: slide indicado → só aquele. Sem indicação → todos os animados do deck.
+
+## Vocabulário de coreografia
+
+Arrumações espaciais que o Mira já sabe montar. São **vocabulário de última hora**: a beat sheet já decidiu quem age e com que consequência, aqui você só acha a geometria que serve.
+
+Hub-and-spoke, staircase com um ator subindo, duas colunas em confronto com centro que arbitra, flip cards 3D, grade que reage em cascata, trajetória entre nós com carga que viaja.
+
+**Não existe mapa conceito para formato.** Se pensou "isso é comparação, então battle arena", parou no atalho: volte à beat sheet e pergunte que geometria a HISTÓRIA exige. Se outra metáfora qualquer pudesse ocupar a mesma composição com os mesmos tempos, refaça. Pulso em uníssono, órbita e partícula genérica ficam fora desta lista de propósito, viraram muleta. E nada de "8 cards retangulares enfileirados" (o usuário já reclamou).
+
+## Ícone flat como ator, não bolinha
+
+O círculo (dot, partícula, satélite, anel, pulso radial) é legítimo só para o **genuinamente abstrato**: fluxo, energia, sinal, conexão, propagação. Para o resto, empobrece.
+
+**Com referente concreto, o ator é um ícone reconhecível.** Se dá para nomear o objeto (livro, engrenagem, foguete, chave, moeda, funil, bússola), anime o objeto. Vale igual para o que a metáfora trouxe: se a analogia é a despensa, desenhe a despensa.
+
+**Flat é o estilo**, silhueta cheia, cantos suaves, pouco detalhe, leitura instantânea na projeção. É o oposto do traço fino vazado do Lucide, que fica só na moldura do card.
+
+- **Inline como `<path>`** no mesmo `<svg>` da animação. Dentro do SVG nunca use `<i data-lucide>`.
+- **O ícone é o ator do loop**: age, sofre a consequência e se recupera dentro da beat sheet. Parado no centro é proibido. Evite resolver o loop com órbita ou pulso, que é a muleta que esta regra veio corrigir.
+- **Cor da paleta do deck, preenchimento cheio.** No deck card laranja/preto, recolore para laranja e neutros. Nunca cor fora do tema num deck card.
+- **Fonte aberta apenas**, licenças MIT, Apache-2.0, CC0 ou CC-BY: Google Material Symbols (eixo *fill*) ou API do Iconify. Prefira path único, viewBox `0 0 24 24`. Embuta inline, o deck roda offline por `file://`. Atribuição no `CREDITS.md` se a licença pedir; recuse IP protegida e sugira arte original.
+- Slide inteiro de morph de ícones já é o `/mira-icon-morph`.
+
+## Texto e título
+
+- **Idioma:** siga `agents/_shared/idioma.md`. Português brasileiro, acentuação correta, UTF-8 direto, `<meta charset="UTF-8">`. Nunca Unicode escapes (`é`) nem entidades (`&eacute;`).
+- **Proibido travessão (—)** em qualquer texto: use vírgula, dois-pontos ou reescreva. Ênfase via `<span class="primary-color italic">`.
+- **Título sem ícone**, nenhum `icon-hero` ou `<i data-lucide>` acima ou ao lado do `<h2>`. Ícones só dentro do card.
+- **No máximo 6 palavras no título**, salvo pedido explícito.
+- **Título colado no topo:** `<section>` com `px-6 pt-3 pb-6`, wrapper sem `pt-10`, bloco do título fechando com `mb-2`.
+- **Capa com quebra equilibrada (diretiva):** segue `agents/_shared/titulo-capa.md`, `text-wrap: balance` escopado só à capa (`body > section:first-of-type h1, body > section:first-of-type h2`). Só a capa, slides de conteúdo não precisam.
+
+## Variante: sandeco-just-animation-template (animação pura)
+
+Deck sem cards. As regras de card (título, subtítulo, pílulas, glass-card, icon-hero, .anim-stage) ficam SUSPENSAS. **O método da metáfora continua valendo integralmente**, aqui com mais peso, porque a animação é a única coisa na tela.
+
+- **Sem texto sobreposto.** Só a animação de tela cheia sobre fundo preto. Labels mínimos DENTRO do SVG (parte da metáfora) são permitidos; título de slide, não.
+- Cada slide é uma `<section class="slide">` filha direta do `<body>`, com `<svg class="stage">` full-bleed (`position: absolute; inset: 0`).
+- **Enquadramento fixo:** `viewBox="155.15 87.27 969.70 545.45"` com `preserveAspectRatio="xMidYMid slice"` e marcador `<!-- @MIRA:SIZE 5/10 -->` acima do svg. Componha centrado em (640, 360) ocupando o palco inteiro, sem reservar topo.
+- **Paleta LIVRE multicor**, alto contraste com o preto, nenhuma cor predominante. NÃO trave em `var(--mira-primary)`. Distribua `#00E5FF`, `#7CFF6B`, `#FFD166`, `#FF5C8A`, `#B388FF`, `#FF904D` e branco.
+- Mantém loop perpétuo, anti-vazamento (`window.__slugGen`), trigger e Replay. Novo slide: duplique a `<section>` e registre em `ANIM.sN`.
+
+## Variante: mira-perfect (tela cheia + header)
+
+Estrutura igual à do animation-pure (seção acima), com estas diferenças:
+
+- **Título e header sobrepostos** num `<div class="slide-head">` (kicker + `<h2>` com `<em>` + parágrafo curto), legíveis pelo scrim do topo. Componha a animação levemente abaixo do centro (`CY + 40`).
+- **A capa é a assinatura:** `<section class="slide slide-cover">` com `<div class="cover-head">` (kicker + `<h1>` gigante em gradiente + tagline) sobre animação ambiente discreta.
+- **UMA cor de marca dominante.** A paleta JS (`OR`, `DEEP`, `AM`, `GOLD`) deriva de `--mira-primary`/`--mira-primary-deep`/`--mira-accent-2` do bloco `@MIRA:THEME`. `COLD`/`COLD2` (aço) SOMENTE para material bruto, estático ou fonte protegida. Sem arco-íris.
+- **Camada cinematográfica compartilhada:** `play()` já aplica `cineUnder` (brasas) e `cineOver` (vinheta + flash). Não recrie por slide; para campo limpo, adicione a chave em `NOEMBERS`.
+
+## Estrutura obrigatória do card
 
 ```html
-<!-- A <section> que envolve o card encosta o título no topo:
-     class="min-h-screen flex flex-col items-center justify-center px-6 pt-3 pb-6" -->
-<!-- Card N: Título descritivo -->
+<!-- Seção que envolve o card: class="min-h-screen flex flex-col items-center justify-center px-6 pt-3 pb-6" -->
 <div class="w-full max-w-6xl" data-aos="fade-up" data-aos-delay="100">
-    <!-- Título do slide: SEM ícone, no máximo 6 palavras -->
     <div class="text-center mb-2">
         <h2 class="text-4xl md:text-5xl font-bold mb-2">
             Parte fixa <span class="primary-color italic">parte com ênfase</span>
@@ -121,9 +176,7 @@ Design do deck de lançamento do MIRA. As regras de card também ficam SUSPENSAS
         <p class="text-white/60 italic text-lg md:text-xl">Subtítulo curto e direto.</p>
     </div>
 
-    <!-- Container visual com replay -->
     <div class="glass-card rounded-2xl p-1 md:p-2">
-        <!-- Header bar interno -->
         <div class="flex items-center justify-between mb-2 px-1">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 rounded-lg bg-[#FFA203]/15 flex items-center justify-center">
@@ -135,18 +188,15 @@ Design do deck de lançamento do MIRA. As regras de card também ficam SUSPENSAS
                 </div>
             </div>
             <button id="replay-SLUG" class="replay-btn" type="button">
-                <i data-lucide="rotate-cw" class="w-4 h-4"></i>
-                Replay
+                <i data-lucide="rotate-cw" class="w-4 h-4"></i> Replay
             </button>
         </div>
 
-        <!-- Palco da animação -->
         <!-- @MIRA:SIZE 3/10 -->
         <div class="anim-stage" id="SLUG-stage">
             <svg id="SLUG-svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
 
-        <!-- Atributos/pílulas no rodapé -->
         <div class="border-t border-white/10 pt-1 mt-1 mb-1">
             <p class="text-xs uppercase tracking-[3px] text-white/40 text-center mb-1">Tagline do slide</p>
             <div class="grid grid-cols-2 md:grid-cols-N gap-2">
@@ -154,41 +204,24 @@ Design do deck de lançamento do MIRA. As regras de card também ficam SUSPENSAS
                     <i data-lucide="..." class="w-4 h-4 primary-color mx-auto mb-1"></i>
                     <p class="text-sm font-semibold tracking-wide">Termo</p>
                 </div>
-                <!-- ...mais pílulas... -->
             </div>
         </div>
     </div>
 </div>
 ```
 
-**CSS específico do stage.** O tamanho padrão do canvas já vem do `.anim-stage` (no `base.css`): `height: clamp(400px, 60vh, 620px)`. Só adicione um override por slide no `<style>` se aquele slide precisar de mais ou menos altura:
+A altura do palco já vem do `.anim-stage` no `base.css` (`clamp(400px, 60vh, 620px)`). Só adicione override por slide se aquele precisar de outra altura:
 
 ```css
-#SLUG-stage {
-    height: clamp(400px, 60vh, 620px);
-}
-
-#SLUG-stage + .border-t {
-    padding-top: 0.25rem;
-    margin-top: 0.25rem;
-    margin-bottom: 0.25rem;
-}
+#SLUG-stage { height: clamp(400px, 60vh, 620px); }
+#SLUG-stage + .border-t { padding-top: .25rem; margin-top: .25rem; margin-bottom: .25rem; }
 ```
 
-## Marcador de Tamanho (@MIRA:SIZE)
+## Marcador @MIRA:SIZE, trigger e anti-vazamento
 
-Toda animação nasce no nível de tamanho **3/10**. Na linha imediatamente acima do `.anim-stage`, estampe sempre o marcador:
+Toda animação nasce em **3/10**, com o marcador na linha imediatamente acima do `.anim-stage`. O `mira-size-animator` lê esse comentário para escalar depois sem adivinhar o nível. Não invente outro valor, e reinicie para 3/10 no modo SUBSTITUIR.
 
-```html
-<!-- @MIRA:SIZE 3/10 -->
-<div class="anim-stage" id="SLUG-stage"> ... </div>
-```
-
-Esse comentário é a memória do tamanho da animação: a skill `mira-size-animator` o lê para reportar e ajustar a percepção de tamanho (escalar a composição para cima ou para baixo) sem adivinhar o nível atual. Gere uma animação por vez já com o marcador 3/10; não invente outro valor.
-
-## Trigger System Obrigatório
-
-Toda animação registra-se em `setupAnimationTriggers()`:
+Todo stage se registra em `setupAnimationTriggers()`, onde o `IntersectionObserver` existente dispara a função ao entrar no viewport e rearma ao sair; o Replay chama a mesma função:
 
 ```javascript
 const stages = [
@@ -196,22 +229,16 @@ const stages = [
 ].filter(s => s.stage);
 ```
 
-O `IntersectionObserver` já existente dispara `animateSlug()` quando o stage entra no viewport, e rearma ao sair. O botão Replay invoca a mesma função manualmente.
-
-## Padrão Anti-Vazamento de Loops
-
-Toda função de animação que usa `setInterval` ou `setTimeout` recursivo DEVE implementar geração:
+Toda função com `setInterval` ou `setTimeout` recursivo DEVE implementar geração. Sem isso, dois atores correm juntos no Replay, vaza memória e a animação dessincroniza:
 
 ```javascript
 function animateSlug() {
-    // Cancela todos os loops antigos antes de reiniciar
-    clearInterval(window.__slugPulse);
+    clearInterval(window.__slugPulse);          // cancela loops antigos ANTES de reiniciar
     clearInterval(window.__slugFlow);
 
     window.__slugGen = (window.__slugGen || 0) + 1;
     const myGen = window.__slugGen;
 
-    // Dentro de recursões/timeouts:
     function loop() {
         if (myGen !== window.__slugGen) return;  // outra geração tomou o controle
         // ...trabalho do loop...
@@ -220,132 +247,81 @@ function animateSlug() {
 }
 ```
 
-Sem isso, dois climbers correm ao mesmo tempo no Replay, vaza memória, animações ficam fora de sincronia.
+## Stacks e composições prontas
 
-## Tipos de Animação Suportados
+A cena já foi decidida na beat sheet. Aqui você só escolhe com que stack desenhá-la. Nada nesta seção escolhe conceito.
 
-### Tipo A: D3 SVG (orchestra, spec-center, climber)
+- **D3 SVG**, quando a cena precisa de geometria calculada (posições vindas de dados, caminhos, escalas, trajetórias). `<svg viewBox="0 0 1280 720">` no `.anim-stage`, D3 v7+ via CDN. `d3.easeBackOut.overshoot(1.1)` para entrada com snap, `d3.easeQuadInOut` para deslocamento. Continuidade via `attrTween`, `stroke-dashoffset` (algo sendo traçado, drenado ou percorrido) ou criar/animar/destruir elementos para carga que entra e sai.
+- **Flip cards 3D**, quando a beat sheet pede que uma face esconda outra e a virada seja o acontecimento. CSS `perspective`, `transform-style: preserve-3d`, `backface-visibility: hidden`, curva `cubic-bezier(0.34, 1.4, 0.64, 1)`, classe `.flipped` em cascata.
+- **Revelação em dois lados**, quando há dois grupos entrando em tempos diferentes e algo atravessa de um para o outro. Grid de 3 colunas, estados iniciais escondidos (`opacity: 0; transform: translateX(±40px)`), classe `.revealed` em cascata, transição própria por lado.
 
-Use quando o conceito tem **estrutura geométrica clara** (hub-spoke, escada, rede, gráfico).
+## Tipografia, cores e ícones de moldura
 
-Stack:
-- `<svg viewBox="0 0 1280 720">` dentro do `.anim-stage`
-- D3 v7+ via CDN (`https://d3js.org/d3.v7.min.js`)
-- Use `d3.easeBackOut.overshoot(1.1)` para entradas com snap
-- Use `d3.easeQuadInOut` para movimentos de partícula
-- Use `attrTween` ou `stroke-dashoffset` para efeitos contínuos
+- Título h2 `text-4xl md:text-5xl font-bold`; subtítulo `text-lg md:text-xl text-white/60 italic`; texto de card `text-xl`/`text-2xl`; pílula `text-sm`/`text-base`; label `text-xs uppercase tracking-[3px]`.
+- Primária `#FFA203` (`.primary-color`, `.primary-bg`), fundo `#222222`, glass `rgba(255,255,255,0.30)` ou laranja `rgba(255,162,3,0.08)`.
+- Glow `drop-shadow(0 0 Npx rgba(255,162,3,0.55))` com N de 20 a 40. Contornos tracejados `stroke-dasharray="5,5"` com opacidade 0.5 a 0.7. Texto secundário `text-white/65`, terciário `text-white/40`.
+- Lucide via CDN, `<i data-lucide="ICONE">`, sempre outline na moldura (header, pílulas), tamanhos `w-4 h-4`, `w-7 h-7`, `w-12 h-12`. O ícone-ator dentro da animação é o oposto: flat preenchido.
 
-Loops típicos:
-- Pulso radial (`circle` com `r` indo e voltando via `setInterval`)
-- Partículas viajando (criar, animar transição, destruir, repetir)
-- `stroke-dashoffset` decrementando para "fluxo" em linhas tracejadas
+## Workflow
 
-### Tipo B: 3D Flip Cards (spec moderna)
+1. **Modo e escopo.** CRIAR ou SUBSTITUIR? No SUBSTITUIR: slide indicado → só aquele, sem indicação → todos os animados do deck.
+2. **Entender o conceito** do alvo (título, subtítulo, texto, pílulas, intenção da animação atual). Se o conceito vier no comando, use esse texto. Se útil, consulte `decks/<tema>/references/`.
+3. **Rodar o método:** frase causal, A/B de famílias diferentes, mapeamento, contrafactual, especificidade, distância, história, loop. **Deck inteiro usa a regra de lote.**
+4. **Ledger de diversidade** contra os outros slides animados do deck.
+5. **Beat sheet** de 5 a 7 momentos, antes de qualquer código.
+6. **Rubrica.** Abaixo de 85 ou com veto, volte ao passo 3.
+7. **Coreografia** derivada da beat sheet, nunca de um formato pronto.
+8. **Esqueleto de `mira-templates/decks/`** como referência estrutural, CSS do stage no `<style>` e HTML do card dentro do `<main>` (modo CRIAR), ou localizar o stage e reescrever só a função (modo SUBSTITUIR).
+9. **Função JS** com reset (clearInterval + `selectAll('*').remove()`), geração anti-vazamento, entrada coreografada com stagger e loop interno contínuo.
+10. **Trigger** registrado em `setupAnimationTriggers()`, ou conferido se já existia.
+11. **Reportar** slide a slide: `conceito → metáfora (loop em uma frase)`, mais a assinatura do ledger.
 
-Use quando o conceito é **revelação** ("o que tem dentro de X").
+Você implementa direto, sem pedir aprovação prévia, quando o usuário já deu contexto suficiente. A exceção é o quadro de metáforas acima de 4 slides.
 
-Stack:
-- CSS: `perspective`, `transform-style: preserve-3d`, `backface-visibility: hidden`
-- Curva: `cubic-bezier(0.34, 1.4, 0.64, 1)` com leve overshoot
-- JS adiciona classe `.flipped` em cascata
+## Portões de entrega
 
-Loop interno após reveal: um card por vez ganha brilho extra com `box-shadow` em loop.
+Nenhum item é opcional. Item não marcado é trabalho não terminado, não detalhe.
 
-### Tipo C: Battle Arena / Choreographed Reveal (SDD vs Agile)
+**Metáfora**
 
-Use quando o conceito é **comparação binária** ou **transformação A→B**.
+- [ ] Dinâmica escrita como frase causal (quando / porque / se falhar).
+- [ ] A/B feito, duas famílias diferentes, comparadas nos portões.
+- [ ] Mapeada 1 para 1, nada sobrando dos dois lados, sem duas metáforas misturadas.
+- [ ] Contrafactual descrito: a cena aguenta a falha sem trocar de analogia.
+- [ ] Passa em especificidade e não é a associação lexical do termo.
+- [ ] Não é o desenho literal do conceito nem clichê de catálogo ("engrenagens girando").
+- [ ] História com estado inicial, causa, transformação, consequência e recuperação.
+- [ ] Loop da ação principal em uma frase, ambiente não conta.
+- [ ] Óbvia sem legenda.
+- [ ] Ledger passado, assinatura do slide reportada.
+- [ ] Rubrica: 85 ou mais, nenhum veto.
 
-Stack:
-- Grid 3 colunas (A | center | B)
-- Estados iniciais escondidos via CSS (`opacity: 0; transform: translateX(±40px)`)
-- JS adiciona `.revealed` em cascata
-- Cada lado tem sua própria transição (`agile` esquerda, `sdd` direita com bounce)
+**Movimento**
 
-Loop interno: partícula viajando de A para B em cada linha (com `animation-delay` por linha gerando onda em cascata).
+- [ ] Beat sheet de 5 a 7 momentos escrita antes do código.
+- [ ] Uma ação focal por vez, ambiente recuando durante ela.
+- [ ] Efeito 120 a 400 ms depois da causa, nunca no mesmo frame.
+- [ ] Antecipação de 8% a 15% na ação principal.
+- [ ] Easing semântico e peso coerente, sem bounce em objeto pesado nem easing único em tudo.
+- [ ] Consequência sustentada 400 a 900 ms antes do reinício.
+- [ ] Corte do loop escondido, sem teletransporte de estado.
+- [ ] Coreografia derivada da história, não escolhida de um menu.
+- [ ] Referente concreto animado como ícone flat, não bolinha genérica; atribuição no `CREDITS.md` se preciso.
 
-## Hierarquia Tipográfica Padrão
+**Execução**
 
-- Título do slide (h2): `text-4xl md:text-5xl font-bold`
-- Subtítulo italic: `text-lg md:text-xl text-white/60 italic`
-- Texto de card grande: `text-xl` ou `text-2xl`
-- Texto de pílula: `text-sm` ou `text-base`
-- Label uppercase tracked: `text-xs uppercase tracking-[3px]`
+- [ ] Título sem ícone, no máximo 6 palavras, margem enxuta (`pt-3 pb-6`, sem `pt-10`, `mb-2`).
+- [ ] Palco no padrão `.anim-stage` com `viewBox="0 0 1280 720"` e CSS do `#SLUG-stage` (modo CRIAR).
+- [ ] Marcador `<!-- @MIRA:SIZE 3/10 -->` acima do palco, reiniciado no modo SUBSTITUIR.
+- [ ] HTML do card dentro do `<main>` em posição lógica (modo CRIAR).
+- [ ] Modo SUBSTITUIR: mesmo id de stage, título, subtítulo, pílulas e cores intactos, deck não reordenado.
+- [ ] Função com generation counter, todo `setInterval` com `clearInterval` na entrada, toda recursão comparando `myGen` com `window.__slugGen`.
+- [ ] Registrado em `setupAnimationTriggers()`, Replay conferido no código.
+- [ ] Algum elemento sempre em movimento depois da entrada.
+- [ ] Cor dentro do tema do deck, sem travessão (—), acentuação UTF-8 direta.
 
-## Cores e Tema
+## Referências e navegação do deck
 
-- Primária: `#FFA203` (laranja, classe `.primary-color`, bg `.primary-bg`)
-- Fundo: `#222222`
-- Backgrounds dos cards: `rgba(255,255,255,0.30)` glassmorph ou `rgba(255,162,3,0.08)` orange
-- Glow: `drop-shadow(0 0 N px rgba(255,162,3,0.55))` com N entre 20 e 40
-- Linhas/contornos: tracejado `stroke-dasharray="5,5"` com `opacity` 0.5-0.7
-- Texto secundário: `text-white/65` ou `text-white/70`
-- Texto terciário: `text-white/40`
+Copie de `mira-templates/slides/` e `mira-templates/decks/` apenas **infraestrutura**: DOM, tema, navegação, trigger, Replay, dimensionamento e proteção contra vazamento. **Não copie de lá metáfora, atores, composição nem loop**, os exemplos de partícula, órbita e layout genérico são andaime, não padrão de qualidade. As diretrizes de D3 em `agents/mira-animator/references/` valem como referência de API, não de escolha criativa.
 
-## Ícones
-
-- Lucide via CDN (`https://unpkg.com/lucide@latest`), `<i data-lucide="ICONE">`
-- Na moldura do card (header, pílulas), Lucide sempre outline/line (vazado), nunca filled. O ícone-ator DENTRO da animação é o oposto: flat preenchido (ver REGRA DE VOCABULÁRIO VISUAL)
-- Tamanhos: `w-4 h-4` (pequeno), `w-7 h-7` (médio), `w-12 h-12` (grande)
-- Dentro do SVG da animação, não use `<i data-lucide>`: inline o `<path>` do ícone. Para um objeto concreto, traga um ícone flat real como ator; `<circle>`, `<rect>`, `<line>` desenhados à mão só para formas abstratas
-
-## Workflow de Execução
-
-1. **Identificar o conceito** que o slide vai comunicar (revelação? comparação? hierarquia? evolução?)
-2. **Escolher a metáfora visual** mais forte para esse conceito (não copiar uma metáfora já usada no mesmo capítulo se possível)
-3. **Esboçar mentalmente o loop interno** ANTES de codar. Se não houver loop, parar e repensar.
-4. **Ler um esqueleto em `mira-templates/decks/`** como referência de padrão visual e estrutural do deck.
-5. **Adicionar o CSS específico** do novo stage no `<style>`.
-6. **Inserir o HTML do card** dentro do `<main>` em posição lógica.
-7. **Implementar a função JS** com:
-   - Reset (clearInterval de loops anteriores + selectAll('*').remove() do svg)
-   - Geração anti-vazamento (`window.__slugGen`)
-   - Entrada coreografada com stagger
-   - Loop interno contínuo
-8. **Registrar o trigger** em `setupAnimationTriggers()`.
-9. **Reportar ao usuário** descrevendo o loop interno em uma frase, para confirmar que a regra-mãe foi cumprida.
-
-## Anti-padrões (NÃO FAÇA)
-
-- ❌ Fade-up + parou. Sem loop interno.
-- ❌ Pulse genérico em todos os elementos ao mesmo tempo (sem hierarquia visual).
-- ❌ Desenhar um círculo/dot genérico quando o conceito tem um objeto concreto óbvio. Use um ícone flat real como ator.
-- ❌ Animação durando 200ms sem easing customizado (parece bug, não criativo).
-- ❌ Cor diferente do tema laranja/preto. Não tem azul, verde, rosa neste livro.
-- ❌ Texto com travessão (—).
-- ❌ Texto sem acento ou com `&eacute;`, `&ccedil;` etc.
-- ❌ `setInterval` sem `clearInterval` correspondente no início da função.
-- ❌ 4 cards retangulares idênticos enfileirados (a menos que seja uma grid intencional e única).
-- ❌ Animação que precisa ser explicada para ser entendida. A metáfora visual deve ser óbvia.
-
-## Checklist Antes de Entregar
-
-- [ ] Título sem ícone (nenhum `icon-hero`/`<i>` acima ou ao lado do `<h2>`).
-- [ ] Título com no máximo 6 palavras (salvo pedido explícito do usuário).
-- [ ] Margem do título ao topo enxuta (seção `pt-3 pb-6`, wrapper sem `pt-10`, título `mb-2`).
-- [ ] Canvas no padrão `.anim-stage` (`clamp(400px, 60vh, 620px)`) e `viewBox="0 0 1280 720"`.
-- [ ] Marcador `<!-- @MIRA:SIZE 3/10 -->` na linha acima do `.anim-stage`.
-- [ ] CSS do `#SLUG-stage` adicionado com height clamp.
-- [ ] HTML do card está dentro de `<main>` na posição lógica.
-- [ ] Função JS implementada com generation counter.
-- [ ] Registrado em `setupAnimationTriggers()`.
-- [ ] Botão Replay funciona (testado mentalmente: cliquei, reseta limpo, refaz).
-- [ ] Loop interno está rodando após a entrada (descreva em uma frase).
-- [ ] Nenhum travessão `—` no slide.
-- [ ] Acentuação UTF-8 direta, sem entidades HTML.
-- [ ] Pelo menos um elemento sempre em movimento depois da entrada.
-- [ ] Metáfora visual diferente das já usadas no mesmo capítulo.
-- [ ] Conceito com referente concreto usa um ícone flat reconhecível como ator, não um círculo genérico; atribuição no CREDITS.md se a licença exigir.
-
-## Referência de Padrões
-
-Os blueprints de card já prontos vivem em `mira-templates/slides/` (capa, comparação, métricas, fluxo, escada, orbital, encerramento), cada um com seu loop interno. Os esqueletos de deck completos vivem em `mira-templates/decks/`. Ao criar um novo slide, abra o blueprint mais próximo do que você quer fazer e use como base estrutural, variando a metáfora visual conforme o conceito.
-
-## Sistema de Passagem de Slides (obrigatório)
-
-Todo deck gerado deve manter o sistema de navegação que já vem nos esqueletos de `mira-templates/decks/`:
-
-- Barra de progresso no topo (`#mira-progress`).
-- Botão flutuante "próximo" no canto (`#mira-next`).
-- Navegação por teclado: setas, PageUp/PageDown, Home/End e F para tela cheia, rolando seção a seção via `scrollIntoView`.
-
-Cada slide é uma `<section class="min-h-screen">` filha direta do `<body>`. Nunca remova esse bloco ao editar ou montar um deck.
+Todo deck mantém o sistema de passagem de slides dos esqueletos: barra de progresso (`#mira-progress`), botão flutuante (`#mira-next`) e navegação por teclado (setas, PageUp/PageDown, Home/End, F para tela cheia) rolando seção a seção via `scrollIntoView`. Cada slide é uma `<section class="min-h-screen">` filha direta do `<body>`. Nunca remova esse bloco.

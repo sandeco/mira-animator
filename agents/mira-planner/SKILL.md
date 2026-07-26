@@ -1,39 +1,39 @@
 ---
 name: mira-planner
 description: >-
-  Planeja o conteudo de apresentacoes em slides HTML: analisa um capitulo (LaTeX, PDF ou texto) e gera um plano de slides antes da montagem visual. Use SEMPRE que a skill /mira-builder for acionada, ou quando o usuario quiser planejar o conteudo de uma apresentacao, definir quantos slides criar, ou revisar a estrutura antes de gerar o HTML.
+  Planeja o conteúdo de apresentações em slides HTML: analisa um capítulo (LaTeX, PDF ou texto) e gera um plano de slides antes da montagem visual. Use SEMPRE que a skill /mira-builder for acionada, ou quando o usuário quiser planejar o conteúdo de uma apresentação, definir quantos slides criar, ou revisar a estrutura antes de gerar o HTML.
 ---
 
-# Skill: Planejador de Conteudo para Slides
+# Skill: Planejador de Conteúdo para Slides
 
 ## Objetivo
 
-Analisar o conteudo-fonte de um capitulo e produzir um plano estruturado de slides que sera usado pela skill `/mira-builder` para montar o HTML final. O plano garante que o conteudo seja bem distribuido, visualmente variado e aprovado pelo usuario antes da geracao.
+Analisar o conteúdo-fonte de um capítulo e produzir um plano estruturado de slides que será usado pela skill `/mira-builder` para montar o HTML final. O plano garante que o conteúdo seja bem distribuído, visualmente variado e aprovado pelo usuário antes da geração.
 
-## Quando esta skill e chamada
+## Quando esta skill é chamada
 
 1. **Automaticamente** pela `/mira-builder` antes de gerar qualquer HTML
-2. **Diretamente** pelo usuario quando quer planejar uma apresentacao
+2. **Diretamente** pelo usuário quando quer planejar uma apresentação
 
-## Fluxo de Execucao
+## Fluxo de Execução
 
-### Passo 1: Identificar a fonte de conteudo
+### Passo 1: Identificar a fonte de conteúdo
 
-Localize o conteudo do capitulo. As fontes possiveis sao:
+Localize o conteúdo do capítulo. As fontes possíveis são:
 - `decks/<deck>/briefing.md` (gerado pelo /mira-extract a partir de uma fonte vinculada — PREFERENCIAL)
-- Arquivo apontado diretamente pelo usuario (LaTeX, PDF, Markdown ou texto)
-- PDF do capitulo na raiz do projeto
-- Texto fornecido diretamente pelo usuario
+- Arquivo apontado diretamente pelo usuário (LaTeX, PDF, Markdown ou texto)
+- PDF do capítulo na raiz do projeto
+- Texto fornecido diretamente pelo usuário
 
-Leia o conteudo completo para entender os temas, secoes e subsecoes.
+Leia o conteúdo completo para entender os temas, seções e subseções.
 
 ### Passo 2: Inventariar os assets visuais
 
-1. **Imagens:** Liste as imagens disponiveis em `decks/<deck>/assets/` e as sugeridas no briefing
-2. **Videos:** Leia `video_lista.md` (dentro da skill `/mira-builder`) e selecione:
-   - 1 video para o header (o mais adequado ao tema do capitulo)
-   - 0-3 videos opcionais para cards internos (os menos distrativos)
-3. **Imagens faltantes:** Identifique se algum slide precisa de uma imagem que nao existe. Anote para que a `/mira-builder` possa chamar a `/mira-visuals`
+1. **Imagens:** Liste as imagens disponíveis em `decks/<deck>/assets/` e as sugeridas no briefing
+2. **Vídeos:** Leia `video_lista.md` (dentro da skill `/mira-builder`) e selecione:
+   - 1 vídeo para o header (o mais adequado ao tema do capítulo)
+   - 0-3 vídeos opcionais para cards internos (os menos distrativos)
+3. **Imagens faltantes:** Identifique se algum slide precisa de uma imagem que não existe. Anote para que a `/mira-builder` possa chamar a `/mira-visuals`
 
 ### Passo 3: Gerar o plano de slides
 
@@ -47,36 +47,36 @@ Para cada slide proposto, defina:
 - **Fonte no capitulo:** secao/subsecao de onde vem o conteudo
 ```
 
-### Regras de composicao
+### Regras de composição
 
-- **Quantidade:** Sugira entre 8 e 20 slides, proporcional ao tamanho do capitulo
+- **Quantidade:** Sugira entre 8 e 20 slides, proporcional ao tamanho do capítulo
 - **Variedade:** Use pelo menos 4 tipos diferentes de template
-- **Ritmo:** Alterne entre cards densos (tabela, codigo, D3) e cards leves (citacao, imagem, CTA)
-- **Sequencia proibida:** Nunca 2 cards do mesmo tipo seguidos
-- **CTA obrigatorio:** Posicione um `card_cta.html` entre os slides 4-8
-- **Abertura forte:** O primeiro card deve ser impactante (grid com numeros, citacao marcante, ou D3)
-- **Fechamento forte:** O penultimo card deve ser um resumo ou conclusao visual
+- **Ritmo:** Alterne entre cards densos (tabela, código, D3) e cards leves (citação, imagem, CTA)
+- **Sequência proibida:** Nunca 2 cards do mesmo tipo seguidos
+- **CTA obrigatório:** Posicione um `card_cta.html` entre os slides 4-8
+- **Abertura forte:** O primeiro card deve ser impactante (grid com números, citação marcante, ou D3)
+- **Fechamento forte:** O penúltimo card deve ser um resumo ou conclusão visual
 
-### Templates disponiveis
+### Templates disponíveis
 
 | Template | Quando usar |
 |----------|------------|
-| `card_lista.html` | Estatisticas, listas com numeros |
+| `card_lista.html` | Estatísticas, listas com números |
 | `card_grid.html` | Grids de 2-4 itens, categorias |
-| `card_destaques.html` | Comparativos lado a lado (2-3 opcoes) |
+| `card_destaques.html` | Comparativos lado a lado (2-3 opções) |
 | `card_timeline.html` | Cronogramas, processos sequenciais |
-| `card_tabela.html` | Dados tabulares, comparacoes detalhadas |
-| `card_code.html` | Trechos de codigo, comandos |
+| `card_tabela.html` | Dados tabulares, comparações detalhadas |
+| `card_code.html` | Trechos de código, comandos |
 | `card_imagem.html` | Destaque de uma imagem com legenda |
-| `card_citacao.html` | Citacoes, frases de impacto |
-| `card_progresso.html` | Barras de progresso, metricas % |
-| `card_cta.html` | Chamada para acao (livro, canal, etc.) |
-| `card_d3.html` | Graficos interativos D3.js |
-| `card_video_bg.html` | Card com video de fundo |
+| `card_citacao.html` | Citações, frases de impacto |
+| `card_progresso.html` | Barras de progresso, métricas % |
+| `card_cta.html` | Chamada para ação (livro, canal, etc.) |
+| `card_d3.html` | Gráficos interativos D3.js |
+| `card_video_bg.html` | Card com vídeo de fundo |
 
-### Passo 4: Apresentar o plano ao usuario
+### Passo 4: Apresentar o plano ao usuário
 
-Formate o plano como uma tabela resumida e apresente ao usuario:
+Formate o plano como uma tabela resumida e apresente ao usuário:
 
 ```
 # Plano de Slides: [Nome do Capitulo]
@@ -91,28 +91,28 @@ Formate o plano como uma tabela resumida e apresente ao usuario:
 | ... | | | |
 ```
 
-Pergunte ao usuario:
+Pergunte ao usuário:
 - "Este plano tem **XX slides**. Quer ajustar a quantidade?"
 - "Quer trocar algum tipo de card ou reorganizar a ordem?"
-- "Posso prosseguir com a geracao?"
+- "Posso prosseguir com a geração?"
 
 ### Passo 5: Modo sem feedback
 
-Se o usuario pediu para criar "sem feedback", "direto", "sem confirmacao", "crie tudo", ou expressao similar:
-- **Gere o plano normalmente** (ele e necessario para a qualidade do output)
-- **NAO apresente ao usuario** para aprovacao
+Se o usuário pediu para criar "sem feedback", "direto", "sem confirmação", "crie tudo", ou expressão similar:
+- **Gere o plano normalmente** (ele é necessário para a qualidade do output)
+- **NÃO apresente ao usuário** para aprovação
 - **Prossiga direto** para o `/mira-copywriter` com o plano pronto
-- Neste modo, use as regras de composicao como guia autonomo
+- Neste modo, use as regras de composição como guia autônomo
 
-### Passo 6: Refinamento de Copy (OBRIGATORIO)
+### Passo 6: Refinamento de Copy (OBRIGATÓRIO)
 
-Apos o plano ser aprovado (ou gerado em modo sem feedback), **chame a skill `/mira-copywriter`** para refinar titulos, descricoes e selecao de imagens antes de passar para o `/mira-builder`.
+Após o plano ser aprovado (ou gerado em modo sem feedback), **chame a skill `/mira-copywriter`** para refinar títulos, descrições e seleção de imagens antes de passar para o `/mira-builder`.
 
-## Saida
+## Saída
 
-O plano e um documento intermediario, nao salvo em arquivo: passa para o `/mira-copywriter` (refinamento) e depois para a `/mira-builder` (contexto de geracao). Deve conter:
+O plano é um documento intermediário, não salvo em arquivo: passa para o `/mira-copywriter` (refinamento) e depois para a `/mira-builder` (contexto de geração). Deve conter:
 
-1. Video escolhido para o header
-2. Lista ordenada de slides com template + conteudo
+1. Vídeo escolhido para o header
+2. Lista ordenada de slides com template + conteúdo
 3. Imagens a usar (existentes e a gerar)
-4. Videos adicionais para cards internos (se houver)
+4. Vídeos adicionais para cards internos (se houver)

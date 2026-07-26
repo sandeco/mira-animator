@@ -27,7 +27,7 @@ Um slide dedicado: campo cinematográfico com os dois times na formação real, 
 >
 > Se nenhum existir, a instalação está desatualizada: rode `npx mira-animator update` (ou `install`) e ele aparece. **NUNCA reconstrua o motor do zero.** Gere sempre a partir dele: copie o arquivo e reescreva apenas o bloco `var TACTICS = { ... }` no topo do `<script>`. Todo o resto (campo, peças, edição, jogadas, vertical) já vive no motor. O HTML é único e autocontido: sem CDN, sem D3, abre por `file://`.
 >
-> A especificação completa do motor está em `specs/manipulação/mesa-tatica.md` (repo fonte). As decisões de produto listadas lá e resumidas no fim desta skill **não podem regredir**.
+> A especificação completa do motor está em `_reversa_sdd/manipulação/mesa-tatica.md` (repo fonte). As decisões de produto listadas lá e resumidas no fim desta skill **não podem regredir**.
 
 ## Modelo mental
 
@@ -152,7 +152,7 @@ As jogadas são ARQUIVOS `.json` na pasta `data/` do deck (`decks/<nome>/data/<s
 }
 ```
 
-Ids de jogador são sequenciais na ordem da config (time 1 depois time 2); coordenadas u,v normalizadas 0..1. Escrita/leitura via File System Access API do Chrome: **ao apertar `R`, a lista de jogadas carrega automaticamente da pasta `data/`** (na primeira vez o picker abre sozinho e o usuário confirma; conectada, vale a sessão inteira). Jogada carregada (▶) fica com o nome pré-preenchido, então 💾 sobrescreve o mesmo arquivo; cada linha da lista tem 💾 próprio. Fallback sem a API: 💾 baixa o .json e ⇪ importa um avulso. Esse JSON é também o contrato de saída do futuro pipeline vídeo→jogada (YOLO; ver `brainstormings/BRAINSTORM_VIDEO_PARA_JOGADA.md`): **não quebrar o schema**. Um exemplo embarcado vive em `mira-templates/decks/mesa-tatica/data/vini-correndo.json`.
+Ids de jogador são sequenciais na ordem da config (time 1 depois time 2); coordenadas u,v normalizadas 0..1. Escrita/leitura via File System Access API do Chrome: **ao apertar `R`, a lista de jogadas carrega automaticamente da pasta `data/`** (na primeira vez o picker abre sozinho e o usuário confirma; conectada, vale a sessão inteira). Jogada carregada (▶) fica com o nome pré-preenchido, então 💾 sobrescreve o mesmo arquivo; cada linha da lista tem 💾 próprio. Fallback sem a API: 💾 baixa o .json e ⇪ importa um avulso. Esse JSON é também o contrato de saída do futuro pipeline vídeo→jogada (YOLO; ver `dev/brainstormings/BRAINSTORM_VIDEO_PARA_JOGADA.md`): **não quebrar o schema**. Um exemplo embarcado vive em `mira-templates/decks/mesa-tatica/data/vini-correndo.json`.
 
 ## Vertical (/mira-vertical)
 

@@ -32,19 +32,19 @@ A referência de um slide vive ao lado do slide, dentro de `references/`. Você 
 
 ## Regra de Inclusão Automática
 
-Se a pasta `slides/<tema>/references/` já tiver arquivos, eles JÁ SÃO as referências do tema. Inclua-os sem perguntar de novo. Só pergunte material novo se a pasta estiver vazia ou se o usuário quiser acrescentar algo.
+Se a pasta `decks/<tema>/references/` já tiver arquivos, eles JÁ SÃO as referências do tema. Inclua-os sem perguntar de novo. Só pergunte material novo se a pasta estiver vazia ou se o usuário quiser acrescentar algo.
 
 ## Passos quando a skill é acionada
 
 1. **Descobrir o tema.** Se o usuário não disser, pergunte um nome curto de tema. Gere um slug em kebab-case, minúsculo, sem acento (ex.: "Spec Driven Development" vira `spec-driven`).
-2. **Garantir a estrutura.** Crie, se não existir, `slides/<tema>/` e dentro dela `slides/<tema>/references/`.
-3. **Listar o que já existe.** Liste os arquivos de `slides/<tema>/references/`. Se houver, informe que serão usados como fonte deste tema.
+2. **Garantir a estrutura.** Crie, se não existir, `decks/<tema>/` e dentro dela `decks/<tema>/references/`.
+3. **Listar o que já existe.** Liste os arquivos de `decks/<tema>/references/`. Se houver, informe que serão usados como fonte deste tema.
 4. **Receber o material novo (se houver).**
-   - Caminho de arquivo ou pasta que o usuário passar: COPIE para `slides/<tema>/references/` (copiar, nunca mover nem editar o original).
+   - Caminho de arquivo ou pasta que o usuário passar: COPIE para `decks/<tema>/references/` (copiar, nunca mover nem editar o original).
    - Texto colado: salve como `.md` dentro de `references/`.
    - Link: salve como `.url` ou registre em um `fontes.md` dentro de `references/`.
-5. **Confirmar o destino.** Mostre o caminho `slides/<tema>/references/` e diga ao usuário que basta soltar mais arquivos ali a qualquer momento.
-6. **Encerrar apontando o próximo passo:** para gerar os slides do tema, as skills de criação devem ler TUDO que estiver em `slides/<tema>/references/`.
+5. **Confirmar o destino.** Mostre o caminho `decks/<tema>/references/` e diga ao usuário que basta soltar mais arquivos ali a qualquer momento.
+6. **Encerrar apontando o próximo passo:** para gerar os slides do tema, as skills de criação devem ler TUDO que estiver em `decks/<tema>/references/`.
 
 ## Tipos de Referência Aceitos
 
@@ -58,11 +58,11 @@ Se a pasta `slides/<tema>/references/` já tiver arquivos, eles JÁ SÃO as refe
 ## Regras Inegociáveis
 
 - Uma pasta por tema. A referência mora dentro da pasta do tema, em `references/`.
-- Nunca leia, edite ou apague nada fora de `slides/<tema>/references/`. Ao copiar de um caminho externo, o original fica intacto.
+- Nunca leia, edite ou apague nada fora de `decks/<tema>/references/`. Ao copiar de um caminho externo, o original fica intacto.
 - A fonte de conteúdo nunca é perguntada na instalação. É sempre adicionada aqui, por tema.
 - Se as referências já existem, inclua-as automaticamente.
 - Texto visível em português brasileiro com acentuação correta. Proibido travessão (—); use vírgula ou dois-pontos.
 
 ## Integração com o Pipeline
 
-Quando o usuário pedir um slide ou deck sobre um tema, antes de criar verifique se `slides/<tema>/references/` existe e tem conteúdo. Se não existir, acione esta skill primeiro. As referências encontradas aqui são a fonte de verdade para mira-extract (briefing), mira-builder (montagem) e mira-animator (animações).
+Quando o usuário pedir um slide ou deck sobre um tema, antes de criar verifique se `decks/<tema>/references/` existe e tem conteúdo. Se não existir, acione esta skill primeiro. As referências encontradas aqui são a fonte de verdade para mira-extract (briefing), mira-builder (montagem) e mira-animator (animações).

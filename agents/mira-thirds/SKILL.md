@@ -175,7 +175,7 @@ Objetivo: CRITÉRIO Nº 1, preencher a maior parte do box.
 
 ## Passos
 
-1. **Localizar o deck.** Ache o arquivo de origem (`decks/<deck>/` ou `slides/<tema>/`). Padrão: `index.html`. Se o usuário pedir terços sobre a versão quadrada/vertical, use `index-1x1.html` ou `index-9x16.html`. Se faltar, ou não tiver `.glass-card`/`.anim-stage`/`<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
+1. **Localizar o deck.** Ache o arquivo de origem (`decks/<deck>/` ou `decks/<tema>/`). Padrão: `index.html`. Se o usuário pedir terços sobre a versão quadrada/vertical, use `index-1x1.html` ou `index-9x16.html`. Se faltar, ou não tiver `.glass-card`/`.anim-stage`/`<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
 2. **Copiar para o novo arquivo.** Copie a origem para a versão `-thirds` na mesma pasta. A origem fica byte a byte igual.
 3. **Confirmar o seletor.** Padrão do Mira: `body > section`, bloco do slide é o filho direto `body > section > div`. Ajuste se este deck embrulhar diferente.
 4. **Injetar a moldura.** Logo antes de `</head>`, **como último bloco de estilo** (depois do Tailwind e de qualquer bloco `mira-squared`/`mira-vertical`), insira o `<style id="mira-formato-thirds">` canônico (abaixo): conteúdo nos 2/3, 1/3 cinza #333, composição só título + animação, canvas casado ao box.

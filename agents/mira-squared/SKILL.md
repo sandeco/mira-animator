@@ -167,7 +167,7 @@ Aplique conforme a metáfora do slide, sempre visando o CRITÉRIO Nº 1. O princ
 
 ## Passos
 
-1. **Localizar o deck.** Ache o `index.html` do deck (em `decks/<deck>/` ou `slides/<tema>/`). Se houver mais de um deck e o usuário não disser qual, pergunte. Se faltar `index.html`, ou ele não tiver `.glass-card` / `.anim-stage` / `<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
+1. **Localizar o deck.** Ache o `index.html` do deck (em `decks/<deck>/` ou `decks/<tema>/`). Se houver mais de um deck e o usuário não disser qual, pergunte. Se faltar `index.html`, ou ele não tiver `.glass-card` / `.anim-stage` / `<svg id="sv-...">`, **aborte com mensagem clara** sem criar arquivo parcial.
 2. **Copiar para o novo arquivo.** Copie `index.html` para `index-1x1.html` na mesma pasta (caminhos relativos de logo, vídeo e imagens continuam válidos). O `index.html` fica byte a byte igual.
 3. **Injetar a moldura + composição.** Logo antes de `</head>` do `index-1x1.html`, como último bloco de estilo (depois do Tailwind, para vencer a especificidade), insira o bloco `<style id="mira-formato-1x1">` canônico (abaixo): quadrado 100vh, fundo #333333 fora da coluna, composição só título + animação, canvas quadrado 1/1.
 4. **Injetar o script de auto-ajuste de título.** Adicione o IIFE `fitTitles` (acima) no bloco de scripts, antes de `lucide.createIcons()`.

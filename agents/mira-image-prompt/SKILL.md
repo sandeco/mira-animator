@@ -184,4 +184,4 @@ Pergunte se o usuário quer ajustar algum campo, trocar o aspect ratio ou gerar 
 
 ## Exemplos de referência
 
-Para padrões de linguagem, consulte `/mnt/skills/user/image-prompt-builder/references/examples.md` se disponível.
+Para padrões de linguagem, consulte `references/Examples.md` se disponível.

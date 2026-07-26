@@ -39,7 +39,7 @@ The agent pipeline reads the source, plans the slides, writes the copy, builds t
 
 - **Linked sources, not invasion.** Mira reads from sources you link but writes only to `decks/`. Your source projects are never touched.
 - **Everything moves.** Every concept slide gets a continuously looping animation. Mira's golden rule: no animation is static — it *enters* with choreography and *then* loops.
-- **Metaphors, not bullet points.** The `mira-animated-metaphor` agent turns abstract concepts into concrete, animated everyday analogies.
+- **Metaphors, not bullet points.** The `mira-animator` agent turns abstract concepts into concrete, animated everyday analogies.
 - **Many formats from one deck.** A single 16:9 deck becomes 1:1, 9:16, rule-of-thirds, and dissolve-transition variants — without touching the original.
 - **More than slides.** Drop a real **3D element** (auto-rotating, draggable) or a scannable **QR code** straight into a card, with `/mira-3d` and `/mira-qrcode`.
 - **Runs anywhere.** Output is plain HTML. Double-click the file. No server, no toolchain.

@@ -108,9 +108,9 @@ mira-extract          reads the linked source and produces a briefing
 mira-planner          slide plan + user approval
 mira-copywriter       text and image refinement
 mira-builder          HTML assembly (glass-cards)
-mira-animator         animations with a mandatory internal loop
+mira-animator         animated metaphors with a mandatory internal loop (create or replace in place)
 mira-size-animator    tunes the perceived size of animations on a 1-10 scale (base 3/10)
-mira-animated-metaphor turns a slide's animation into a visual metaphor of the concept
+mira-animated-metaphor compatibility alias for mira-animator (replace mode)
 mira-visuals          static images: panels, diagrams, charts and infographics
 mira-validator        final conformance report
 ```
@@ -162,6 +162,7 @@ npx mira-animator link <path>        # link a content source (--name, --type)
 npx mira-animator sources            # list linked sources
 npx mira-animator new <name>         # create a deck from a template
 npx mira-animator edit <deck>        # turn on edit mode (reorder slides) on an existing deck
+npx mira-animator memoria <sub>      # preference memory (lembrancas, nota, consolidar, estado)
 npx mira-animator status             # show install and deck state
 npx mira-animator update             # update agents and templates
 npx mira-animator uninstall          # remove Mira from the current folder
@@ -175,6 +176,7 @@ npx mira-animator uninstall          # remove Mira from the current folder
 | `status` | Shows install and deck state |
 | `update` | Updates agents and templates to the latest version |
 | `uninstall` | Removes Mira from the current folder |
+| `memoria <sub>` | Preference memory. `lembrancas` prints what applies to a slide, `nota` records an explicit order, `consolidar` turns repeated corrections into candidate notes, `estado` activates/suspends/revokes one |
 
 > Creating a deck is **not** a CLI command — you do it conversationally in Claude with `/mira-new` (see [Creating a deck](#creating-a-deck)).
 

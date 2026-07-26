@@ -9,10 +9,10 @@ La puerta de entrada de un nuevo deck. Recolecta los requisitos de una presentac
 Crea y organiza la carpeta de referencias por tema, `references/`, dentro del tema del deck, e incluye automáticamente el material que ya esté ahí. Es la forma de informar la fuente de contenido de una presentación específica — siempre por tema, local al tema. Úsala antes de crear un slide cuando el tema aún no tenga carpeta de referencias.
 
 ## `/mira-animator`
-Crea slides de concepto con animaciones creativas y **bucle interno obligatorio**. La regla madre de Mira vive aquí: *ninguna animación es estática — toda animación entra con coreografía y después continúa en bucle interno.* Estampa cada animación con un marcador `<!-- @MIRA:SIZE 3/10 -->` para que `mira-size-animator` la escale después. También maneja *"convierte esta imagen en un slide animado."*
+El corazón de Mira, la **M** de Metáforas Inteligentes Responsivas Animadas. A partir del concepto del slide destila la dinámica, inventa una **analogía concreta de la vida diaria** y la anima con **bucle interno obligatorio**. Aquí viven dos reglas madre: *ninguna animación es literal, toda animación es metáfora*, y *ninguna animación es estática, toda animación entra con coreografía y después continúa en bucle interno.* Funciona en dos modos, **crear** un slide animado nuevo y **reemplazar** la animación de un slide existente en el lugar, manteniendo título, subtítulo y píldoras (*"convierte estos slides en metáforas"*). Estampa cada animación con un marcador `<!-- @MIRA:SIZE 3/10 -->` para que `mira-size-animator` la escale después. También maneja *"convierte esta imagen en un slide animado."*
 
 ## `/mira-animated-metaphor`
-Convierte la animación de un slide (o de todos) en una **metáfora visual** animada. A partir del concepto del slide, inventa una analogía concreta de la vida diaria y la anima al estilo de `mira-animator` (bucle interno obligatorio), reemplazando la animación en el lugar y manteniendo título, subtítulo y píldoras.
+Atajo compatible de `/mira-animator` (modo reemplazar), mantenido porque está citado en material publicado. Llamar a uno o al otro es lo mismo: las reglas viven solo en `mira-animator`.
 
 ## `/mira-img-animator`
 Anima una imagen existente — le da vida a una figura estática al estilo del deck.

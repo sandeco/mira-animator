@@ -1,6 +1,11 @@
 ---
 name: mira-builder
-description: Motor de montagem atômica para criar apresentações interativas em HTML/Tailwind usando componentes Glassmorphism modulares com navegação card-a-card.
+description: >-
+  Motor de montagem atômica que cria apresentações interativas em HTML/Tailwind com
+  componentes Glassmorphism modulares e navegação card-a-card. Use SEMPRE que o
+  usuário quiser montar ou gerar uma apresentação, transformar um plano de slides (do
+  /mira-planner) ou um capítulo em HTML, criar um deck do zero, ou pedir slides
+  interativos. Normalmente roda depois do /mira-planner e antes do /mira-validator.
 ---
 
 # Skill: Apresentação de Dados em Cards Animados
@@ -34,6 +39,43 @@ Use o plano refinado pelo copywriter como guia. Nao invente slides fora do plano
 2. **Leia as imagens** em `decks/<deck>/assets/` (ja inventariadas pelo planejador)
 3. **Identifique a logo** em `logo_canal/canal_sandeco_logo.png` (sera copiada para o destino)
 4. **Leia `video_lista.md`** para confirmar o video escolhido pelo planejador
+
+### Passo 1.5: Lembrancas do Usuario (memoria de preferencias)
+
+Primeiro, deixe a memoria em dia. O comando le as correcoes que o usuario ja fez e promove a candidata o que ja se repetiu o bastante:
+
+```bash
+npx mira-animator memoria consolidar
+```
+
+Se aparecer nota **candidata**, avise o usuario em uma linha e siga: candidata **nao e aplicada** ate ele ativar com `memoria estado <arquivo> ativo`. Nao insista, nao pare a montagem.
+
+Depois pergunte o que se aplica a este deck. **Uma consulta por papel de slide que o deck tem** (a nota so aparece quando o papel dela e informado, entao a consulta generica nao alcanca nota de escopo):
+
+```bash
+npx mira-animator memoria lembrancas --papel capa --formato 16x9 --registro <slug>
+npx mira-animator memoria lembrancas --papel conteudo --formato 16x9 --registro <slug>
+npx mira-animator memoria lembrancas --papel encerramento --formato 16x9 --registro <slug>
+```
+
+Ajuste `--formato` ao deck (`16x9`, `9x16`, `1x1`). O `--registro` recebe o **slug do deck**, nao um caminho: a proveniencia (o que foi aplicado, o que foi ignorado e por que) vai para a pasta de memoria do Mira, fora do deck. **Nunca grave lembranca dentro do deck**: o pacote tem o perfil do usuario em texto puro e deck publicado e drop-and-run, subiria junto.
+
+Se qualquer um desses comandos falhar (versao do Mira sem o comando, pasta inexistente), **gere normalmente e siga**: memoria e opcional, nunca trava a montagem.
+
+O comando devolve texto legivel, uma linha por lembranca, com o escopo e a confianca. Como usar:
+
+- **Lembranca ativa vale como orientacao**, nao como ordem: aplique quando o slide se encaixa no escopo dela.
+- **A marca manda acima da memoria.** Cor #FF904D, `text-wrap: balance` na capa e area segura continuam nao-negociaveis; lembranca que conflita com isso e descartada.
+- **Nao interrompa slide a slide.** Se duas lembrancas se contradizem no mesmo slide, siga o padrao do Mira e junte a duvida numa pergunta so no fim.
+- **Sem memoria ainda?** O comando responde "Nenhuma lembranca se aplica". Gere normal, isso e o esperado no comeco.
+
+Quando o usuario der uma ordem explicita de gosto durante a conversa ("sempre menos texto", "na capa o titulo fica em cima"), grave:
+
+```bash
+npx mira-animator memoria nota "menos texto por slide, no maximo tres linhas" --eixo densidade
+```
+
+Eixos em uso: `cor`, `posicao`, `densidade`, `animacao`, `camera`, `tipografia`. Escopo opcional: `--papel capa|conteudo|encerramento`, `--formato 16x9|9x16|1x1`, `--tema <tema>`. Grave so preferencia que valha para os proximos decks; conserto de um slide especifico nao vira nota.
 
 ### Passo 2: Montagem dos Cards conforme o Plano
 Para cada slide do plano aprovado, use o template indicado:

@@ -9,10 +9,10 @@ The front door for a new deck. Collects the requirements of a presentation conve
 Creates and organizes the per-theme references folder, `references/`, inside the deck's theme, and automatically includes whatever material is already there. This is how you tell Mira the content source for a specific presentation — always per theme, local to the theme. Use it before creating a slide when the theme has no references folder yet.
 
 ## `/mira-animator`
-Creates concept slides with creative animations and a **mandatory internal loop**. Mira's mother-rule lives here: *no animation is static — every animation enters with choreography and then continues in an internal loop.* It stamps each animation with a `<!-- @MIRA:SIZE 3/10 -->` marker so `mira-size-animator` can scale it later. Also handles *"turn this image into an animated slide."*
+Mira's heart, the **M** in Metáforas Inteligentes Responsivas Animadas (Intelligent Responsive Animated Metaphors). From the slide's concept it distills the dynamic, invents a **concrete everyday analogy** and animates it with a **mandatory internal loop**. Two mother-rules live here: *no animation is literal, every animation is a metaphor*, and *no animation is static, every animation enters with choreography and then continues in an internal loop.* It works in two modes, **create** a new animated slide and **replace** an existing slide's animation in place, keeping the title, subtitle and pills (*"turn these slides into metaphors"*). It stamps each animation with a `<!-- @MIRA:SIZE 3/10 -->` marker so `mira-size-animator` can scale it later. Also handles *"turn this image into an animated slide."*
 
 ## `/mira-animated-metaphor`
-Turns a slide's animation (or all of them) into an animated **visual metaphor**. From the slide's concept, it invents a concrete everyday analogy and animates it in the `mira-animator` style (internal loop required), replacing the animation in place while keeping the title, subtitle and pills.
+Compatibility alias for `/mira-animator` (replace mode), kept because it is cited in published material. Calling either is the same thing: the rules live only in `mira-animator`.
 
 ## `/mira-img-animator`
 Animates an existing image — bringing a static figure to life in the deck's style.

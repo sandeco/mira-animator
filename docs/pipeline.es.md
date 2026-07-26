@@ -8,7 +8,7 @@ flowchart TD
     E --> P[mira-planner<br/>planifica los slides]
     P --> C[mira-copywriter<br/>refina texto e imágenes]
     C --> B[mira-builder<br/>monta el HTML]
-    B --> A[mira-animator<br/>coreografía las animaciones]
+    B --> A[mira-animator<br/>metáforas animadas]
     A --> V[mira-validator<br/>reporte de conformidad]
 ```
 
@@ -21,7 +21,7 @@ flowchart TD
 | 2 | **mira-planner** | Analiza el briefing y propone un **plan de slides** detallado, y espera tu aprobación antes de montar nada. |
 | 3 | **mira-copywriter** | Refina el texto a la altura de slide y especifica imágenes. |
 | 4 | **mira-builder** | El motor de montaje. Monta HTML/Tailwind interactivo a partir de cards glassmorphism modulares con navegación card por card. |
-| 5 | **mira-animator** | Añade el movimiento. Cada slide de concepto recibe una animación creativa con **bucle interno obligatorio** — entra con coreografía y después entra en bucle. Estampa cada animación con el marcador `<!-- @MIRA:SIZE 3/10 -->`. |
+| 5 | **mira-animator** | Añade el movimiento, y la metáfora. Cada slide de concepto se convierte en una **analogía concreta de la vida diaria** animada, con **bucle interno obligatorio**: entra con coreografía y después entra en bucle. También reemplaza la animación de un slide existente en el lugar. Estampa cada animación con el marcador `<!-- @MIRA:SIZE 3/10 -->`. |
 | 6 | **mira-validator** | Analiza el HTML generado y produce un reporte de conformidad: chequeos visuales, estructurales y de assets. |
 
 ## Agentes de ajuste de movimiento
@@ -30,8 +30,8 @@ Estos corren sobre un deck existente.
 
 | Agente | Qué hace |
 |---|---|
+| **mira-animated-metaphor** | Atajo compatible de `mira-animator` (modo reemplazar), mantenido por estar citado en material publicado. |
 | **mira-size-animator** | Lee el marcador `@MIRA:SIZE N/10` y escala la percepción de tamaño de las animaciones (radios, longitudes, espaciados, fuentes internas, glow) en una escala de 1 a 10, sin cambiar la altura del escenario ni romper el bucle. *"Pon las animaciones en 6/10."* |
-| **mira-animated-metaphor** | Convierte la animación de un slide en una **metáfora visual** animada — una analogía concreta de la vida diaria para el concepto — manteniendo título, subtítulo y píldoras. |
 
 ## Agentes visuales / de imagen
 

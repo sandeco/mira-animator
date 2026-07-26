@@ -18,7 +18,7 @@ description: >-
 
 Dá vida a um SVG que o usuário já tem: a borboleta bate asas, a roda gira, o contorno se desenha, o objeto desliza. A forma ganha movimento próprio, não vira outra (isso é morph).
 
-> **Fonte da verdade:** padrão validado em `decks/apresentacao-mira-gsap/borboleta-bate-asas.html` (sessão de 2026-06-19): asas batendo via `scaleX` em torno do eixo do corpo, fundo branco removido, antenas mantidas estáticas. Spec completa em `specs/GSAP/mira-svg-animator-spec.md`. Em dúvida, copie desse exemplo.
+> **Fonte da verdade:** padrão validado em `decks/apresentacao-mira-gsap/borboleta-bate-asas.html` (sessão de 2026-06-19): asas batendo via `scaleX` em torno do eixo do corpo, fundo branco removido, antenas mantidas estáticas. Spec completa em `_reversa_sdd/GSAP/mira-svg-animator-spec.md`. Em dúvida, copie desse exemplo.
 
 ## Animar uma PARTE exige que a parte seja separada
 

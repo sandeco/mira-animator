@@ -42,5 +42,21 @@ decks/*
 # Videos de teste pesados nos decks
 decks/**/*.mp4
 
-# Decks de teste (nao vao para o repo publico)
+# Decks de teste (nao vao para o repo publico). Os testes de verdade ficam
+# em test/ (singular), que e o que o "npm test" roda.
 tests/
+
+# Brainstorms e notas de ideacao: material de trabalho, nao documentacao
+BRAINSTORMING/
+evolução/
+
+# Decks gerados ao exercitar cada skill: saida de teste local (59 MB), o
+# repo publica so os decks curados da allowlist acima
+examples/
+
+# Config de uma INSTALACAO do Mira, com caminhos da maquina do usuario.
+# O repo e a fonte, nao uma instalacao.
+mira.config.json
+
+# Registro de geracao do /mira-fast: fica no disco para inspecao, fora do repo
+decks/**/mira/fast/

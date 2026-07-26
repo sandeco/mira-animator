@@ -17,7 +17,7 @@ description: >-
 
 Insere num slide um QR code escaneável, grande e central, gerado de um link ou texto do usuário. Casos típicos: CTA de fim de deck, material complementar, link de inscrição.
 
-> **Fonte da verdade:** decisões congeladas em `BRAINSTORM_MIRA_QRCODE.md` (2026-06-11) e padrão visual validado em `decks/teste-qrcode/index.html` (QR de sandeco.com.br, 25x25 módulos, nível M). Em dúvida sobre CSS da moldura ou estrutura do card, copie do teste.
+> **Fonte da verdade:** decisões congeladas em `BRAINSTORM_MIRA_QRCODE.md` (2026-06-11) e padrão visual validado em `decks/testes/teste-qrcode/index.html` (QR de sandeco.com.br, 25x25 módulos, nível M). Em dúvida sobre CSS da moldura ou estrutura do card, copie do teste.
 
 ## Como o QR é gerado
 

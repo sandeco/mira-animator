@@ -8,7 +8,7 @@ flowchart TD
     E --> P[mira-planner<br/>plan the slides]
     P --> C[mira-copywriter<br/>refine text and images]
     C --> B[mira-builder<br/>assemble the HTML]
-    B --> A[mira-animator<br/>choreograph animations]
+    B --> A[mira-animator<br/>animated metaphors]
     A --> V[mira-validator<br/>conformance report]
 ```
 
@@ -21,7 +21,7 @@ flowchart TD
 | 2 | **mira-planner** | Analyzes the briefing and proposes a detailed **slide plan**, then waits for your approval before anything is built. |
 | 3 | **mira-copywriter** | Refines the text to slide altitude and specifies images. |
 | 4 | **mira-builder** | The assembly engine. Builds interactive HTML/Tailwind from modular glassmorphism cards with card-by-card navigation. |
-| 5 | **mira-animator** | Adds the motion. Every concept slide gets a creative animation with a **mandatory internal loop** — it enters with choreography and then loops. Stamps each animation with a `<!-- @MIRA:SIZE 3/10 -->` marker. |
+| 5 | **mira-animator** | Adds the motion, and the metaphor. Every concept slide becomes an animated **concrete everyday analogy** with a **mandatory internal loop**: it enters with choreography and then loops. It also replaces an existing slide's animation in place. Stamps each animation with a `<!-- @MIRA:SIZE 3/10 -->` marker. |
 | 6 | **mira-validator** | Analyzes the generated HTML and produces a conformance report: visual, structural and asset checks. |
 
 ## Motion-tuning agents
@@ -30,8 +30,8 @@ These run on top of an existing deck.
 
 | Agent | What it does |
 |---|---|
+| **mira-animated-metaphor** | Compatibility alias for `mira-animator` (replace mode), kept because it is cited in published material. |
 | **mira-size-animator** | Reads the `@MIRA:SIZE N/10` marker and scales the perceived size of animations (radii, lengths, spacing, internal fonts, glow) on a 1–10 scale, without changing the stage height or breaking the loop. *"Put the animations at 6/10."* |
-| **mira-animated-metaphor** | Turns a slide's animation into an animated **visual metaphor** — a concrete everyday analogy of the concept — keeping the title, subtitle and pills. |
 
 ## Visual / image agents
 

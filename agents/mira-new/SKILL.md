@@ -54,6 +54,23 @@ Isso cria `decks/<slug>/index.html` com o tema base embutido (entre `/* @MIRA:TH
 
 > **Para templates ou temas do `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<slug>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece decks e temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local. **Depois, rode `node mira-templates/vendor/apply-offline.mjs decks/<slug>`** para deixar esse deck offline (a montagem manual não passa pelo CLI, então não recebe o offline automático). **Por fim, instale as ferramentas de autoria** — a montagem manual não copia os módulos de edição/pintura. Rode `npx mira-animator edit decks/<slug>`; sem npx, copie `mira-edit.js`, `mira-edit-free.js` e `mira-draw.js` de `mira-templates/authoring/` para `decks/<slug>/mira/` e injete antes do `</body>` as três tags `<script defer src="mira/...">` (com `mira-edit-free.js` depois de `mira-edit.js`).
 
+### Passo 2.5: Lembranças do usuário (memória de preferências)
+
+Com o esqueleto no lugar e antes de preencher qualquer slide, consulte o que este usuário já corrigiu em decks anteriores:
+
+```bash
+npx mira-animator memoria consolidar
+npx mira-animator memoria lembrancas --papel capa --formato 16x9
+npx mira-animator memoria lembrancas --papel conteudo --formato 16x9
+```
+
+Uma consulta por papel de slide (nota de escopo só aparece quando o papel dela é informado). Ajuste `--formato` ao deck.
+
+- Lembrança ativa é **orientação**, não ordem: aplique onde o slide se encaixa no escopo dela.
+- A marca manda acima da memória: `#FF904D`, `text-wrap: balance` na capa e área segura continuam inegociáveis.
+- Nota **candidata** não é aplicada. Se aparecer alguma, avise em uma linha e siga.
+- Se o comando falhar por qualquer motivo, **gere normalmente e siga**. Memória nunca trava a criação.
+
 ### Passo 3: Aplicar a cor principal custom (só se houver override)
 
 Se o usuário escolheu cor diferente da do tema base, edite o `:root` **dentro** dos marcadores `@MIRA:THEME` de `decks/<slug>/index.html`. A partir do hex `#RRGGBB` (componentes R, G, B em decimal), substitua **somente** estas variáveis derivadas da primária:
@@ -101,5 +118,5 @@ Depois **ofereça** o próximo passo (não execute sem confirmar):
 
 - A skill **para no setup**. Só siga para o pipeline após o usuário confirmar.
 - Escreva apenas dentro de `decks/<slug>/` (mais o registro em `mira.config.json`). Nunca edite o original de uma referência.
-- O tema base deve ser um dos quatro válidos; a cor custom é aplicada **por cima** dele, só nas variáveis derivadas da primária.
+- O tema base deve ser um dos temas válidos (built-in ou derivado de imagem via `/mira-image-template`); a cor custom é aplicada **por cima** dele, só nas variáveis derivadas da primária.
 - Texto visível em português brasileiro com acentuação correta. Proibido travessão (—); use vírgula ou dois-pontos.

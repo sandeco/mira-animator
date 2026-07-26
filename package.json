@@ -1,6 +1,6 @@
 {
   "name": "mira-animator",
-  "version": "0.1.47",
+  "version": "0.1.48",
   "description": "Agentes e templates para criação de slides animados com D3.js em HTML",
   "bin": {
     "mira": "bin/mira.js"
@@ -49,6 +49,7 @@
     "agents/mira-builder/video_lista.md",
     "agents/mira-copywriter",
     "agents/mira-extract",
+    "agents/mira-fast",
     "agents/mira-get-videos",
     "agents/mira-image-prompt",
     "agents/mira-image-template",
@@ -60,6 +61,7 @@
     "bin/",
     "lib/",
     "templates/",
+    "workflows/",
     "!templates/videos_header",
     "README.md",
     "LICENSE"
@@ -82,6 +84,9 @@
     "inquirer": "^9.2.0",
     "ora": "^8.0.0",
     "yoctocolors-cjs": "^2.1.2"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
   },
   "devDependencies": {
     "puppeteer": "^25.3.0"
