@@ -76,7 +76,7 @@ Obrigatórios em folha animada: `js_id`, `titulo`, `conceito`, `frase_causal`, `
 
 `js_id` é camelCase seguro (`^[a-z][A-Za-z0-9]*$`) e único. Ele gera `animate<PascalJsId>` e `window.__<js_id>Gen`. `slug_stage` continua sendo o id DOM.
 
-No formato `mira`, também são obrigatórios `subtitulo`, `pilulas` e `icone_moldura`.
+No formato `mira`, `subtitulo`, `pilulas` e `icone_moldura` não fazem parte do contrato. O layout `mira-default` usa apenas o título e o palco amplo.
 
 ## Formatos com câmera
 

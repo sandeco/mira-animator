@@ -18,6 +18,10 @@ Siga integralmente `agents/_shared/idioma.md`. Todo texto visível em português
 - Nível alto (perto de 10) = composição enorme, quase todo o palco. Nível baixo (perto de 1) = tímida, com muita margem.
 - Faixa válida: **1 a 10**. Recuse 0 ou valores fora da faixa.
 
+> **A escala é relativa AO PALCO, e o palco varia por template.** No `aula-capitulo` o palco é uma caixa dentro de um card (altura fixa, 400 a 620px). No `mira-default` (padrão do Mira) e nos formatos Studio, o palco é o slide inteiro menos o título, ou seja, muito maior.
+>
+> Consequência prática: **3/10 num deck `mira-default` é fisicamente bem maior que 3/10 num deck `aula-capitulo`**. O número não é comparável entre decks de templates diferentes; ele mede preenchimento do palco, não centímetros na tela. Ao ajustar um deck, leia o nível atual no marcador daquele deck e trabalhe dentro dele, sem trazer a calibragem de outro. Se o usuário achar que "o mesmo 5/10 ficou diferente", é isto, e não um bug.
+
 ## O marcador @MIRA:SIZE (fonte da verdade)
 
 O nível atual de cada animação vive num comentário HTML, colado logo acima do palco:

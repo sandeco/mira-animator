@@ -17,7 +17,7 @@ function tempRoot() {
 }
 
 test.after(() => {
-  for (const root of roots) rmSync(root, { recursive: true, force: true });
+  for (const root of roots) rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
 });
 
 const staticSlide = {
@@ -35,7 +35,6 @@ const animatedSlide = {
   tipo: 'animado',
   modo_folha: 'animada',
   titulo: 'Dois fluxos, uma panela',
-  subtitulo: 'Quem chega primeiro serve.',
   conceito: 'condição de corrida',
   frase_causal: 'Quando dois fluxos escrevem, o resultado muda porque a ordem interfere.',
   metafora: 'duas mãos servindo da mesma panela',
@@ -45,8 +44,6 @@ const animatedSlide = {
   espaco: 'duas colunas',
   movimento: 'alternância',
   tempo: 'rajada com pausa',
-  pilulas: ['Leitura', 'Escrita', 'Trava'],
-  icone_moldura: 'layers',
 };
 
 function miraPlan(overrides = {}) {
@@ -67,14 +64,14 @@ function miraPlan(overrides = {}) {
 }
 
 const staticFragment = `<!-- @MIRA:FAST slide=01 stage=capa kind=static -->
-<section><h1>Concorrência sem mistério</h1></section>
+<section><div class="slide-centro"><h1>Concorrência <span class="accent">sem mistério</span></h1></div></section>
 <!-- @MIRA:FAST css -->
 <style></style>
 <!-- @MIRA:FAST js -->
 <script></script>`;
 
 const animatedFragment = `<!-- @MIRA:FAST slide=02 stage=corrida kind=animated -->
-<section><!-- @MIRA:SIZE 3/10 --><div id="corrida-stage"></div></section>
+<section><div class="slide-main"><h2>Dois fluxos, <span class="accent">uma panela</span></h2><!-- @MIRA:SIZE 3/10 --><div class="anim-stage" id="corrida-stage"><svg id="corrida-svg" preserveAspectRatio="xMidYMid meet"></svg></div></div></section>
 <!-- @MIRA:FAST css -->
 <style></style>
 <!-- @MIRA:FAST js -->
@@ -82,6 +79,12 @@ const animatedFragment = `<!-- @MIRA:FAST slide=02 stage=corrida kind=animated -
 function animateCorrida() {
   clearTimeout(window.__corridaTimer);
   window.__corridaGen = (window.__corridaGen || 0) + 1;
+  var svg = d3.select('#corrida-svg');
+  var r = svg.node().closest('.anim-stage').getBoundingClientRect();
+  var H = Math.round(960 * r.height / r.width);
+  svg.attr('viewBox', '0 0 960 ' + H);
+  var primary = getComputedStyle(document.documentElement).getPropertyValue('--mira-primary').trim();
+  svg.attr('color', primary);
 }
 </script>`;
 
@@ -94,7 +97,10 @@ test('workflow usa pipeline, validação individual e retry limitado', () => {
   assert.match(workflow, /--slide \$\{slide\.n\}/);
   assert.match(workflow, /contrato-animado\.md/);
   assert.match(workflow, /formato-\$\{plan\.formato\}\.md/);
-  assert.ok(workflow.indexOf('pipeline(plan.slides') < workflow.indexOf("mira-fast: montagem"));
+  assert.doesNotMatch(workflow, /mira-fast: montagem/);
+  assert.match(workflow, /assemble-run\.mjs/);
+  assert.match(workflow, /pronto_para_montar/);
+  assert.ok(workflow.indexOf('pipeline(plan.slides') < workflow.indexOf('return {', workflow.indexOf('pipeline(plan.slides')));
 });
 
 test('instalador copia o workflow para Claude Code', () => {
@@ -113,6 +119,16 @@ test('plano e fragmentos estático/animado válidos passam', () => {
   assert.deepEqual(validateFragment(animatedSlide, animatedFragment, plan), []);
 });
 
+test('mira-default rejeita card antigo, viewBox fixo e hex no JavaScript', () => {
+  const oldCard = animatedFragment.replace('class="slide-main"', 'class="slide-main glass-card"');
+  assert.ok(validateFragment(animatedSlide, oldCard, miraPlan()).some((error) => error.includes('glass-card')));
+
+  const fixed = animatedFragment.replace('preserveAspectRatio=', 'viewBox="0 0 1280 720" preserveAspectRatio=');
+  assert.ok(validateFragment(animatedSlide, fixed, miraPlan()).some((error) => error.includes('viewBox fixo')));
+
+  const fixedColor = animatedFragment.replace("svg.attr('color', primary);", "svg.attr('color', '#FF904D');");
+  assert.ok(validateFragment(animatedSlide, fixedColor, miraPlan()).some((error) => error.includes('hexadecimal')));
+});
 test('folha animada sem protocolo é rejeitada', () => {
   const invalid = `<!-- @MIRA:FAST slide=02 stage=corrida kind=animated -->
 <section><div id="corrida-stage"></div></section>
@@ -124,6 +140,15 @@ test('folha animada sem protocolo é rejeitada', () => {
   assert.ok(errors.some((error) => error.includes('generation counter')));
 });
 
+test('folha não pode assumir os triggers do montador', () => {
+  const selfStarting = animatedFragment.replace(
+    '</script>',
+    'document.addEventListener("DOMContentLoaded", animateCorrida); animateCorrida();</script>',
+  );
+  const errors = validateFragment(animatedSlide, selfStarting, miraPlan());
+  assert.ok(errors.some((error) => error.includes('trigger da animação')));
+  assert.ok(errors.some((error) => error.includes('observer da animação')));
+});
 test('validação individual não depende do término das outras folhas', () => {
   const root = tempRoot();
   const fastDir = join(root, 'mira', 'fast');
@@ -181,8 +206,8 @@ test('vertical exige palco e viewBox retrato', () => {
     ...miraPlan(), formato: 'mira-vertical', arquivo_saida: 'index-9x16.html', slides: [staticSlide, slide],
   };
   const vertical = animatedFragment
-    .replace('<style></style>', '<style>#corrida-stage { aspect-ratio: 128 / 203; }</style>')
-    .replace('<div id="corrida-stage"></div>', '<div id="corrida-stage"><svg viewBox="0 0 960 1522.5"></svg></div>');
+    .replace('</style>', '#corrida-stage { aspect-ratio: 128 / 203; }</style>')
+    .replace('preserveAspectRatio="xMidYMid meet"', 'viewBox="0 0 960 1522.5" preserveAspectRatio="xMidYMid meet"');
   assert.deepEqual(validateFragment(slide, vertical, plan), []);
   assert.ok(validateFragment(slide, animatedFragment, plan).some((error) => error.includes('128/203')));
 });

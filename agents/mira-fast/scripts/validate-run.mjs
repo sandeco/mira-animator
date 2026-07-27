@@ -83,12 +83,6 @@ export function validatePlan(plan) {
       } else if (jsIds.has(slide.js_id)) {
         errors.push(`${prefix}: js_id duplicado: ${slide.js_id}`);
       } else jsIds.add(slide.js_id);
-
-      if (plan.formato === 'mira') {
-        if (!slide.subtitulo) errors.push(`${prefix}: subtitulo obrigatório no formato mira`);
-        if (!Array.isArray(slide.pilulas) || slide.pilulas.length === 0) errors.push(`${prefix}: pilulas obrigatórias no formato mira`);
-        if (!slide.icone_moldura) errors.push(`${prefix}: icone_moldura obrigatório no formato mira`);
-      }
     }
 
     if (plan.formato === 'mira-studio') {
@@ -133,23 +127,58 @@ export function validateFragment(slide, fragment, plan = {}) {
   if (!(htmlPos >= 0 && htmlPos < cssPos && cssPos < jsPos)) errors.push('marcadores fora de ordem');
 
   const htmlBlock = cssPos >= 0 ? fragment.slice(0, cssPos) : fragment;
+  const jsBlock = jsPos >= 0 ? fragment.slice(jsPos + jsMarker.length) : '';
   const opens = (htmlBlock.match(/<section\b/gi) ?? []).length;
   const closes = (htmlBlock.match(/<\/section>/gi) ?? []).length;
   if (opens !== 1 || closes !== 1) errors.push(`section inválida: ${opens} abertura(s), ${closes} fechamento(s)`);
   if (htmlBlock.includes('—')) errors.push('travessão presente no HTML');
 
   if (slide.modo_folha === 'animada') {
-    const pascal = slide.js_id[0].toUpperCase() + slide.js_id.slice(1);
+    const pascal = slide.js_id ? slide.js_id[0].toUpperCase() + slide.js_id.slice(1) : '';
     if (!htmlBlock.includes('<!-- @MIRA:SIZE 3/10 -->')) errors.push('@MIRA:SIZE 3/10 ausente');
-    if (!new RegExp(`function\\s+animate${escapeRegExp(pascal)}\\s*\\(`).test(fragment)) errors.push(`animate${pascal} ausente`);
+    if (pascal && !new RegExp(`function\\s+animate${escapeRegExp(pascal)}\\s*\\(`).test(fragment)) errors.push(`animate${pascal} ausente`);
     if (!fragment.includes(`window.__${slide.js_id}Gen`)) errors.push('generation counter ausente');
     if (!/clear(?:Interval|Timeout)\s*\(/.test(fragment)) errors.push('limpeza de timer ausente');
     if (!fragment.includes(`id="${slide.slug_stage}-stage"`) && !fragment.includes(`id='${slide.slug_stage}-stage'`)) errors.push('id do palco ausente');
+    if (pascal) {
+      const animateCalls = fragment.match(new RegExp(`\\banimate${escapeRegExp(pascal)}\\s*\\(`, 'g')) ?? [];
+      if (animateCalls.length !== 1) errors.push('trigger da animação pertence ao montador');
+    }
+    if (/IntersectionObserver|DOMContentLoaded/.test(fragment)) errors.push('observer da animação pertence ao montador');
   } else if (htmlBlock.includes('<!-- @MIRA:SIZE')) {
     errors.push('folha estática não pode declarar @MIRA:SIZE');
   }
 
   const format = plan.formato;
+  if (format === 'mira') {
+    const oldMiraClasses = [
+      'glass-card', 'mira-fast-card', 'mira-fast-static', 'mira-fast-pills',
+      'attribute-pill', 'replay-btn', 'mira-fast-subtitle',
+    ];
+    for (const className of oldMiraClasses) {
+      if (htmlBlock.includes(className)) errors.push(`mira-default não aceita ${className}`);
+    }
+
+    if (slide.modo_folha === 'animada') {
+      if (!/class=["'][^"']*\bslide-main\b/.test(htmlBlock)) errors.push('mira animado exige .slide-main');
+      if (!/<h2\b/i.test(htmlBlock)) errors.push('mira animado exige h2');
+      if (!/class=["'][^"']*\banim-stage\b/.test(htmlBlock)) errors.push('mira animado exige .anim-stage');
+      if (!new RegExp(`id=["']${escapeRegExp(slide.slug_stage)}-svg["']`).test(htmlBlock)) errors.push('id do svg ausente');
+      if (/\bviewBox\s*=/i.test(htmlBlock)) errors.push('mira-default não aceita viewBox fixo no HTML');
+      if (!/closest\(\s*["']\.anim-stage["']\s*\)/.test(jsBlock) || !/getBoundingClientRect\s*\(/.test(jsBlock)) {
+        errors.push('mira animado exige geometria real do palco');
+      }
+      if (!/\.attr\(\s*["']viewBox["']\s*,/.test(jsBlock)) errors.push('mira animado deve calcular viewBox no JavaScript');
+      if (!/getComputedStyle\s*\(\s*document\.documentElement\s*\)/.test(jsBlock) || !/getPropertyValue\(\s*["']--mira-primary["']\s*\)/.test(jsBlock)) {
+        errors.push('mira animado deve ler --mira-primary');
+      }
+      if (/#(?:[0-9a-f]{3}|[0-9a-f]{6})\b/i.test(jsBlock)) errors.push('mira-default não aceita cor hexadecimal fixa no JavaScript');
+    } else {
+      if (!/class=["'][^"']*\bslide-centro\b/.test(htmlBlock)) errors.push('mira estático exige .slide-centro');
+      const heading = slide.tipo === 'capa' ? 'h1' : 'h2';
+      if (!new RegExp(`<${heading}\\b`, 'i').test(htmlBlock)) errors.push(`mira estático ${slide.tipo} exige ${heading}`);
+    }
+  }
   if (format === 'mira-studio') {
     if (slide.layout === 'capa') {
       if (/data-layout=/.test(htmlBlock)) errors.push('capa Studio não usa data-layout');

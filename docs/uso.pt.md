@@ -30,11 +30,11 @@ Ela pergunta o nome do tema, o template do deck, o tema base, a cor principal e 
 
 | Template | Para |
 |---|---|
+| `mira-default` | **Padrao.** Titulo em cima, animacao ocupando o resto do slide |
 | `aula-capitulo` | Uma aula ou palestra a partir de um capítulo / módulo |
 | `pitch-projeto` | Um pitch de projeto |
 | `demo-tecnica` | Uma demo técnica / walkthrough |
-| `sandeco-just-animation-template` | Um palco preto, sem texto, apenas para a animacao do Mira |
-| `mira-perfect` | Animacao de tela cheia com titulo/header sobreposto (design do lancamento do MIRA) |
+| `sandeco-just-animation-template` | Um palco preto, sem texto, apenas para a animacao do Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 

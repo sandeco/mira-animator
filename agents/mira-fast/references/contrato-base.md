@@ -1,6 +1,6 @@
 # Contrato base da folha
 
-Receba campos globais e um único objeto `slide`. Escreva exatamente `<deck_dir>/mira/fast/slide-NN.html`.
+Receba campos globais e um único objeto `slide`. Escreva exatamente `<deck_dir>/mira/fast/slide-NN.html` e o status exclusivo `<deck_dir>/mira/fast/result-NN.json`.
 
 Não leia plano completo, HTML final, outras folhas ou outras skills. Não crie assets, módulos, roteiro ou arquivos compartilhados. Na segunda tentativa, leia somente seu próprio fragmento anterior.
 
@@ -33,4 +33,4 @@ Depois de gravar, rode:
 node .claude/skills/mira-fast/scripts/validate-run.mjs "<deck_dir>" --slide N
 ```
 
-Só retorne `ok: true` após exit code 0.
+Após validar, grave `result-NN.json` com `n`, `ok`, `validation` e `attempts`. Só retorne `ok: true` após exit code 0.

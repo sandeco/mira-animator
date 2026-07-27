@@ -30,7 +30,17 @@ Tudo o que esta skill cria ou edita vive **dentro de `decks/<tema>/`**. Nunca to
 Pergunte de forma objetiva, com os defaults entre parênteses. Se o usuário já adiantou uma resposta, não pergunte de novo.
 
 1. **Nome do tema.** Texto livre. Gere um **slug** em kebab-case, minúsculo, sem acento (ex.: "Spec Driven Development" → `spec-driven-development`). Confirme se houver ambiguidade.
-2. **Template do deck** (esqueleto). Liste **dinamicamente** varrendo `mira-templates/decks/` (cada subpasta com `index.html` é um template). Built-in: `aula-capitulo` (default), `pitch-projeto`, `demo-tecnica`, `sandeco-just-animation-template` e `mira-perfect`; templates do `/mira-image-template` aparecem aqui automaticamente. Mostre todos e deixe o usuário escolher.
+2. **Template do deck** (esqueleto). Liste **dinamicamente** varrendo `mira-templates/decks/` (cada subpasta com `index.html` é um template), incluindo os do `/mira-image-template`, que aparecem lá automaticamente.
+
+   **`mira-default` vem SEMPRE em primeiro na lista, com o rótulo `(recomendado)` ao lado.** Os demais seguem em ordem alfabética. Mostre todos e deixe o usuário escolher: recomendado não é obrigatório. Se ele não escolher nenhum, use o `mira-default` sem perguntar de novo.
+
+   ```text
+   1. mira-default (recomendado) — título em cima, animação ocupando o slide inteiro
+   2. aula-capitulo — aula ou palestra a partir de um capítulo
+   3. demo-tecnica — demo técnica / walkthrough
+   4. pitch-projeto — pitch de projeto
+   5. sandeco-just-animation-template — palco preto, só animação, sem texto
+   ```
 3. **Tema base** (identidade visual). Liste **dinamicamente** varrendo `mira-templates/themes/` (cada `.css`, exceto `base.css`, é um tema). Built-in: `mira-dark` (default, laranja), `light-minimal`, `corporate-blue` e `neon-emerald`; temas do `/mira-image-template` aparecem aqui também. **Se o template escolhido tiver um tema de mesmo nome** (templates derivados de imagem), use-o como **padrão** desse template, pois é a identidade que veio da imagem; o usuário ainda pode escolher outro.
 4. **Cor principal** (opcional). Sem pedido, use a cor do tema base. Se pedir uma cor (hex `#RRGGBB` ou nome como "roxo"), converta para hex e trate como override no Passo 3. Confirme a cor.
 5. **Descrição do tema.** Uma ou duas frases: do que trata, para quem, qual o objetivo. Vira a semente do briefing.
@@ -40,7 +50,7 @@ Se `decks/<slug>/` já existir, avise e pergunte se é para usar outro nome.
 
 ### Passo 2: Montar o deck
 
-Para os **templates built-in** (`aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `sandeco-just-animation-template`, `mira-perfect`) com um **tema built-in**, use o comando canônico do Mira, que copia o esqueleto, injeta o CSS do tema e registra no config:
+Para os **templates built-in** (`mira-default`, `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `sandeco-just-animation-template`) com um **tema built-in**, use o comando canônico do Mira, que copia o esqueleto, injeta o CSS do tema e registra no config:
 
 ```bash
 npx mira-animator new <slug> --deck=<template> --theme=<tema-base>
@@ -50,7 +60,9 @@ Isso cria `decks/<slug>/index.html` com o tema base embutido (entre `/* @MIRA:TH
 
 > **Caso especial, `sandeco-just-animation-template`:** deck de **animação pura, multi-slide** (cada `<section>` é uma animação de tela cheia, sem títulos nem texto sobreposto), **multicor e theme-agnóstico**. Por isso o `new` **ignora o `--theme`** e mantém o bloco `@MIRA:THEME` neutro do próprio template; a cor vive numa paleta livre (nenhuma predominante), não na cor única do tema. Não aplique override de cor aqui. O preenchimento segue a seção "Variante: sandeco-just-animation-template" do `mira-animator`.
 
-> **Caso especial, `mira-perfect`:** deck de **animação de tela cheia com título e header sobrepostos** (design do lançamento do MIRA: capa com título gigante em gradiente, scrim no topo dos slides de conteúdo, camada cinematográfica de brasas + vinheta). Também é theme-agnóstico: o `new` **ignora o `--theme`** e mantém o bloco `@MIRA:THEME` próprio do template. Diferente do animation-pure, ele tem **uma cor de marca única** (default laranja MIRA): para trocar, edite `--mira-primary`, `--mira-primary-deep` e `--mira-accent-2` no bloco `@MIRA:THEME`; o CSS e a paleta do JS leem essas variáveis. O preenchimento segue a seção "Variante: mira-perfect" do `mira-animator`.
+> **`mira-default` é o padrão.** Se o usuário não escolher template, é este: **um título em cima e a animação ocupando todo o resto do quadro 16:9**, sem card, sem pílulas, sem moldura. Quadro 16:9 fixo com faixa cinza nas sobras, navegação por seta, modos E e P. Ao contrário do animation-pure, ele **aceita `--theme` normalmente**. Não tem câmera nem terços: quem vai gravar com webcam usa `/mira-studio-full` (16:9) ou `/mira-studio` (9:16). O preenchimento segue a seção "Variante: mira-default" do `mira-animator`.
+>
+> Use `aula-capitulo` quando o deck for **denso de conteúdo** (tabela, código, timeline, comparativo): lá o slide é um card com texto ao redor da animação, que é outro trabalho.
 
 > **Para templates ou temas do `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<slug>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece decks e temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local. **Depois, rode `node mira-templates/vendor/apply-offline.mjs decks/<slug>`** para deixar esse deck offline (a montagem manual não passa pelo CLI, então não recebe o offline automático). **Por fim, instale as ferramentas de autoria** — a montagem manual não copia os módulos de edição/pintura. Rode `npx mira-animator edit decks/<slug>`; sem npx, copie `mira-edit.js`, `mira-edit-free.js` e `mira-draw.js` de `mira-templates/authoring/` para `decks/<slug>/mira/` e injete antes do `</body>` as três tags `<script defer src="mira/...">` (com `mira-edit-free.js` depois de `mira-edit.js`).
 

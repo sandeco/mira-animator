@@ -105,7 +105,7 @@ Pontue com uma evidência concreta por linha. Polimento não compensa causalidad
 
 Mesma skill nos dois casos, o que muda é onde o resultado pousa.
 
-**CRIAR** (padrão, etapa 5 do pipeline): slide novo em `decks/<tema>/index.html` (ou `decks/<tema>/index.html`, conforme o fluxo). Você monta o card inteiro. Se o deck não existir, crie a partir de um esqueleto de `mira-templates/decks/` (aula-capitulo, pitch-projeto, demo-tecnica, sandeco-just-animation-template, mira-perfect).
+**CRIAR** (padrão, etapa 5 do pipeline): slide novo em `decks/<tema>/index.html` (ou `decks/<tema>/index.html`, conforme o fluxo). Você monta o card inteiro. Se o deck não existir, crie a partir de um esqueleto de `mira-templates/decks/` (mira-default é o padrão; também aula-capitulo, pitch-projeto, demo-tecnica, sandeco-just-animation-template).
 
 **SUBSTITUIR** (retrofit de palco existente, "transforma esses slides em metáforas", "essa animação está fraca"):
 
@@ -155,14 +155,30 @@ Deck sem cards. As regras de card (título, subtítulo, pílulas, glass-card, ic
 - **Paleta LIVRE multicor**, alto contraste com o preto, nenhuma cor predominante. NÃO trave em `var(--mira-primary)`. Distribua `#00E5FF`, `#7CFF6B`, `#FFD166`, `#FF5C8A`, `#B388FF`, `#FF904D` e branco.
 - Mantém loop perpétuo, anti-vazamento (`window.__slugGen`), trigger e Replay. Novo slide: duplique a `<section>` e registre em `ANIM.sN`.
 
-## Variante: mira-perfect (tela cheia + header)
+## Variante: mira-default (template PADRÃO do Mira)
 
-Estrutura igual à do animation-pure (seção acima), com estas diferenças:
+É o template que o `npx mira-animator new` usa quando ninguém pede outro. Um slide é **um título em cima e a animação ocupando todo o resto do quadro 16:9**. Sem card, sem pílulas, sem moldura: a animação É o slide.
 
-- **Título e header sobrepostos** num `<div class="slide-head">` (kicker + `<h2>` com `<em>` + parágrafo curto), legíveis pelo scrim do topo. Componha a animação levemente abaixo do centro (`CY + 40`).
-- **A capa é a assinatura:** `<section class="slide slide-cover">` com `<div class="cover-head">` (kicker + `<h1>` gigante em gradiente + tagline) sobre animação ambiente discreta.
-- **UMA cor de marca dominante.** A paleta JS (`OR`, `DEEP`, `AM`, `GOLD`) deriva de `--mira-primary`/`--mira-primary-deep`/`--mira-accent-2` do bloco `@MIRA:THEME`. `COLD`/`COLD2` (aço) SOMENTE para material bruto, estático ou fonte protegida. Sem arco-íris.
-- **Camada cinematográfica compartilhada:** `play()` já aplica `cineUnder` (brasas) e `cineOver` (vinheta + flash). Não recrie por slide; para campo limpo, adicione a chave em `NOEMBERS`.
+Estrutura de um slide de conteúdo (é o contrato, não sugestão):
+
+```html
+<section>
+    <div class="slide-main">
+        <h2>Título <span class="accent">com destaque</span></h2>
+        <div class="anim-stage"><svg id="SLUG-svg" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+</section>
+```
+
+Capa e encerramento trocam `.slide-main` por `.slide-centro` (texto centrado, sem palco).
+
+- **O palco é o slide inteiro menos o título.** `.anim-stage` é `flex: 1 1 auto`, não uma caixa de altura fixa. Case o `viewBox` com a caixa real (`getBoundingClientRect`) em vez de fixar `0 0 1280 720`, senão o desenho estica quando a altura do slide muda.
+- **Componha no centro do palco**, não abaixo dele: aqui não há header sobreposto para desviar.
+- **Os 50px de padding do `.slide-main` são área segura.** Nada encosta na borda do quadro.
+- **UMA cor de marca dominante**, lida de `--mira-primary` / `--mira-accent-2`. Sem arco-íris.
+- **Sem camada cinematográfica.** Este template não tem brasas nem vinheta; o fundo é preto limpo. Quem quer o clima de gravação usa `/mira-studio-full`.
+
+> **Atenção ao tamanho.** O palco aqui é bem maior que o palco dentro de um card do `aula-capitulo`. Uma composição calibrada em 3/10 para card fica pequena e perdida aqui. Componha para preencher, e trate o `@MIRA:SIZE` deste template como escala própria (ver `/mira-size-animator`).
 
 ## Estrutura obrigatória do card
 

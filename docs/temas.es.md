@@ -40,7 +40,7 @@ La capa `decks/` guarda presentaciones completas y ejecutables que sirven de **e
 | `pitch-projeto` | Un pitch de proyecto. |
 | `demo-tecnica` | Una demo técnica o walkthrough. |
 | `sandeco-just-animation-template` | Un escenario #000000, sin texto, solo para animacion libre. |
-| `mira-perfect` | Animacion a pantalla completa con titulo/header superpuesto, portada en gradiente y capa cinematografica (diseno del lanzamiento de MIRA). |
+| `mira-default` | **El valor por defecto de Mira.** Titulo arriba, animacion ocupando el resto del cuadro 16:9. Sin tarjeta, sin camara. |
 
 ## Los marcadores `@MIRA:`
 

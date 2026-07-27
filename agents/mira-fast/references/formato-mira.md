@@ -2,33 +2,64 @@
 
 Saída final: `index.html`. A folha não escreve o arquivo final.
 
+O formato usa sempre o template oficial `mira-default`: título no topo e animação ocupando todo o espaço restante. Não use card, pílulas, ícone de moldura, subtítulo de conteúdo ou botão de replay.
+
 ## Folha animada
 
-Use o card Mira completo: moldura, cabeçalho, palco e base de pílulas.
+Substitua `SLUG` pelo `slug_stage`:
 
 ```html
 <section>
-  <div class="w-full max-w-6xl">
-    <div class="glass-card rounded-3xl p-4">
-      <div class="flex items-center justify-between">
-        <div><h2>TÍTULO</h2><p>SUBTÍTULO</p></div>
-        <button id="replay-SLUG" class="replay-btn" type="button">Replay</button>
-      </div>
-      <!-- @MIRA:SIZE 3/10 -->
-      <div class="anim-stage" id="SLUG-stage">
-        <svg id="SLUG-svg" viewBox="0 0 1280 720" preserveAspectRatio="xMidYMid meet"></svg>
-      </div>
-      <div class="border-t border-white/10"><div class="attribute-pill">PÍLULAS</div></div>
+  <div class="slide-main">
+    <h2>TÍTULO COM <span class="accent">DESTAQUE</span></h2>
+    <!-- @MIRA:SIZE 3/10 -->
+    <div class="anim-stage" id="SLUG-stage">
+      <svg id="SLUG-svg" preserveAspectRatio="xMidYMid meet"></svg>
     </div>
   </div>
 </section>
 ```
 
-- Título: máximo seis palavras, idêntico ao plano, sem ícone.
-- Subtítulo, pílulas e ícone de moldura são obrigatórios.
-- `viewBox="0 0 1280 720"`.
-- Use somente cores da paleta.
+- O título deve ser idêntico ao plano e ter no máximo seis palavras.
+- Não fixe `viewBox` no HTML.
+- A metáfora deve preencher o palco flexível. O marcador `3/10` é relativo a esse palco maior.
+- A função da animação calcula a geometria real:
+
+```js
+var svg = d3.select('#SLUG-svg');
+var r = svg.node().closest('.anim-stage').getBoundingClientRect();
+var H = Math.round(960 * r.height / r.width);
+svg.attr('viewBox', '0 0 960 ' + H);
+```
+
+- Não use hex fixo no JavaScript. Leia a cor do tema:
+
+```js
+var primary = getComputedStyle(document.documentElement)
+  .getPropertyValue('--mira-primary')
+  .trim();
+```
 
 ## Folha estática
 
-Capa, card, CTA e encerramento usam uma única section e as classes visuais já presentes no esqueleto. Não crie palco vazio. Capa usa `h1`; demais usam `h2` quando houver título.
+Capa:
+
+```html
+<section>
+  <div class="slide-centro">
+    <h1>TÍTULO COM <span class="accent">DESTAQUE</span></h1>
+  </div>
+</section>
+```
+
+Card, CTA e encerramento usam a mesma estrutura com `h2`:
+
+```html
+<section>
+  <div class="slide-centro">
+    <h2>TÍTULO COM <span class="accent">DESTAQUE</span></h2>
+  </div>
+</section>
+```
+
+Não crie card interno. O CSS de escala, centralização e responsividade vem do esqueleto `mira-default`.

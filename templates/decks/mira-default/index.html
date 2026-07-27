@@ -1,0 +1,501 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mira-Default</title>
+
+<!-- ==========================================================
+     MIRA-DEFAULT · template oficial padrão do Mira
+     ----------------------------------------------------------
+     Um slide = um título em cima e uma animação ocupando todo o
+     resto do quadro 16:9. Sem card, sem pílulas, sem moldura: a
+     animação É o slide.
+
+     Veio do mira-studio-full, mas SÓ a parte de animação. Ficaram
+     de fora, de propósito, as coisas que existem para gravar:
+       - regra dos terços (animação 2/3 + câmera 1/3)
+       - layout de câmera cheia
+       - teleprompter e gravador
+     Slide comum não tem câmera. Quem precisa gravar usa
+     /mira-studio-full (16:9) ou /mira-studio (9:16), que seguem
+     existindo com essas peças.
+
+     ESTRUTURA DE UM SLIDE DE CONTEÚDO (é o contrato; os agentes
+     de animação procuram .anim-stage):
+
+       <section>
+         <div class="slide-main">
+           <h2>Título <span class="accent">destacado</span></h2>
+           <div class="anim-stage"><svg id="..."></svg></div>
+         </div>
+       </section>
+
+     Os 50px de padding do .slide-main são área segura: título e
+     animação vivem dentro dela, nada encosta na borda do quadro.
+     ========================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+/* @MIRA:THEME:START */
+/* MIRA THEME: mira-dark (padrão)
+   Identidade clássica do canal: fundo preto, laranja vibrante. */
+:root {
+    --mira-primary: #FF904D;
+    --mira-bg: #000000;
+    --mira-text: #ffffff;
+    --mira-text-soft: rgba(255, 255, 255, 0.70);
+    --mira-text-softer: rgba(255, 255, 255, 0.50);
+    --mira-card-bg: rgba(255, 255, 255, 0.05);
+    --mira-card-border: rgba(255, 255, 255, 0.10);
+    --mira-glow-soft: rgba(255, 144, 77, 0.15);
+    --mira-glow-strong: rgba(255, 144, 77, 0.25);
+    --mira-icon-bg: rgba(255, 144, 77, 0.15);
+    --mira-icon-border: rgba(255, 144, 77, 0.30);
+    --mira-pill-bg: rgba(255, 255, 255, 0.04);
+    --mira-pill-border: rgba(255, 255, 255, 0.08);
+    --mira-stage-glow: rgba(255, 144, 77, 0.06);
+    --mira-accent-2: #FFC766;
+}
+/* @MIRA:THEME:END */
+
+/* ----------------------------------------------------------
+   A estrutura vem DEPOIS do bloco do tema de propósito: o
+   "npx mira-animator new --theme=..." troca só aquele bloco, e
+   o que está aqui embaixo precisa continuar valendo por cima do
+   que o tema trouxer.
+   ---------------------------------------------------------- */
+:root {
+    --accent: var(--mira-primary);
+    --bg: var(--mira-bg);
+    --ink: var(--mira-text);
+    --muted: var(--mira-text-soft);
+    --line: var(--mira-card-border);
+    /* quadro 16:9 que cabe inteiro na janela */
+    --fmt-w: min(100vw, calc(100vh * 16 / 9));
+    --fmt-h: calc(var(--fmt-w) * 9 / 16);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { background: #333333; scroll-behavior: smooth; scroll-snap-type: y proximity; }
+/* sem barra de rolagem: ela roubaria largura do quadro e criaria
+   scroll horizontal em tela cheia. Navegue por seta ou roda. */
+html { scrollbar-width: none; overflow-x: hidden; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+body {
+    background: #333333;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+body > section {
+    position: relative;
+    width: var(--fmt-w);
+    height: var(--fmt-h);
+    min-height: var(--fmt-h);
+    /* centraliza o quadro: em tela que não é 16:9 a sobra vira
+       faixa cinza acima e abaixo, nunca o slide seguinte */
+    margin: calc((100vh - var(--fmt-h)) / 2) 0;
+    scroll-margin-top: calc((100vh - var(--fmt-h)) / 2);
+    overflow: hidden;
+    background: var(--bg);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+}
+
+/* DIRETIVA DA CAPA: o título do primeiro slide nunca quebra
+   deixando artigo ou preposição sozinho na linha de baixo. */
+body > section:first-of-type h1,
+body > section:first-of-type h2 { text-wrap: balance; }
+
+h1 { font-size: clamp(34px, 7.4vh, 72px); line-height: 1.02; letter-spacing: -.02em; font-weight: 800; }
+h2 { font-size: clamp(28px, 4.6vh, 46px); line-height: 1.1; letter-spacing: -.01em; font-weight: 800; }
+p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
+.accent { color: var(--accent); }
+
+/* ---------- capa e encerramento: texto centrado no quadro ---------- */
+.slide-centro {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 50px;
+    text-align: center;
+}
+.slide-centro .marca {
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--mira-text-softer);
+}
+
+/* ---------- slide de conteúdo: título em cima, animação no resto ---------- */
+.slide-main {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 50px;              /* área segura */
+}
+.slide-main h2 { flex: 0 0 auto; margin-bottom: 14px; text-align: center; }
+
+/* o palco: TODO o espaço que sobra depois do título.
+
+   Os três resets abaixo não são enfeite. Quando o "new --theme=..."
+   injeta o base.css, ele traz `.anim-stage` com altura fixa
+   (clamp 400-620px), glow radial e cantos arredondados, que é a
+   linguagem de CARD. Aqui o palco É o slide: sem neutralizar isso,
+   o deck gerado sai com uma caixinha arredondada no meio, que é
+   exatamente o que este template existe para não ser. */
+.anim-stage {
+    flex: 1 1 auto;
+    min-height: 0;
+    width: 100%;
+    height: auto;
+    background: none;
+    border-radius: 0;
+}
+.anim-stage svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+
+<!-- === SLIDE 1 · CAPA === -->
+<section>
+    <div class="slide-centro">
+        <span class="marca">Mira</span>
+        <h1>O título da sua <span class="accent">apresentação</span></h1>
+        <p>Uma linha de subtítulo que situa quem está vendo.</p>
+    </div>
+</section>
+
+<!-- === SLIDE 2 · CONTEÚDO (título + animação em tela cheia) === -->
+<section>
+    <div class="slide-main">
+        <h2>O tempo <span class="accent">voa</span></h2>
+        <div class="anim-stage"><svg id="stage-tempo" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+</section>
+
+<!-- === SLIDE 3 · CONTEÚDO (título + animação em tela cheia) === -->
+<section>
+    <div class="slide-main">
+        <h2>Pequeno que vira <span class="accent">grande</span></h2>
+        <div class="anim-stage"><svg id="stage-bola" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+</section>
+
+<!-- === SLIDE 4 · ENCERRAMENTO === -->
+<section>
+    <div class="slide-centro">
+        <h2>Obrigado</h2>
+        <p>Encerre com o próximo passo, não com um ponto final.</p>
+    </div>
+</section>
+
+<script>
+/* ==============================================================
+   Animações de exemplo.
+
+   As duas seguem a regra do Mira: a animação é uma METÁFORA com
+   história (começo, transformação, sentido) em loop infinito, não
+   um enfeite que se mexe. Troque-as pelas suas; o que o template
+   define é a MOLDURA (título em cima, palco no resto).
+
+   Todo palco casa o viewBox com a caixa real, então o mesmo
+   desenho serve a qualquer altura de slide sem esticar.
+   ============================================================== */
+(function () {
+    'use strict';
+
+    /* A cor sai do TEMA, nunca fixa no código: o "new --theme=..." troca
+       o bloco @MIRA:THEME, e um hex escrito aqui deixaria a animação
+       laranja num deck azul. Fallback só para o caso de o CSS não ter
+       carregado ainda. */
+    function cor(nome, reserva) {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+        return v || reserva;
+    }
+    var COR = {
+        marca: cor('--mira-primary', '#FF904D'),
+        acento: cor('--mira-accent-2', '#FFC766'),
+        tinta: cor('--mira-text', '#ffffff'),
+        fundo: cor('--mira-bg', '#000000')
+    };
+
+    /* ---------- regente: a animação começa QUANDO O SLIDE APARECE ----------
+       Um `d3.timer` solto dispara no load e nunca para. Num deck de vários
+       slides isso significa que, ao chegar no slide 3, a animação dele já
+       rodou meio ciclo escondida: o espectador pega a história no meio e
+       nunca vê o começo, que é justamente onde a metáfora se explica.
+
+       Aqui cada animação declara seu quadro como função de `ms`, e o regente
+       decide QUE `ms` passar:
+         - slide fora da tela  -> relógio congelado no zero;
+         - slide entrou        -> relógio começa do zero, história do início;
+         - slide saiu e voltou -> recomeça do zero de novo.
+
+       IntersectionObserver com threshold 0.6: o slide precisa estar
+       majoritariamente visível, senão o de baixo dispararia durante a
+       rolagem. Sem suporte (navegador antigo), tudo roda solto, que é o
+       comportamento de antes: degradar é melhor que ficar preto. */
+    function reger(svgId, quadro) {
+        var svg = document.getElementById(svgId);
+        var slide = svg && svg.closest('section');
+        if (!slide || typeof IntersectionObserver !== 'function') {
+            d3.timer(function (ms) { quadro(ms); });
+            return;
+        }
+        var relogio = null, visivel = false;
+        d3.timer(function (ms) {
+            if (!visivel) { quadro(0); return; }   // congelado no primeiro quadro
+            if (relogio === null) relogio = ms;    // acabou de entrar: zera aqui
+            quadro(ms - relogio);
+        });
+        new IntersectionObserver(function (entradas) {
+            entradas.forEach(function (e) {
+                if (e.isIntersecting === visivel) return;
+                visivel = e.isIntersecting;
+                relogio = null;                    // reentrada recomeça a história
+            });
+        }, { threshold: 0.6 }).observe(slide);
+    }
+
+    function palco(svgId) {
+        var svg = d3.select('#' + svgId);
+        if (svg.empty()) return null;
+        var caixa = svg.node().closest('.anim-stage');
+        var F = { W: 960, H: 460 };
+        function casar() {
+            var r = caixa.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
+            svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
+        }
+        casar();
+        window.addEventListener('resize', casar);
+        svg.selectAll('*').remove();
+        return { svg: svg, F: F };
+    }
+
+    /* ---------- 1. O TEMPO VOA ----------
+       Repouso: o relógio está parado, tiquetaqueando.
+       Virada:  abre asas e destrava do chão.
+       Fuga:    atravessa o quadro e os ponteiros disparam — quanto
+                mais longe, mais rápido o tempo passa.
+       Sentido: some no horizonte, e outro aparece parado, porque a
+                próxima hora começa achando que vai durar. */
+    function animTempoVoa(svgId) {
+        var p = palco(svgId); if (!p) return;
+        var svg = p.svg, F = p.F, CICLO = 7200, R = 54;
+        var raiz = svg.append('g');
+
+        var grad = svg.append('defs').append('linearGradient')
+            .attr('id', svgId + '-trilha').attr('x1', '0').attr('x2', '1');
+        grad.append('stop').attr('offset', '0').attr('stop-color', COR.marca).attr('stop-opacity', 0);
+        grad.append('stop').attr('offset', '1').attr('stop-color', COR.marca).attr('stop-opacity', .55);
+
+        var trilha = raiz.append('path').attr('fill', 'none')
+            .attr('stroke', 'url(#' + svgId + '-trilha)')
+            .attr('stroke-width', 3).attr('stroke-linecap', 'round').attr('opacity', 0);
+
+        var voador = raiz.append('g');
+        var asaEsq = voador.append('path').attr('fill', COR.marca).attr('opacity', .92);
+        var asaDir = voador.append('path').attr('fill', COR.acento).attr('opacity', .92);
+        var corpo = voador.append('g');
+        corpo.append('circle').attr('r', R).attr('fill', COR.fundo)
+            .attr('stroke', COR.marca).attr('stroke-width', 6);
+        corpo.append('circle').attr('r', R - 12).attr('fill', 'none')
+            .attr('stroke', 'rgba(255,255,255,.10)').attr('stroke-width', 2);
+        var marcasHora = [];
+        [0, 90, 180, 270].forEach(function (a) {
+            marcasHora.push({
+                el: corpo.append('rect').attr('x', -2.5).attr('y', -R + 8).attr('width', 5).attr('height', 11)
+                    .attr('rx', 2.5).attr('fill', 'rgba(255,255,255,.55)'),
+                angulo: a
+            });
+        });
+        var ponteiroH = corpo.append('rect').attr('x', -3.5).attr('y', -R + 22)
+            .attr('width', 7).attr('height', R - 24).attr('rx', 3.5).attr('fill', COR.tinta);
+        var ponteiroM = corpo.append('rect').attr('x', -2.5).attr('y', -R + 12)
+            .attr('width', 5).attr('height', R - 14).attr('rx', 2.5).attr('fill', COR.marca);
+        corpo.append('circle').attr('r', 5).attr('fill', COR.tinta);
+
+        /* asa flat: uma pena, aberta por `escala`, inclinada por `batida`.
+           A da direita é a mesma forma espelhada. */
+        function pathAsa(escala, batida) {
+            var s = Math.max(0.001, escala), L = 92 * s, A = 40 * s, lift = batida * 26 * s;
+            return 'M 0 0'
+                + ' C ' + (-L * .35) + ' ' + (-A - lift) + ' ' + (-L * .78) + ' ' + (-A * .82 - lift) + ' ' + (-L) + ' ' + (-lift * .5)
+                + ' C ' + (-L * .74) + ' ' + (A * .30) + ' ' + (-L * .34) + ' ' + (A * .52) + ' 0 ' + (A * .22) + ' Z';
+        }
+        function rota(t) {
+            var p0 = { x: F.W * .30, y: F.H * .60 }, p1 = { x: F.W * .55, y: F.H * .24 };
+            var p2 = { x: F.W * .86, y: F.H * .40 }, p3 = { x: F.W * 1.16, y: F.H * .06 };
+            var u = 1 - t;
+            return {
+                x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
+                y: u * u * u * p0.y + 3 * u * u * t * p1.y + 3 * u * t * t * p2.y + t * t * t * p3.y
+            };
+        }
+
+        reger(svgId, function (ms) {
+            marcasHora.forEach(function (marca) {
+                marca.el.attr('transform', 'rotate(' + marca.angulo + ')');
+            });
+            var t = (ms % CICLO) / CICLO;
+            var REPOUSO = .20, ABRIR = .34, DECOLA = .30, VOO = .90;
+            var abrir = t < REPOUSO ? 0 : t < ABRIR ? d3.easeCubicOut((t - REPOUSO) / (ABRIR - REPOUSO)) : 1;
+            /* quadrática, não cúbica: com cúbica o relógio fica plantado
+               dois terços da janela de voo e o resto vira teletransporte */
+            var voo = t < DECOLA ? 0 : t < VOO ? Math.pow((t - DECOLA) / (VOO - DECOLA), 2) : 1;
+
+            var pos = rota(voo);
+            /* flutua enquanto as asas abrem: sem isso há um instante morto
+               com as asas batendo e o relógio parado */
+            var bob = abrir * (1 - voo) * Math.sin(ms / 1000 * 2.6 * Math.PI * 2) * 9;
+            var somindo = t > VOO ? 0 : (voo > .72 ? (1 - voo) / .28 : 1);
+
+            voador.attr('transform', 'translate(' + pos.x + ',' + (pos.y + bob) + ') scale(' + (1 - .66 * voo) + ')')
+                .attr('opacity', somindo);
+
+            var batida = abrir === 0 ? 0 : Math.sin(ms / 1000 * (2.4 + 9 * voo) * Math.PI * 2);
+            asaEsq.attr('d', pathAsa(abrir, batida)).attr('transform', 'translate(-14,-6)');
+            asaDir.attr('d', pathAsa(abrir, batida)).attr('transform', 'translate(14,-6) scale(-1,1)');
+
+            var giro = ms / 1000 * (60 + 900 * voo);
+            ponteiroM.attr('transform', 'rotate(' + giro + ')');
+            ponteiroH.attr('transform', 'rotate(' + giro / 12 + ')');
+
+            if (voo > .02 && somindo > 0) {
+                var pts = [];
+                for (var k = Math.max(0, voo - .34); k <= voo; k += .02) pts.push(rota(k));
+                trilha.attr('opacity', somindo * .9).attr('d', d3.line()
+                    .x(function (d) { return d.x; }).y(function (d) { return d.y; })
+                    .curve(d3.curveCatmullRom)(pts));
+            } else { trilha.attr('opacity', 0); }
+
+            var frente = rota(Math.min(1, voo + .04));
+            var ang = voo > 0 ? Math.atan2(frente.y - pos.y, frente.x - pos.x) * 180 / Math.PI : 0;
+            corpo.attr('transform', 'rotate(' + ang * .35 + ')');
+        });
+    }
+
+    /* ---------- 2. PEQUENO QUE VIRA GRANDE ----------
+       Uma bola minúscula desce a ladeira. A cada volta ela gruda
+       uma camada e cresce; quanto maior, mais rápido desce. No fim
+       sai do quadro grande demais para caber. Volta a ser um ponto:
+       todo acúmulo começa parecendo pequeno demais para importar. */
+    function animBolaNeve(svgId) {
+        var p = palco(svgId); if (!p) return;
+        var svg = p.svg, F = p.F, CICLO = 6600;
+        var raiz = svg.append('g');
+
+        function ladeira(t) {
+            /* a rampa e a bola leem a MESMA curva: a bola nunca
+               descola do chão quando o palco muda de altura */
+            var x = F.W * (.06 + .95 * t);
+            var y = F.H * (.30 + .52 * t * t);
+            return { x: x, y: y };
+        }
+        var pts = [];
+        for (var k = 0; k <= 1.001; k += .02) pts.push(ladeira(k));
+        var linha = d3.line().x(function (d) { return d.x; }).y(function (d) { return d.y; })
+            .curve(d3.curveCatmullRom);
+
+        raiz.append('path').attr('d', linha(pts)).attr('fill', 'none')
+            .attr('stroke', 'rgba(255,255,255,.14)').attr('stroke-width', 3).attr('stroke-linecap', 'round');
+
+        var rastro = raiz.append('path').attr('fill', 'none')
+            .attr('stroke', COR.marca).attr('stroke-width', 3)
+            .attr('stroke-linecap', 'round').attr('opacity', .5);
+
+        var bola = raiz.append('g');
+        var disco = bola.append('circle').attr('fill', COR.marca);
+        /* as espirais mostram que ela GIRA; sem isso ela só desliza */
+        var voltas = bola.append('path').attr('fill', 'none')
+            .attr('stroke', 'rgba(0,0,0,.30)').attr('stroke-width', 2.5).attr('stroke-linecap', 'round');
+
+        var R0 = 9, R1 = 74;
+        reger(svgId, function (ms) {
+            var t = (ms % CICLO) / CICLO;
+            /* acelera: bola grande desce mais rápido que bola pequena */
+            var d = Math.pow(t, 1.7);
+            var pos = ladeira(d);
+            var r = R0 + (R1 - R0) * d;
+            var somindo = d > .88 ? Math.max(0, (1 - d) / .12) : 1;
+
+            /* rolar de verdade: o giro é o caminho dividido pela
+               circunferência, não um número inventado */
+            var giro = (F.W * d) / Math.max(1, r) * (180 / Math.PI) * .5;
+
+            bola.attr('transform', 'translate(' + pos.x + ',' + (pos.y - r) + ') rotate(' + giro + ')')
+                .attr('opacity', somindo);
+            disco.attr('r', r);
+            voltas.attr('d',
+                'M ' + (-r * .62) + ' 0 A ' + (r * .62) + ' ' + (r * .62) + ' 0 0 1 ' + (r * .62) + ' 0' +
+                ' M ' + (-r * .30) + ' 0 A ' + (r * .30) + ' ' + (r * .30) + ' 0 0 1 ' + (r * .30) + ' 0');
+
+            var seg = pts.filter(function (_, i) { return i / (pts.length - 1) <= d; });
+            rastro.attr('d', seg.length > 1 ? linha(seg) : null).attr('opacity', somindo * .5);
+        });
+    }
+
+    function ligar() {
+        animTempoVoa('stage-tempo');
+        animBolaNeve('stage-bola');
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);
+    else ligar();
+})();
+</script>
+
+<script>
+/* ==============================================================
+   Navegação slide a slide: setas, PageUp/Down e espaço.
+
+   As guardas importam: durante a EDIÇÃO (tecla E) e a PINTURA
+   (tecla P) o teclado pertence a esses modos. Sem isso, arrastar
+   um elemento com a seta trocaria de slide no meio da edição.
+   ============================================================== */
+(function () {
+    'use strict';
+    var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+    function atual() {
+        var meio = window.innerHeight / 2, achado = 0;
+        secs.forEach(function (s, i) {
+            var r = s.getBoundingClientRect();
+            if (r.top <= meio && r.bottom > meio) achado = i;
+        });
+        return achado;
+    }
+    function ir(d) {
+        var de = atual(), i = Math.max(0, Math.min(secs.length - 1, de + d));
+        if (i === de) return;
+        secs[i].scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    document.addEventListener('keydown', function (e) {
+        if (document.body.classList.contains('me-on') || document.body.classList.contains('md-on')) return;
+        var t = e.target;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); ir(1); }
+        else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); ir(-1); }
+    });
+})();
+</script>
+
+<script defer src="mira/mira-edit.js"></script>
+<script defer src="mira/mira-edit-free.js"></script>
+<script defer src="mira/mira-draw.js"></script>
+</body>
+</html>

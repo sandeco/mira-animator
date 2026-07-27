@@ -15,6 +15,10 @@ Esta pasta é uma instalação do **Mira**: agentes e templates para criar apres
 
 No PRIMEIRO turno da sessão, rode `node .mira/bin/version-notice.js` uma vez (é instantâneo, não bloqueia). Se ele imprimir uma linha `[MIRA] Atualização disponível...`, siga a instrução: avise o usuário em uma linha e pergunte se ele quer que você atualize com `npx mira-animator update`. Só atualize se ele confirmar; se recusar, não insista.
 
+## Estrutura de cada deck
+
+A raiz contém somente o HTML final, launchers aplicáveis, `roteiro.md` nos decks de gravação e a pasta obrigatória `references/`. Arquivos de apoio ficam em `mira/`; imagens, fontes e bibliotecas ficam em `assets/`.
+
 ## Estrutura
 
 ```

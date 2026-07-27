@@ -25,6 +25,7 @@ Aplique quando `modo_folha` for `animada`.
 - Use `replay-<slug_stage>` para replay quando o formato o exibir.
 - Mantenha algum movimento ambiente depois da entrada.
 - Em callbacks de `d3.timer`, use `try/catch` para não congelar a fila global do D3.
+- Defina somente a função de animação. Não a invoque, não crie `IntersectionObserver`, não ligue replay e não registre `DOMContentLoaded`; o montador Node gera esses triggers uma única vez.
 
 Esqueleto JavaScript:
 

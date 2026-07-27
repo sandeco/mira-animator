@@ -30,11 +30,11 @@ Pregunta el nombre del tema, la plantilla del deck, el tema base, el color princ
 
 | Plantilla | Para |
 |---|---|
+| `mira-default` | **Por defecto.** Titulo arriba, animacion ocupando el resto del slide |
 | `aula-capitulo` | Una clase o conferencia a partir de un capítulo / módulo |
 | `pitch-projeto` | Un pitch de proyecto |
 | `demo-tecnica` | Una demo técnica / walkthrough |
-| `sandeco-just-animation-template` | Un escenario negro, sin texto, solo para la animacion de Mira |
-| `mira-perfect` | Animacion a pantalla completa con titulo/header superpuesto (diseno del lanzamiento de MIRA) |
+| `sandeco-just-animation-template` | Un escenario negro, sin texto, solo para la animacion de Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
 

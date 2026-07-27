@@ -1,6 +1,6 @@
 export const meta = {
   name: 'mira-fast-engine',
-  description: 'Planeja um deck, gera uma folha validada por slide em paralelo e monta o resultado.',
+  description: 'Planeja um deck e gera uma folha validada por slide em paralelo para montagem determinística.',
 };
 
 const invocation = typeof args === 'string' ? args : JSON.stringify(args ?? {});
@@ -9,8 +9,15 @@ const plan = await agent(`
 Execute somente a Fase 1 do Mira Fast para esta invocação:
 ${invocation}
 
-Leia .claude/skills/mira-fast/SKILL.md, references/plano-schema.md e references/quadro-metaforas.md.
-Crie o esqueleto do deck, grave mira/fast/plano.json e references/quadro-metaforas.md.
+Leia .claude/skills/mira-fast/SKILL.md,
+.claude/skills/mira-fast/references/plano-schema.md e
+.claude/skills/mira-fast/references/quadro-metaforas.md.
+Crie mira/fast/esqueleto.html com os seis slots determinísticos exigidos pela skill.
+Se o formato for mira, use obrigatoriamente mira-templates/decks/mira-default/index.html
+como fonte canônica. Preserve o marcador MIRA-DEFAULT, o runtime e o CSS
+.slide-main/.slide-centro; remova somente os slides e a animação de exemplo.
+Não pergunte por template.
+Grave mira/fast/plano.json e references/quadro-metaforas.md.
 Não gere fragmentos nem monte o deck. Retorne o plano completo no schema solicitado.
 `, {
   label: 'mira-fast: plano',
@@ -99,11 +106,15 @@ ${JSON.stringify(slide)}
 
 Grave ou corrija somente:
 ${fragmentPath}
+e seu status exclusivo:
+${plan.deck_dir}/mira/fast/result-${String(slide.n).padStart(2, '0')}.json
 
 Depois rode obrigatoriamente:
 node .claude/skills/mira-fast/scripts/validate-run.mjs "${plan.deck_dir}" --slide ${slide.n}
 
-Se falhar, corrija seu fragmento e rode novamente. Não escreva em nenhum outro arquivo.
+Se falhar, corrija seu fragmento e rode novamente. Grave no status
+{"n":${slide.n},"ok":true|false,"validation":"pass ou motivo","attempts":${attempt}}.
+Não escreva em nenhum outro arquivo.
 Retorne {"n":${slide.n},"ok":true,"validation":"pass"} somente após exit code 0.
 Se não conseguir corrigir, retorne {"n":${slide.n},"ok":false,"validation":"motivo curto"}.
 `, { label: `mira-fast: slide ${slide.n} tentativa ${attempt}`, schema: leafSchema });
@@ -126,26 +137,12 @@ async function buildWithRetry(slide) {
 const leaves = await pipeline(plan.slides, (slide) => buildWithRetry(slide));
 const failedLeaves = leaves.filter((leaf) => !leaf.ok);
 
-const assembly = await agent(`
-Execute somente a Fase 3 do Mira Fast.
-Leia .claude/skills/mira-fast/SKILL.md e o plano em ${plan.deck_dir}/mira/fast/plano.json.
-Resultados das folhas: ${JSON.stringify(leaves)}
-
-Primeiro rode:
-node .claude/skills/mira-fast/scripts/validate-run.mjs "${plan.deck_dir}"
-
-Sempre grave mira/fast/montagem.log, inclusive quando houver falha.
-Se a validação falhar ou houver folha com ok=false, registre todos os motivos e não publique deck parcial.
-Se passar, monte todas as folhas na ordem do plano, preserve o esqueleto do formato,
-instale os módulos obrigatórios, grave ${plan.deck_dir}/${plan.arquivo_saida} e abra o deck.
-Não reescreva o conteúdo criativo das folhas.
-`, { label: 'mira-fast: montagem' });
-
 return {
   deck_dir: plan.deck_dir,
   arquivo_saida: plan.arquivo_saida,
   folhas: leaves.length,
   total_slides: plan.slides.length,
   falhas: failedLeaves,
-  montagem: assembly,
+  pronto_para_montar: failedLeaves.length === 0,
+  comando_montagem: `node .claude/skills/mira-fast/scripts/assemble-run.mjs "${plan.deck_dir}"`,
 };
