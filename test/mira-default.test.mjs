@@ -302,3 +302,79 @@ test('o template mora na pasta de templates do Mira e viaja no pacote', () => {
     const pkg = JSON.parse(readFileSync(join(RAIZ, 'package.json'), 'utf8'));
     assert.ok(pkg.files.includes('templates/'), 'templates/ está no files do package.json');
 });
+
+/* ---------- o desenho da caneta (P) pertence ao slide ----------
+   O mira-draw pinta num canvas único fixo sobre a janela. Sem trocar os
+   traços junto com o slide, o que você desenhou num slide fica pairando
+   sobre todos os outros. */
+function rodarNavegacao(html, alturaSlide = 500) {
+    const script = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)]
+        .map((m) => m[1]).find((s) => /ArrowRight/.test(s));
+    assert.ok(script, 'o deck tem o script de navegação');
+
+    /* 4 seções; a "visível" é a que cobre o meio da janela */
+    let topo = 0;
+    const secoes = Array.from({ length: 4 }, (_, i) => ({
+        getBoundingClientRect: () => ({ top: i * alturaSlide - topo, bottom: (i + 1) * alturaSlide - topo }),
+        scrollIntoView: () => { topo = i * alturaSlide; }
+    }));
+
+    /* mira-draw falso: um canvas só, como o de verdade */
+    let traços = [];
+    const miraDraw = {
+        getShapes: () => traços.slice(),
+        setShapes: (s) => { traços = s.slice(); }
+    };
+
+    const ouvintes = {};
+    const window = {
+        innerHeight: alturaSlide,
+        miraDraw,
+        addEventListener: (ev, fn) => { (ouvintes[ev] = ouvintes[ev] || []).push(fn); }
+    };
+    const document = {
+        querySelectorAll: () => secoes,
+        addEventListener: () => { },
+        body: { classList: { contains: () => false } }
+    };
+    new Function('window', 'document', script)(window, document);
+
+    const disparar = (ev) => (ouvintes[ev] || []).forEach((f) => f());
+    disparar('load');
+    return {
+        irPara(i) { topo = i * alturaSlide; disparar('scroll'); },
+        desenhar(marca) { traços.push(marca); },
+        get traçosVisiveis() { return traços.slice(); }
+    };
+}
+
+test('o desenho feito num slide não aparece nos outros', () => {
+    const p = projeto();
+    try {
+        const nav = rodarNavegacao(p.novo('desenho'));
+
+        nav.desenhar('risco-do-slide-0');
+        assert.deepEqual(nav.traçosVisiveis, ['risco-do-slide-0']);
+
+        nav.irPara(1);
+        assert.deepEqual(nav.traçosVisiveis, [], 'canvas limpo no slide seguinte');
+
+        nav.desenhar('risco-do-slide-1');
+        nav.irPara(2);
+        assert.deepEqual(nav.traçosVisiveis, [], 'nem o do slide 0 nem o do slide 1');
+    } finally { p.limpar(); }
+});
+
+test('voltando ao slide, o desenho dele volta', () => {
+    const p = projeto();
+    try {
+        const nav = rodarNavegacao(p.novo('volta'));
+        nav.desenhar('a');
+        nav.irPara(1);
+        nav.desenhar('b');
+        nav.irPara(0);
+        assert.deepEqual(nav.traçosVisiveis, ['a'], 'o traço do slide 0 voltou');
+        nav.irPara(1);
+        assert.deepEqual(nav.traçosVisiveis, ['b'], 'e o do slide 1 continua lá');
+    } finally { p.limpar(); }
+});

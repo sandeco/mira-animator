@@ -491,6 +491,31 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
         if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); ir(1); }
         else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); ir(-1); }
     });
+
+    /* ---------- desenho (tecla P) pertence AO SLIDE ----------
+       O mira-draw pinta num <canvas> único, fixo sobre a janela: sem
+       isto, o traço feito num slide fica pairando sobre todos os outros,
+       como se você tivesse riscado a tela e não o slide.
+
+       Aqui os traços são guardados por slide e trocados junto com ele:
+       sai do slide, o desenho sai; volta, o desenho volta. Usa a API
+       pública `getShapes`/`setShapes` do mira-draw, sem tocar no módulo.
+
+       No palco do mira-remote o desenho é da shell (modelo global
+       sincronizado com o celular), então lá isto não se mete. */
+    var porSlide = {}, ultimo = -1;
+    function trocarDesenho() {
+        if (window.__MIRA_REMOTE_STAGE__) return;
+        var md = window.miraDraw;
+        if (!md || !md.getShapes || !md.setShapes) return;   // deck sem a caneta
+        var i = atual();
+        if (i === ultimo) return;
+        if (ultimo >= 0) porSlide[ultimo] = md.getShapes();  // guarda o que estava
+        ultimo = i;
+        md.setShapes(porSlide[i] || []);
+    }
+    window.addEventListener('load', function () { ultimo = atual(); });
+    window.addEventListener('scroll', trocarDesenho, { passive: true });
 })();
 </script>
 
