@@ -38,11 +38,17 @@
        Se o encoder recusar frames de tamanho diferente, o Worker cai
        para um OffscreenCanvas de escala — ainda fora do main thread.
        Backpressure real: descarta frames não-chave quando
-       encodeQueueSize >= 2; timestamps preservados (VFR); keyframe a
-       cada 2s. Áudio do microfone via MediaStreamTrackProcessor ->
-       AudioEncoder AAC no mesmo Worker. Mux MP4 via mp4-muxer
-       (importScripts no Worker), com firstTimestampBehavior
-       'cross-track-offset' (preserva o offset real entre A/V).
+       encodeQueueSize >= 2; keyframe a cada 2s. Áudio do microfone via
+       MediaStreamTrackProcessor -> AudioEncoder AAC no mesmo Worker.
+       Mux MP4 via mp4-muxer (importScripts no Worker), com
+       firstTimestampBehavior 'offset' (por trilha).
+     - Linha do tempo do vídeo em CFR (chave "CFR (edição)", ligada por
+       padrão): cada frame vai para um slot da grade 1/FPS e os buracos
+       são preenchidos com o quadro anterior. Sem isso o MP4 sai VFR e
+       editores que conformam VFR numa grade fixa (Adobe Premiere)
+       acumulam dessincronia labial progressiva contra o áudio AAC —
+       enquanto VLC/Chrome, que honram PTS, tocam certo. Ver a seção
+       "GRADE CFR" no Worker.
      - O main thread só renderiza a página e recebe o MP4 pronto no fim.
        Zero callback de gravação por frame no main thread.
 
@@ -149,6 +155,7 @@
             '<label id="mrc-cams">câmera <select></select></label>' +
             '<label id="mrc-mics">mic <select></select></label>' +
             '<label id="mrc-disk"><input type="checkbox" checked> salvar direto no disco</label>' +
+            '<label id="mrc-cfr"><input type="checkbox" checked> CFR (edição)</label>' +
             '<label id="mrc-enc">encoder <select>' +
             '<option value="auto">Auto (navegador)</option>' +
             '<option value="gpu">Hardware preferido</option>' +
@@ -172,6 +179,7 @@
         ui.camSel = p.querySelector('#mrc-cams select');
         ui.micSel = p.querySelector('#mrc-mics select');
         ui.disk = p.querySelector('#mrc-disk input');
+        ui.cfr = p.querySelector('#mrc-cfr input');
         ui.enc = p.querySelector('#mrc-enc select');
         ui.qual = p.querySelector('#mrc-qual select');
         ui.gpu = p.querySelector('#mrc-gpu');
@@ -182,6 +190,7 @@
         ui.btn.addEventListener('click', toggle);
         ui.diagSave.addEventListener('click', saveDiagnostics);
         setupDiskToggle();
+        setupCfrToggle();
         setupEncoderSelect();
         setupQualitySelect();
         setupDevices();
@@ -708,6 +717,8 @@
         t0: 0, timer: null, finalizeTimer: null, slowWarned: false, memWarned: false, gotMetrics: false, noAudio: false, out: null,
         diagRaf: 0, diagLastRaf: 0, navUntil: 0, maxNavRafMs: 0, maxNavLongMs: 0,
         maxNavPtsMs: 0, maxNavFirstFrameMs: 0, path: '', input: null, crop: null, lastStats: null,
+        /* linha do tempo do vídeo: modo (cfr/vfr) e contadores da grade */
+        timing: { mode: '', dupFilled: 0, dupDropped: 0, gapJumped: 0 },
         /* Element Capture: ativo nesta sessão, seção atualmente restrita e
            rAF que evita reaplicar o restrictTo mais de uma vez por frame */
         elemActive: false, lastRestrictSec: null, reRaf: 0,
@@ -761,6 +772,33 @@
         });
     }
 
+    /* ---------- CFR (modo edição) ---------------------------------------
+       LIGADO por padrão: o arquivo nasce com a linha do tempo do vídeo numa
+       grade fixa de 1/FPS, que é o que editor (Premiere, Resolve) espera.
+       Desligado, volta ao VFR de antes: menos CPU quando a máquina sofre e
+       o vídeo só vai ser publicado direto (player honra PTS). A chave só
+       vale no caminho WebCodecs/Worker — o fallback MediaRecorder já é
+       regular por construção. */
+    function cfrWanted() { return !!(ui.cfr && ui.cfr.checked); }
+    function setupCfrToggle() {
+        if (!ui.cfr) return;
+        var lbl = ui.panel.querySelector('#mrc-cfr');
+        if (lbl) lbl.title = 'Grava o vídeo numa grade fixa de ' + FPS + ' fps (preenchendo buracos com o quadro anterior). ' +
+            'Sem isso o MP4 sai VFR e o Adobe Premiere desloca o áudio progressivamente.';
+        if (!CAN_WORKER) {
+            /* fallback MediaRecorder: já sai regular, a chave não faz nada */
+            ui.cfr.checked = true;
+            ui.cfr.disabled = true;
+            return;
+        }
+        var saved = null;
+        try { saved = localStorage.getItem('mira-rec-cfr'); } catch (e) { }
+        if (saved === '0') ui.cfr.checked = false;
+        ui.cfr.addEventListener('change', function () {
+            try { localStorage.setItem('mira-rec-cfr', ui.cfr.checked ? '1' : '0'); } catch (e) { }
+        });
+    }
+
     function fmtTime(ms) {
         var s = Math.floor(ms / 1000);
         return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
@@ -774,6 +812,7 @@
     function resetDiagnostics() {
         S.navUntil = 0; S.maxNavRafMs = 0; S.maxNavLongMs = 0; S.maxNavPtsMs = 0; S.maxNavFirstFrameMs = 0;
         S.path = ''; S.input = null; S.crop = null; S.out = null; S.lastStats = null;
+        S.timing = { mode: cfrWanted() ? 'cfr' : 'vfr', dupFilled: 0, dupDropped: 0, gapJumped: 0 };
         S.falhas = [];   /* só aqui: o deliver() lê S.falhas depois do cleanup() */
         S.diskName = '';
         if (ui.diag) ui.diag.textContent = 'diagnóstico aguardando frames';
@@ -814,12 +853,30 @@
             (fatal ? '. Nada foi salvo.' : '. O arquivo será marcado como PARCIAL.'));
         updateDiag();
     }
+    /* contadores da grade CFR vindos do Worker (métricas ao vivo e stats do
+       'done' carregam os mesmos campos) */
+    function guardarTiming(d) {
+        if (!d) return;
+        if (d.mode) S.timing.mode = d.mode;
+        if (typeof d.dupFilled === 'number') S.timing.dupFilled = d.dupFilled;
+        if (typeof d.dupDropped === 'number') S.timing.dupDropped = d.dupDropped;
+        if (typeof d.gapJumped === 'number') S.timing.gapJumped = d.gapJumped;
+    }
     function diagObject(extra) {
         return Object.assign({
             generatedAt: new Date().toISOString(),
             renderer: gpuName || 'não identificado',
             encoderPreference: encMode(),
             quality: qualityMode(),
+            /* linha do tempo do vídeo: 'cfr' = grade fixa (importa certo no
+               Premiere); 'vfr' = timestamps de captura (drift no editor) */
+            timing: {
+                mode: S.timing.mode || (cfrWanted() ? 'cfr' : 'vfr'),
+                fps: FPS,
+                dupFilled: S.timing.dupFilled,
+                dupDropped: S.timing.dupDropped,
+                gapJumped: S.timing.gapJumped
+            },
             output: S.out || null,
             input: S.input,
             crop: S.crop,
@@ -855,7 +912,11 @@
         var input = S.input ? S.input.w + 'x' + S.input.h : '?';
         var crop = S.crop ? Math.round(S.crop.x) + ',' + Math.round(S.crop.y) + ' ' + Math.round(S.crop.w) + 'x' + Math.round(S.crop.h) : '?';
         var out = S.out ? S.out.w + 'x' + S.out.h : '?';
+        var timing = (S.timing.mode || (cfrWanted() ? 'cfr' : 'vfr')) +
+            (S.timing.dupFilled || S.timing.dupDropped || S.timing.gapJumped
+                ? ' ' + S.timing.dupFilled + '/' + S.timing.dupDropped + '/' + S.timing.gapJumped : '');
         ui.diag.textContent = (S.path || 'aguardando') + ' · in ' + input + ' · crop ' + crop + ' · out ' + out +
+            ' · ' + timing +
             ' · nav PTS/rAF/long/1º ' + Math.round(S.maxNavPtsMs) + '/' + Math.round(S.maxNavRafMs) + '/' +
             Math.round(S.maxNavLongMs) + '/' + Math.round(S.maxNavFirstFrameMs) + ' ms' +
             (S.falhas.length ? ' · PARCIAL — ' + resumoFalhas(S.falhas) : '');
@@ -918,6 +979,22 @@
         var frames = 0, dropped = 0, encoded = 0, maxQ = 0, audioDropped = 0;
         var encBytes = 0, winBytes = 0;                 /* bytes reais emitidos (vídeo+áudio) */
         var lastKey = null, lastTs = -1;
+        /* ---------- GRADE CFR (modo edição) -------------------------------
+           O defeito: a captura entrega timestamps reais e o backpressure
+           derruba frames, então a trilha de vídeo sai VFR. Player que honra
+           PTS (VLC, Chrome) toca certo; editor NÃO trabalha em VFR — o
+           Premiere conforma o clipe numa grade fixa e cada buraco da linha
+           do tempo vira deslocamento ACUMULADO contra o áudio AAC (a boca
+           desencontra da voz, pior quanto mais longo o clipe).
+           A correção: um frame por slot da grade de 1/FPS. Frame fora do
+           slot é remarcado, dois frames no mesmo slot descartam o segundo e
+           slot vazio é preenchido com o quadro anterior (congela). O áudio
+           NÃO é tocado — 'offset' por trilha continua resolvendo o offset
+           inicial (defeito diferente, ver o comentário do muxer). */
+        var cfr = false, cfrFps = 30, cfrCap = 60, cfrQCap = 60;
+        var slotT0 = -1, lastSlot = -1, lastFrame = null;   /* lastFrame: clone do último aceito (caminho direto) */
+        var canvasReady = false;                            /* o canvas de escala já tem um quadro desenhado */
+        var dupFilled = 0, dupDropped = 0, gapJumped = 0;
         var scaleCanvas = null, scaleCtx = null, scaleMode = 'encoder', cropFrac = null, sourceViewport = null;
         var inputSize = null, cropRect = null, pathName = 'direct';
         var navUntil = 0, navMarkMs = 0, navLastTs = -1, maxNavPtsGapUs = 0, maxNavFirstFrameMs = 0;
@@ -980,6 +1057,10 @@
         function switchToCanvas() {
             scaleMode = 'canvas';
             if (!cropFrac) cropFrac = cfg.cropFrac || null;
+            /* no canvas o preenchimento de buraco sai do próprio canvas: o
+               clone do caminho direto vira lixo (e seguraria um buffer da
+               pool de captura à toa) */
+            closeLastFrame();
             ensureCanvas();
             try { if (venc && venc.state !== 'closed') venc.close(); } catch (e) { }
             makeVideoEncoder();
@@ -1057,6 +1138,15 @@
 
         function start(d) {
             cfg = d.config;
+            cfr = !!cfg.cfr;
+            cfrFps = cfg.fps || 30;
+            /* teto de preenchimento: 2 s de quadro congelado. Acima disso a
+               aba provavelmente travou (ou a captura parou de emitir) e
+               duplicar minutos de tela parada custaria mais que o buraco. */
+            cfrCap = cfrFps * 2;
+            /* válvula independente do tempo: preencher não pode inflar a
+               fila do encoder sem limite (fila é memória). */
+            cfrQCap = cfrFps * 2;
             cropFrac = cfg.cropFrac || null;
             sourceViewport = cfg.sourceViewport || null;
             scaleMode = d.forceCanvas ? 'canvas' : 'encoder';
@@ -1111,6 +1201,96 @@
             cropRect = computeCropRect(fw, fh, cropFrac, sourceViewport);
             pathName = cropRect.path;
             scaleCtx.drawImage(frame, cropRect.x, cropRect.y, cropRect.w, cropRect.h, 0, 0, cfg.out.w, cfg.out.h);
+            canvasReady = true;
+        }
+        /* ---------- grade CFR: helpers ------------------------------------
+           PTS EXATO do slot, arredondado a cada slot (nunca n * DT com DT
+           inteiro): com DT = 33333 µs o erro de 0,33 µs por frame vira uma
+           unidade de timescale a cada ~30 frames, o stts do MP4 sai com
+           deltas alternados e o ffprobe deixa de reportar 30/1 — ou seja, o
+           arquivo voltaria a parecer VFR justamente para quem a correção
+           existe. Com o arredondamento por slot, o delta é constante. */
+        function slotPts(n) { return Math.round(n * 1e6 / cfrFps); }
+        function closeLastFrame() {
+            if (!lastFrame) return;
+            try { lastFrame.close(); } catch (e) { }
+            lastFrame = null;
+        }
+        /* codifica `source` (VideoFrame ou o canvas de escala) no slot n.
+           Devolve false quando o frame se perdeu (falha já registrada). */
+        function encodeSlot(source, n, fromCanvas) {
+            var pts = slotPts(n), dur = slotPts(n + 1) - pts;
+            var key = lastKey === null || (pts - lastKey) >= 2000000;
+            var vf;
+            try { vf = new VideoFrame(source, { timestamp: pts, duration: dur }); }
+            catch (e) { falhaVideo('video-frame', e); return false; }
+            try { venc.encode(vf, { keyFrame: key }); if (key) lastKey = pts; }
+            catch (e) {
+                /* mesma recuperação do caminho VFR: mismatch de dimensão no
+                   1º frame migra para o canvas; erro com chunks já muxados é
+                   perda de frame e vira falha visível */
+                if (encoded === 0 && scaleMode === 'encoder' && !fromCanvas) { switchToCanvas(); }
+                else { falhaVideo('video-encode', e); }
+                return false;
+            }
+            finally { vf.close(); }
+            return true;
+        }
+        /* preenche os slots vazios entre o último aceito e n com o quadro
+           anterior. No caminho canvas a fonte é o próprio canvas (que ainda
+           guarda o último quadro) — por isso o preenchimento acontece ANTES
+           do drawCropScale do frame novo. */
+        function fillGap(n) {
+            if (lastSlot < 0) return;                       /* nada aceito ainda: não há o que congelar */
+            var gap = n - lastSlot - 1;
+            if (gap <= 0) return;
+            var fonte = scaleMode === 'canvas' ? (canvasReady ? scaleCanvas : null) : lastFrame;
+            if (!fonte) return;
+            if (gap > cfrCap) { gapJumped++; return; }
+            for (var k = lastSlot + 1; k < n; k++) {
+                if (venc.encodeQueueSize >= cfrQCap) { gapJumped++; return; }
+                if (!encodeSlot(fonte, k, scaleMode === 'canvas')) return;
+                dupFilled++;
+            }
+        }
+        /* janela de diagnóstico da navegação: mede a CAPTURA, então usa o ts
+           real do frame, não o da grade */
+        function markNav(ts) {
+            var navNow = nowMs();
+            if (!navMarkMs || navNow > navUntil) return;
+            if (navLastTs >= 0) maxNavPtsGapUs = Math.max(maxNavPtsGapUs, ts - navLastTs);
+            else maxNavFirstFrameMs = Math.max(maxNavFirstFrameMs, navNow - navMarkMs);
+            navLastTs = ts;
+        }
+        /* um frame por slot da grade fixa (ver "GRADE CFR" no topo) */
+        function encodeFrameCFR(frame, q) {
+            var ts = frame.timestamp;
+            if (slotT0 < 0) slotT0 = ts;
+            var n = Math.round((ts - slotT0) * cfrFps / 1e6);
+            /* dois frames no mesmo slot (ou ts que regrediu): o segundo não
+               tem para onde ir — a grade já está ocupada */
+            if (n <= lastSlot) { dupDropped++; frame.close(); return; }
+            markNav(ts);
+            var key = lastKey === null || (slotPts(n) - lastKey) >= 2000000;
+            /* backpressure continua ANTES do re-timestamp: o frame novo cai,
+               mas o slot perdido deixa de virar buraco — o próximo aceito
+               preenche com duplicata na grade */
+            if (q >= 2 && !key) { dropped++; frame.close(); return; }
+            if (scaleMode === 'canvas') {
+                fillGap(n);                                 /* duplicatas saem do canvas ANTES de redesenhar */
+                drawCropScale(frame); frame.close();
+                if (encodeSlot(scaleCanvas, n, true)) lastSlot = n;
+                return;
+            }
+            fillGap(n);
+            if (encodeSlot(frame, n, false)) {
+                closeLastFrame();
+                /* clone compartilha o buffer (barato); é a fonte das
+                   duplicatas do próximo buraco */
+                try { lastFrame = frame.clone(); } catch (e) { lastFrame = null; }
+                lastSlot = n;
+            }
+            frame.close();
         }
         function encodeFrame(frame) {
             if (stopping || !venc || venc.state !== 'configured') { frame.close(); return; }
@@ -1135,16 +1315,14 @@
                     input: { w: frame.displayWidth || frame.codedWidth, h: frame.displayHeight || frame.codedHeight } });
             }
             var q = venc.encodeQueueSize; if (q > maxQ) maxQ = q;
+            if (cfr) { encodeFrameCFR(frame, q); return; }
+            /* --- VFR: comportamento histórico, com a chave "CFR (edição)"
+                   desligada. Timestamps de captura passam direto. --- */
             var ts = frame.timestamp;
             /* AVC exige PTS monotônico; screen-capture raramente regride, mas
                se ts não avança, descarta (nos dois caminhos) — não inventa ts */
             if (ts <= lastTs) { dropped++; frame.close(); return; }
-            var navNow = nowMs();
-            if (navMarkMs && navNow <= navUntil) {
-                if (navLastTs >= 0) maxNavPtsGapUs = Math.max(maxNavPtsGapUs, ts - navLastTs);
-                else maxNavFirstFrameMs = Math.max(maxNavFirstFrameMs, navNow - navMarkMs);
-                navLastTs = ts;
-            }
+            markNav(ts);
             var key = lastKey === null || (ts - lastKey) >= 2000000;
             if (q >= 2 && !key) { dropped++; frame.close(); return; }
             lastTs = ts;
@@ -1233,7 +1411,8 @@
                     type: 'metrics', fps: winFrames / dt, frames: frames, dropped: dropped,
                     encoded: encoded, q: q, maxQ: maxQ, bytes: encBytes, mbps: (winBytes * 8) / dt / 1e6,
                     input: inputSize, crop: cropRect, output: cfg.out, path: pathName,
-                    maxNavPtsGapMs: maxNavPtsGapUs / 1000, maxNavFirstFrameDelayMs: maxNavFirstFrameMs
+                    maxNavPtsGapMs: maxNavPtsGapUs / 1000, maxNavFirstFrameDelayMs: maxNavFirstFrameMs,
+                    mode: cfr ? 'cfr' : 'vfr', dupFilled: dupFilled, dupDropped: dupDropped, gapJumped: gapJumped
                 });
                 winFrames = 0; winBytes = 0; winT0 = t;
             }, 1000);
@@ -1262,6 +1441,8 @@
                 .then(function () {
                     try { if (venc && venc.state !== 'closed') venc.close(); } catch (e) { }
                     try { if (aenc && aenc.state !== 'closed') aenc.close(); } catch (e) { }
+                    /* nenhum VideoFrame fica aberto além do flush */
+                    closeLastFrame();
                     /* áudio descartado por fila cheia também é dado perdido */
                     if (audioDropped > 0) registrarFalha('audio-fila', audioDropped + ' pacote(s) de áudio descartado(s) por fila cheia');
                     if (terminalPosted) return;   /* fatal já encerrou; não posta 'done' duplicado */
@@ -1281,6 +1462,7 @@
                             post({ type: 'done', buffer: buffer, savedToDisk: toDisk, stats: { frames: frames, dropped: dropped, encoded: encoded,
                                 audioDropped: audioDropped, maxQ: maxQ, maxNavPtsGapMs: maxNavPtsGapUs / 1000,
                                 maxNavFirstFrameDelayMs: maxNavFirstFrameMs,
+                                mode: cfr ? 'cfr' : 'vfr', dupFilled: dupFilled, dupDropped: dupDropped, gapJumped: gapJumped,
                                 input: inputSize, crop: cropRect, output: cfg.out, path: pathName,
                                 /* toda falha da sessão viaja com a causa original; o main
                                    usa isso para marcar o arquivo como PARCIAL */
@@ -1329,13 +1511,18 @@
         if (d.path) S.path = d.path;
         S.maxNavPtsMs = Math.max(S.maxNavPtsMs, Number(d.maxNavPtsGapMs) || 0);
         S.maxNavFirstFrameMs = Math.max(S.maxNavFirstFrameMs, Number(d.maxNavFirstFrameDelayMs) || 0);
+        guardarTiming(d);
         /* métricas reais ao vivo (honestas): fps efetivo, % descartado,
-           fila atual/máxima do encoder, bitrate real e memória acumulada */
+           fila atual/máxima do encoder, bitrate real e memória acumulada.
+           `dup` = frames duplicados para fechar buraco na grade CFR: é o
+           custo real da correção, então aparece do lado do % descartado. */
         if (ui.metrics) {
             var dropPct = d.frames > 0 ? Math.round(100 * d.dropped / d.frames) : 0;
             var mb = Math.round((d.bytes || 0) / (1024 * 1024));
             ui.metrics.textContent = Math.round(d.fps) + ' fps · ' + dropPct + '% desc · fila ' +
-                (d.q || 0) + '/' + (d.maxQ || 0) + ' · ' + (d.mbps || 0).toFixed(1) + ' Mbps · ' + mb + ' MB';
+                (d.q || 0) + '/' + (d.maxQ || 0) + ' · ' + (d.mbps || 0).toFixed(1) + ' Mbps · ' + mb + ' MB' +
+                (S.timing.dupFilled ? ' · ' + S.timing.dupFilled + ' dup' : '') +
+                (S.timing.gapJumped ? ' · ' + S.timing.gapJumped + ' salto' : '');
             /* o alerta de MB só faz sentido em memória: no disco o número é só
                o tamanho do arquivo crescendo, não pressão de RAM */
             ui.metrics.classList.toggle('warn',
@@ -1542,6 +1729,10 @@
             out: out,
             video: vcfg,
             audio: audioCfg,
+            /* grade fixa da trilha de vídeo (chave "CFR (edição)"): sem ela o
+               MP4 sai VFR e o Premiere desloca o áudio ao longo do clipe */
+            cfr: cfrWanted(),
+            fps: FPS,
             /* Rede de segurança do Region Capture: quando cropTo() resolve mas a
                track real ainda entrega a guia inteira (Windows), o Worker recorta
                pela fração. Com Element Capture a track JÁ vem 16:9 — recortar de
@@ -1639,6 +1830,7 @@
             if (S.lastStats.path) S.path = S.lastStats.path;
             S.maxNavPtsMs = Math.max(S.maxNavPtsMs, Number(S.lastStats.maxNavPtsGapMs) || 0);
             S.maxNavFirstFrameMs = Math.max(S.maxNavFirstFrameMs, Number(S.lastStats.maxNavFirstFrameDelayMs) || 0);
+            guardarTiming(S.lastStats);
         }
         var savedToDisk = !!d.savedToDisk;
         var finalDiag = diagObject({ worker: S.lastStats });
@@ -1756,6 +1948,7 @@
         ui.mic.disabled = true;
         ui.enc.disabled = true;
         if (ui.qual) ui.qual.disabled = true;
+        if (ui.cfr) ui.cfr.disabled = true;
         if (ui.metrics) { ui.metrics.textContent = ''; ui.metrics.classList.remove('warn'); }
         note(msg);
         startRafDiagnostics();
@@ -1825,6 +2018,7 @@
         ui.mic.disabled = false;
         ui.enc.disabled = false;
         if (ui.qual) ui.qual.disabled = false;
+        if (ui.cfr) ui.cfr.disabled = !CAN_WORKER;
         if (ui.metrics) { ui.metrics.textContent = ''; ui.metrics.classList.remove('warn'); }
         updateDiag();
     }
