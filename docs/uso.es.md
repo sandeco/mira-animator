@@ -20,7 +20,11 @@ Crear un deck es conversacional — solo habla con `/mira-new` dentro de Claude:
 /mira-new crea una nueva presentación llamada 'mi-clase'
 ```
 
-Pregunta el nombre del tema, la plantilla del deck, el tema base, el color principal y referencias, luego monta la carpeta `decks/<tema>/` y ofrece accionar el pipeline. También puedes indicar la plantilla y el tema en la misma frase:
+Pregunta **solo el nombre del tema** y en seguida crea la carpeta `decks/<tema>/` con la `references/` lista, mostrándote su ruta completa. Ahí se detiene y pregunta cómo quieres empezar: contarle por texto en el chat de qué trata la presentación, o poner tus archivos (PDF, documento, capturas, enlaces) en la carpeta de referencias y avisarle. Solo después pregunta el resto (plantilla del deck, tema base, color principal), monta el deck y ofrece accionar el pipeline.
+
+La carpeta va primero por una razón práctica: si ya tienes el material a mano, necesitas un lugar donde ponerlo antes de decidir plantilla y color. Si vuelves más tarde, en la misma sesión o en otra, `/mira-new` reconoce la carpeta como un deck en curso, lista lo que encontró en `references/` y continúa donde lo dejaste.
+
+También puedes indicar la plantilla y el tema en la misma frase:
 
 ```text
 /mira-new crea una presentación llamada 'mi-clase' con la plantilla aula-capitulo y el tema mira-dark
@@ -34,9 +38,20 @@ Pregunta el nombre del tema, la plantilla del deck, el tema base, el color princ
 | `aula-capitulo` | Una clase o conferencia a partir de un capítulo / módulo |
 | `pitch-projeto` | Un pitch de proyecto |
 | `demo-tecnica` | Una demo técnica / walkthrough |
-| `sandeco-just-animation-template` | Un escenario negro, sin texto, solo para la animacion de Mira |
+| `sandeco-just-animation-template` | Un escenario negro, sin texto, solo para la animacion de Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
+
+### Atajo: el deck completo de una vez
+
+Si prefieres no pasar por los pasos 2 y 3 por separado, [`/mira-fast`](agentes/core.md#mira-fast) hace todo en una sola llamada, generando los slides en paralelo:
+
+```text
+/mira-fast spec driven development
+/mira-fast /mira-vertical el libro en references/mi-libro.pdf
+```
+
+No pregunta nada, del tema al HTML final, y por eso no apruebas el plan de slides a mitad de camino. También crea la carpeta del deck con la `references/` antes de planificar, y falla avisando si señalas una fuente que no existe. Necesita **Dynamic workflows** habilitado en `/config`.
 
 ## 3. Rellena el deck
 

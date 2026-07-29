@@ -20,7 +20,11 @@ Criar um deck é conversacional — basta falar com o `/mira-new` dentro do Clau
 /mira-new crie uma nova apresentação chamada 'minha-aula'
 ```
 
-Ela pergunta o nome do tema, o template do deck, o tema base, a cor principal e referências, então monta a pasta `decks/<tema>/` e oferece acionar o pipeline. Você também pode já indicar o template e o tema na própria frase:
+Ela pergunta **só o nome do tema** e já cria a pasta `decks/<tema>/` com a `references/` pronta, mostrando o caminho completo dela. Aí ela para e pergunta como você quer começar: contar por texto ali no chat do que trata a apresentação, ou colocar seus arquivos (PDF, documento, prints, links) na pasta de referências e avisar. Só depois disso ela pergunta o resto (template do deck, tema base, cor principal), monta o deck e oferece acionar o pipeline.
+
+A pasta primeiro existe por um motivo prático: quem já tem o material na mão precisa de um lugar para colocá-lo antes de decidir template e cor. Se você voltar mais tarde, na mesma sessão ou em outra, o `/mira-new` reconhece a pasta como deck em andamento, lista o que encontrou em `references/` e continua de onde parou.
+
+Você também pode já indicar o template e o tema na própria frase:
 
 ```text
 /mira-new crie uma apresentação chamada 'minha-aula' com o template aula-capitulo e o tema mira-dark
@@ -34,9 +38,20 @@ Ela pergunta o nome do tema, o template do deck, o tema base, a cor principal e 
 | `aula-capitulo` | Uma aula ou palestra a partir de um capítulo / módulo |
 | `pitch-projeto` | Um pitch de projeto |
 | `demo-tecnica` | Uma demo técnica / walkthrough |
-| `sandeco-just-animation-template` | Um palco preto, sem texto, apenas para a animacao do Mira |
+| `sandeco-just-animation-template` | Um palco preto, sem texto, apenas para a animacao do Mira |
 
 **Temas:** `mira-dark`, `light-minimal`, `corporate-blue`, `neon-emerald`.
+
+### Atalho: o deck inteiro de uma vez
+
+Se você não quer passar pelos passos 2 e 3 separados, o [`/mira-fast`](agentes/core.md#mira-fast) faz tudo numa única chamada, gerando os slides em paralelo:
+
+```text
+/mira-fast spec driven development
+/mira-fast /mira-vertical o livro em references/meu-livro.pdf
+```
+
+Ele não pergunta nada, do tema ao HTML final, e por isso você não aprova o plano de slides no meio do caminho. Também cria a pasta do deck com a `references/` antes de planejar, e falha avisando se você apontar uma fonte que não existe. Precisa de **Dynamic workflows** habilitado em `/config`.
 
 ## 3. Preencha o deck
 

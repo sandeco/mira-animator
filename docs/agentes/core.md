@@ -3,7 +3,21 @@
 The heart of deck creation. See how they connect in the [Agent pipeline](../pipeline.md).
 
 ## `/mira-new`
-The front door for a new deck. Collects the requirements of a presentation conversationally (theme name, deck template, base theme, primary color and references) and assembles the `decks/<theme>/` folder ready for the pipeline to fill. It does **not** generate slides — it prepares the ground and, at the end, offers to trigger the pipeline.
+The front door for a new deck. It asks only for the theme name and **creates the `decks/<theme>/` structure right away, with `references/` ready**, so you can drop your PDF, document or screenshots in before deciding anything else. Then it stops and asks whether you would rather describe the presentation in chat or put the files in the folder. Only after that does it collect the rest conversationally (deck template, base theme, primary color) and assemble the deck for the pipeline to fill. It does **not** generate slides: it prepares the ground and, at the end, offers to trigger the pipeline.
+
+## `/mira-fast`
+A whole deck in a single call. Where `/mira-new` opens the normal chain with pauses, `/mira-fast` plans the deck and fans out **one leaf per slide in parallel**, then assembles the final file deterministically. It asks nothing: not content, not format, not theme, not continuity. Quality matches the normal chain, without the human gates in between.
+
+```text
+/mira-fast <topic or path>                       -> default 16:9
+/mira-fast /mira-studio <topic or path>          -> Studio 9:16
+/mira-fast /mira-studio-full <topic or path>     -> Studio Full 16:9
+/mira-fast /mira-vertical <topic or path>        -> vertical 9:16
+```
+
+Before planning anything it creates the `decks/<theme>/` structure with `references/` and shows you its full path, so material dropped there is already part of the plan. It **never infers the format** from the topic, and a source you point at that does not exist on disk **fails immediately**, telling you about the references folder, instead of inventing a deck out of nothing. A mistyped path does not become an entirely imagined presentation.
+
+Requires Claude Code 2.1.154 or newer with **Dynamic workflows** enabled in `/config`. For a single slide, use `/mira-animator`.
 
 ## `/mira-references`
 Creates and organizes the per-theme references folder, `references/`, inside the deck's theme, and automatically includes whatever material is already there. This is how you tell Mira the content source for a specific presentation — always per theme, local to the theme. Use it before creating a slide when the theme has no references folder yet.

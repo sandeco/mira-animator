@@ -62,7 +62,7 @@ The agents read from the sources, but write only to `decks/`.
 
 ## Creating a deck
 
-In Claude, just talk to `/mira-new` in plain language. It drives the creation conversationally (theme name, deck template, base theme, primary color and references), assembles the `decks/<theme>/` folder and, at the end, offers to trigger the pipeline.
+In Claude, just talk to `/mira-new` in plain language. It asks for the theme name and immediately creates the `decks/<theme>/` structure, with `references/` ready, so you can drop your source material in straight away, then it stops and asks whether you would rather describe the presentation in chat or put the files in that folder. From there it drives the rest conversationally (deck template, base theme, primary color), assembles the deck and, at the end, offers to trigger the pipeline.
 
 ```text
 /mira-new create a new presentation called 'my-class'
@@ -115,11 +115,24 @@ mira-visuals          static images: panels, diagrams, charts and infographics
 mira-validator        final conformance report
 ```
 
-Support skills: `mira-img-animator` (animates existing images), `mira-chart` (data charts from CSV/JSON, images or hand sketches, with a best-type recommendation) and `mira-image-template` (builds a new deck template from screenshots and/or a logo, recognizing the design system and layout, then registers it for `mira-new`). Entry and helpers: `mira-new`, `mira-references`, `mira-get-videos`, `mira-offline` (turns a finished deck **self-contained / offline**: copies the libraries it would otherwise load from a CDN — Tailwind, AOS, Lucide, D3 and the Inter font — into the deck and rewrites the HTML to local paths, so it opens from `file://` even behind a corporate firewall; downloads nothing at runtime).
+Support skills: `mira-img-animator` (animates existing images), `mira-chart` (data charts from CSV/JSON, images or hand sketches, with a best-type recommendation) and `mira-image-template` (builds a new deck template from screenshots and/or a logo, recognizing the design system and layout, then registers it for `mira-new`). Entry and helpers: `mira-new`, `mira-fast` (the whole deck in one call, slides generated in parallel), `mira-references`, `mira-get-videos`, `mira-offline` (turns a finished deck **self-contained / offline**: copies the libraries it would otherwise load from a CDN — Tailwind, AOS, Lucide, D3 and the Inter font — into the deck and rewrites the HTML to local paths, so it opens from `file://` even behind a corporate firewall; downloads nothing at runtime).
 
 On-slide elements: `mira-3d` (a true 3D element, auto-rotating and draggable, choosing CSS 3D, procedural Three.js or a glTF `.glb`; a `.glb` slide needs a local server, so the agent starts one and writes a double-click launcher), `mira-qrcode` (a scannable QR code from a link or text, generated locally as inline SVG, works from `file://`), `mira-survey` (a live poll slide: the audience scans a QR to vote on a Google Form and a 3D donut or bar chart updates in real time by reading the responses sheet via gviz/JSONP, works from `file://`), `mira-quiz` (a live quiz slide: the audience answers a multiple-choice Google Form, the presenter reveals the correct answer on command, and percentages plus a basic ranking appear from the same gviz/JSONP sheet feed), `mira-chart-race` (a racing-chart slide: temporal data from a wide CSV animates over time, bars swapping rank or lines drawing in, playing once and stopping at the end, embedded inline so it works from `file://`), `mira-image` (places an image you already have into a slide, copied into `assets/` and referenced by a relative path, image static with the loop on the frame, works from `file://`), `mira-svg-morph` (one SVG shape morphs into another in a continuous loop, GSAP MorphSVG vendored locally, works from `file://`), `mira-icon-morph` (the same morph from concepts in words, sourcing licensed icons from the Iconify API), `mira-svg-animator` (animates an SVG you provide: flap, spin, slide or draw, splitting a single merged path to move one part) and `mira-animated-typing` (the "prompt typed in zoom" scene: giant terminal monospace text typed character by character with a Windows-style blinking cursor, sliding left once it reaches 100px before the right edge, per-span color via a `color=#HEX` tag, pure JS/CSS, works from `file://`).
 
 Each orchestrator pauses between agents and keeps you in control of every step.
+
+### One-shot: `mira-fast`
+
+`mira-fast` is an alternative entry point that covers the whole chain in a single call. A central agent plans the deck, then **one leaf per slide runs in parallel**, and a deterministic script assembles the final file:
+
+```text
+/mira-fast spec driven development
+/mira-fast /mira-studio <topic or path>       # Studio 9:16
+/mira-fast /mira-studio-full <topic or path>  # Studio Full 16:9
+/mira-fast /mira-vertical <topic or path>     # vertical 9:16
+```
+
+It asks nothing, from topic to final HTML, so you trade the approval pauses above for speed. Before planning it creates the `decks/<theme>/` structure with `references/` and shows you the full path, so material you drop there is part of the plan. It never infers the format from the topic, and a source you point at that does not exist on disk fails immediately instead of producing an invented deck. Requires Claude Code 2.1.154 or newer with **Dynamic workflows** enabled in `/config`.
 
 ---
 

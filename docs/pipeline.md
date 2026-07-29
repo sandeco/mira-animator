@@ -16,13 +16,19 @@ flowchart TD
 
 | Step | Agent | What it does |
 |---|---|---|
-| 0 | **mira-new** | Conversational entry point. Scaffolds `decks/<theme>/` (name, deck template, base theme, color, references). Does not generate slides — it prepares the ground. |
+| 0 | **mira-new** | Conversational entry point. Creates the `decks/<theme>/` structure with `references/` as its very first action, so you can drop the source material in before choosing anything, then assembles the deck (template, base theme, color). Does not generate slides, it prepares the ground. |
 | 1 | **mira-extract** | Reads a linked source (project, PDF, LaTeX or text) and produces a structured **briefing**. First link in the chain. |
 | 2 | **mira-planner** | Analyzes the briefing and proposes a detailed **slide plan**, then waits for your approval before anything is built. |
 | 3 | **mira-copywriter** | Refines the text to slide altitude and specifies images. |
 | 4 | **mira-builder** | The assembly engine. Builds interactive HTML/Tailwind from modular glassmorphism cards with card-by-card navigation. |
 | 5 | **mira-animator** | Adds the motion, and the metaphor. Every concept slide becomes an animated **concrete everyday analogy** with a **mandatory internal loop**: it enters with choreography and then loops. It also replaces an existing slide's animation in place. Stamps each animation with a `<!-- @MIRA:SIZE 3/10 -->` marker. |
 | 6 | **mira-validator** | Analyzes the generated HTML and produces a conformance report: visual, structural and asset checks. |
+
+## The parallel path: `mira-fast`
+
+The main line is not the only way to get to a deck. **[`/mira-fast`](agentes/core.md#mira-fast)** is an alternative entry point that covers the whole chain in a single call: a central agent plans the deck, then **one leaf per slide runs in parallel**, with deterministic assembly at the end.
+
+It is not a step in the table above, it replaces it. You trade the approval pauses between agents for speed: `/mira-fast` asks nothing, from topic to final HTML. Use the main line when you want to approve the slide plan before anything is built; use `/mira-fast` when you want the deck done in one go.
 
 ## Motion-tuning agents
 

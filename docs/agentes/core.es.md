@@ -3,7 +3,21 @@
 El corazón de la creación de decks. Mira cómo se conectan en el [Pipeline de agentes](../pipeline.md).
 
 ## `/mira-new`
-La puerta de entrada de un nuevo deck. Recolecta los requisitos de una presentación de forma conversacional (nombre del tema, plantilla del deck, tema base, color principal y referencias) y monta la carpeta `decks/<tema>/` lista para que el pipeline la rellene. **No** genera slides — prepara el terreno y, al final, ofrece accionar el pipeline.
+La puerta de entrada de un nuevo deck. Pregunta solo el nombre del tema y **crea la estructura de `decks/<tema>/` de inmediato, con la `references/` lista**, para que puedas dejar ahí el PDF, el documento o las capturas antes de decidir nada más. Entonces se detiene y pregunta si prefieres describir la presentación por texto o poner los archivos en la carpeta. Solo después recolecta el resto de forma conversacional (plantilla del deck, tema base, color principal) y monta el deck para que el pipeline lo rellene. **No** genera slides: prepara el terreno y, al final, ofrece accionar el pipeline.
+
+## `/mira-fast`
+El deck completo en una sola llamada. Donde `/mira-new` abre la cadena normal con pausas, `/mira-fast` planifica el deck y dispara **una hoja por slide en paralelo**, y luego monta el archivo final de forma determinista. No hace preguntas: ni contenido, ni formato, ni tema, ni continuidad. La calidad equivale a la de la cadena normal, sin los gates humanos intermedios.
+
+```text
+/mira-fast <tema o ruta>                       -> 16:9 estándar
+/mira-fast /mira-studio <tema o ruta>          -> Studio 9:16
+/mira-fast /mira-studio-full <tema o ruta>     -> Studio Full 16:9
+/mira-fast /mira-vertical <tema o ruta>        -> vertical 9:16
+```
+
+Antes de planificar nada crea la estructura de `decks/<tema>/` con la `references/` y muestra su ruta completa, así el material que dejes ahí ya entra en el plan. **Nunca infiere el formato** por el tema, y una fuente que señales y no exista en el disco **falla de inmediato**, informando la carpeta de referencias, en vez de inventar un deck de la nada. Una ruta mal escrita no se convierte en una presentación entera imaginada.
+
+Requiere Claude Code 2.1.154 o superior con **Dynamic workflows** habilitado en `/config`. Para un slide suelto, usa `/mira-animator`.
 
 ## `/mira-references`
 Crea y organiza la carpeta de referencias por tema, `references/`, dentro del tema del deck, e incluye automáticamente el material que ya esté ahí. Es la forma de informar la fuente de contenido de una presentación específica — siempre por tema, local al tema. Úsala antes de crear un slide cuando el tema aún no tenga carpeta de referencias.

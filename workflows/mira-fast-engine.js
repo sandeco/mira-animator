@@ -9,6 +9,13 @@ const plan = await agent(`
 Execute somente a Fase 1 do Mira Fast para esta invocação:
 ${invocation}
 
+A Fase 0 já rodou na sessão principal: a pasta do deck existe, com references/,
+assets/ e mira/ criadas, e o slug já está decidido. Se a invocação informar o
+slug ou o deck_dir resolvido, use exatamente esse, não escolha outro nome nem
+crie uma segunda pasta. Não recrie a estrutura e não apague nem sobrescreva
+nada que já esteja em references/: pode haver material que o usuário colocou
+lá, e esse material é fonte. Leia o que houver antes de planejar.
+
 Leia .claude/skills/mira-fast/SKILL.md,
 .claude/skills/mira-fast/references/plano-schema.md e
 .claude/skills/mira-fast/references/quadro-metaforas.md.

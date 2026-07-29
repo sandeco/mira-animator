@@ -16,13 +16,19 @@ flowchart TD
 
 | Etapa | Agente | Qué hace |
 |---|---|---|
-| 0 | **mira-new** | Puerta de entrada conversacional. Monta `decks/<tema>/` (nombre, plantilla de deck, tema base, color, referencias). No genera slides — prepara el terreno. |
+| 0 | **mira-new** | Puerta de entrada conversacional. Crea la estructura de `decks/<tema>/` con la `references/` en la primera acción, para que dejes el material fuente antes de elegir nada, y después monta el deck (plantilla, tema base, color). No genera slides, prepara el terreno. |
 | 1 | **mira-extract** | Lee una fuente vinculada (proyecto, PDF, LaTeX o texto) y produce un **briefing** estructurado. Primer eslabón de la cadena. |
 | 2 | **mira-planner** | Analiza el briefing y propone un **plan de slides** detallado, y espera tu aprobación antes de montar nada. |
 | 3 | **mira-copywriter** | Refina el texto a la altura de slide y especifica imágenes. |
 | 4 | **mira-builder** | El motor de montaje. Monta HTML/Tailwind interactivo a partir de cards glassmorphism modulares con navegación card por card. |
 | 5 | **mira-animator** | Añade el movimiento, y la metáfora. Cada slide de concepto se convierte en una **analogía concreta de la vida diaria** animada, con **bucle interno obligatorio**: entra con coreografía y después entra en bucle. También reemplaza la animación de un slide existente en el lugar. Estampa cada animación con el marcador `<!-- @MIRA:SIZE 3/10 -->`. |
 | 6 | **mira-validator** | Analiza el HTML generado y produce un reporte de conformidad: chequeos visuales, estructurales y de assets. |
+
+## El camino paralelo: `mira-fast`
+
+La línea principal no es la única forma de llegar a un deck. **[`/mira-fast`](agentes/core.md#mira-fast)** es una puerta de entrada alternativa que cubre toda la cadena en una sola llamada: un agente central planifica el deck y entonces **una hoja por slide corre en paralelo**, con montaje determinista al final.
+
+No es una etapa de la tabla anterior, la sustituye. Cambias las pausas de aprobación entre agentes por velocidad: `/mira-fast` no pregunta nada, del tema al HTML final. Usa la línea principal cuando quieras aprobar el plan de slides antes de montar; usa `/mira-fast` cuando quieras el deck listo de una vez.
 
 ## Agentes de ajuste de movimiento
 
