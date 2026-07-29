@@ -41,6 +41,7 @@ if (!command || command === '--help' || command === '-h') {
     memoria <sub>        Memória de preferências do usuário
                          lembrancas [--papel capa] [--formato 16x9]  pacote pro builder
                          nota "<frase>" --eixo <eixo> [--papel capa]  grava uma ordem
+                         consolidar [--simular] | estado <arquivo> <estado>
                          listar | onde
     status               Mostra o estado da instalação e dos decks
     update               Atualiza agents e templates para a última versão

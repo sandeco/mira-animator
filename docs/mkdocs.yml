@@ -93,6 +93,7 @@ plugins:
             Interactivity agents: Agentes de Interatividade
             Responsive agents: Agentes responsivos
             Transitions: Agentes transições
+            Specialized agents: Agentes especializados
             Video formats: Formatos de vídeo
             Themes and templates: Temas e templates
             Contributing: Contribuindo
@@ -114,6 +115,7 @@ plugins:
             Interactivity agents: Agentes de Interactividad
             Responsive agents: Agentes responsivos
             Transitions: Agentes transiciones
+            Specialized agents: Agentes especializados
             Video formats: Formatos de vídeo
             Themes and templates: Temas y plantillas
             Contributing: Contribuir
@@ -124,12 +126,14 @@ nav:
   - Installation: instalacao.md
   - How to use: uso.md
   - Agent pipeline: pipeline.md
+  - Agents: agentes.md
   - Core agents: agentes/core.md
   - Utility agents: agentes/uteis.md
   - Visuals & data: agentes/visuais.md
   - Interactivity agents: agentes/interatividade.md
   - Responsive agents: agentes/responsivos.md
   - Transitions: agentes/transicoes.md
+  - Specialized agents: agentes/especializados.md
   - Linked sources: fontes.md
   - CLI: cli.md
   - Video formats: formatos.md

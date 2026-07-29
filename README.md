@@ -186,12 +186,14 @@ npx mira-animator uninstall          # remove Mira from the current folder
 | `install` | Installs Mira in the current folder (agents, templates, config) |
 | `link <path>` | Links a folder or file as a content source. Options: `--name=<alias>` `--type=projeto\|pdf\|latex\|texto` |
 | `sources` | Lists linked sources |
+| `new <name>` | Creates a deck from an installed template. Options: `--deck=<template>` `--theme=<theme>` |
+| `edit <deck>` | Installs or updates edit, free-edit and drawing tools in an existing deck |
 | `status` | Shows install and deck state |
 | `update` | Updates agents and templates to the latest version |
 | `uninstall` | Removes Mira from the current folder |
 | `memoria <sub>` | Preference memory. `lembrancas` prints what applies to a slide, `nota` records an explicit order, `consolidar` turns repeated corrections into candidate notes, `estado` activates/suspends/revokes one |
 
-> Creating a deck is **not** a CLI command — you do it conversationally in Claude with `/mira-new` (see [Creating a deck](#creating-a-deck)).
+> You can create a deck directly with `npx mira-animator new <name>` or conversationally with `/mira-new` (see [Creating a deck](#creating-a-deck)).
 
 ---
 

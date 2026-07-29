@@ -1,0 +1,9 @@
+# Vocabulário controlado de classificação de bugs.
+# As listas estão vazias porque o projeto ainda não tem architecture.md nem domain.md
+# extraídos em _reversa_sdd/. Rode /reversa para escavar os componentes e semear estas listas.
+# Enquanto estiverem vazias, todo bug é classificado como "unclassified" e a proposta de
+# termo novo fica registrada em Agent Notes do próprio bug.
+
+area: []
+module: []
+feature: []

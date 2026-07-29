@@ -21,7 +21,7 @@ Reordena los slides de un deck **después** del montaje, sin regenerarlo. Los de
 npx mira-animator edit <deck>   # nombre del deck, carpeta del deck o la ruta del index.html
 ```
 
-Eso copia `mira-edit.js` a la carpeta del deck e inyecta `<script src="mira-edit.js" defer>` antes de `</body>`.
+Eso copia `mira-edit.js`, `mira-edit-free.js` y `mira-draw.js` a `<deck>/mira/` e inyecta las tres etiquetas antes de `</body>`. La edición libre carga después del editor base. Pulsa **E** para editar y **P** para dibujar.
 
 **Cómo funciona el reorder**
 
