@@ -205,12 +205,22 @@ export function validateFragment(slide, fragment, plan = {}) {
   if (format === 'mira-studio') {
     if (slide.layout === 'capa') {
       if (/data-layout=/.test(htmlBlock)) errors.push('capa Studio não usa data-layout');
+      // BUG-20260731-VPVV: o layout próprio da capa mora em `section.capa`. Sem
+      // a classe o slide perde o estilo em file:// e o builder do roteiro o
+      // rebaixa a uma área de câmera vazia sob HTTP.
+      if (!/<section\b[^>]*class=["'][^"']*\bcapa\b/.test(htmlBlock)) {
+        errors.push('capa Studio exige class="capa" na section');
+      }
     } else if (!new RegExp(`data-layout=["']${escapeRegExp(slide.layout)}["']`).test(htmlBlock)) {
       errors.push(`data-layout=${slide.layout} ausente`);
     }
     if (slide.layout === 'camera' && !htmlBlock.includes('cam-area')) errors.push('camera Studio exige cam-area');
     if (slide.layout === 'split' && (!htmlBlock.includes('split-top') || !htmlBlock.includes('cam-area'))) errors.push('split Studio exige split-top e cam-area');
     if (slide.layout === 'full' && htmlBlock.includes('cam-area')) errors.push('full Studio não usa cam-area');
+    // BUG-20260731-UDTY: `.full-wrap` carrega a área segura de 4,63% do formato.
+    // Sem o wrapper o slide encosta nas bordas em file:// e ganha o padding sob
+    // HTTP, exibindo enquadramentos diferentes para o mesmo deck.
+    if (slide.layout === 'full' && !htmlBlock.includes('full-wrap')) errors.push('full Studio exige full-wrap');
   }
 
   if (format === 'mira-studio-full') {
@@ -218,6 +228,14 @@ export function validateFragment(slide, fragment, plan = {}) {
     if (slide.layout === 'camera' && !htmlBlock.includes('cam-area')) errors.push('camera Studio Full exige cam-area');
     if (slide.layout === 'thirds' && (!htmlBlock.includes('thirds-main') || !htmlBlock.includes('cam-area'))) errors.push('thirds exige thirds-main e cam-area');
     if (slide.layout === 'full' && (!htmlBlock.includes('full-main') || htmlBlock.includes('cam-area'))) errors.push('full Studio Full exige full-main e não usa cam-area');
+  }
+
+  // BUG-20260731-AMOM: contrato de palco dos formatos Studio, o mesmo que o
+  // formato `mira` já cobrava. `.anim-stage` dá altura ao palco e o id do <svg>
+  // é o que a animação gerada seleciona; sem eles o palco colapsa em silêncio.
+  if (['mira-studio', 'mira-studio-full'].includes(format) && slide.modo_folha === 'animada') {
+    if (!/class=["'][^"']*\banim-stage\b/.test(htmlBlock)) errors.push('animado Studio exige .anim-stage');
+    if (!new RegExp(`id=["']${escapeRegExp(slide.slug_stage)}-svg["']`).test(htmlBlock)) errors.push('id do svg ausente');
   }
 
   if (format === 'mira-vertical' && slide.modo_folha === 'animada') {

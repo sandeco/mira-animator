@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-JZNJ
 display_number: 1
 title: Builder do roteiro.md descarta o palco do slide e a animação nunca toca no mira-studio servido por HTTP
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: critical
 priority: P1
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: manual-report
@@ -23,8 +23,8 @@ visibility: normal
 security_suspected: false
 
 reproduction:
-  classification: environment-dependent
-  rate: "não medido nesta sessão; relatado como praticamente 100% sob HTTP"
+  classification: deterministic
+  rate: "1/1 em navegador real sob HTTP; reclassificado de environment-dependent para deterministic (o protocolo é gatilho, não fonte de variância)"
   suspected_triggers:
     - "deck servido por http:// ou https:// (mira-studio-server.cjs ou launcher)"
     - "existência de roteiro.md ao lado do index.html"
@@ -35,8 +35,16 @@ blocking: []
 relationships:
   - bug: BUG-20260731-OI56
     type: related-to
-    state: proposed
-    evidence: []
+    state: supported
+    evidence:
+      - ref: "evidence/reproducao-navegador.md"
+        observation: "sem o esqueleto pelo caminho canônico (correção do OI56) não há deck gerado para servir; a reprodução deste bug depende daquela correção"
+  - bug: BUG-20260731-S3TX
+    type: related-to
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "mesma política invertida nos dois builders, mesma correção, arquivos diferentes"
 
 traceability:
   specs:
@@ -50,18 +58,64 @@ traceability:
     - "agents/mira-fast/scripts/assemble-run.mjs:84"
     - "agents/mira-fast/scripts/assemble-run.mjs:100-105"
     - "agents/mira-fast/scripts/assemble-run.mjs:124-142"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      montarSecao() nunca consultava a seção original: montava tudo do zero e palco(n)
+      devolvia sempre um palco com id genérico sv-slide-N. O builder era internamente
+      coerente com o deck escrito à mão e cego para o deck gerado.
+    causal_path:
+      - "sob HTTP o IIFE lê o roteiro.md que a própria Fase 3 gravou"
+      - "montarSecao(s, n) cria uma section nova e chama palco(n), sem olhar a original"
+      - "palco(n) devolve <div class=\"anim-stage\"><svg id=\"sv-slide-N\"> sempre"
+      - "todas as seções originais são removidas de uma vez"
+      - "getElementById('<slug_stage>-stage') devolve null para todos os slides"
+      - "a guarda if (stage && !observed.has(stage)) não registra observer e nada é reportado"
+    evidence:
+      - ref: "evidence/reproducao-navegador.md"
+        observation: "1/1 sob HTTP: palcos corrida-stage e panela-stage sumiam; window.__tocou ficava vazio"
+      - ref: "fix/CHG-002.diff"
+        observation: "seis casos em navegador real, incluindo o deck escrito à mão como controle"
+    code_refs:
+      - file: "templates/decks/mira-studio-demo/index.html"
+        symbol: "IIFE ROTEIRO EXTERNO · montarSecao/palco"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-JZNJ · deck gerado sob HTTP mantém os palcos com id de slug"
+  regression_tests:
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-JZNJ · a animação gerada toca em todos os slides sob HTTP"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-JZNJ · o roteiro.md continua mandando no título"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-JZNJ · o deck de demonstração escrito à mão continua funcionando"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: code
+    artifact: "templates/decks/mira-studio-demo/index.html"
+  - id: CHG-002
+    kind: test
+    artifact: "test/mira-studio-builders.test.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md"
+
+change_risk: média
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Builder do roteiro.md descarta o palco do slide e a animação nunca toca no mira-studio servido por HTTP
@@ -172,7 +226,98 @@ formatos Studio. As duas resolvem o sintoma e têm custos diferentes.
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: a closure policy é `package` e exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### Reprodução
+
+Reproduzido em navegador real (Chromium via puppeteer) sobre um deck montado pelo pipeline de
+verdade. O pré-requisito que as Agent Notes apontavam se confirmou: gerar um deck do zero
+depende da correção do BUG-20260731-OI56, já aplicada; por isso a relação `related-to` subiu
+de `proposed` para `supported`.
+
+`environment-dependent` foi reclassificado para `deterministic`: o protocolo é gatilho, não
+fonte de variância. Sob HTTP falha 1/1; em `file://` não falha 1/1. Não há aleatoriedade.
+
+### Causa raiz (confirmed)
+
+`montarSecao()` nunca consultava a seção original. O builder era internamente coerente com o
+uso que o template documenta (animação autoral presa a `sv-slide-N`) e completamente cego ao
+deck gerado, cujo palco tem id derivado do slug.
+
+Como o registro do bug já dizia, o defeito é de integração: nenhum dos dois lados está errado
+sozinho. A decisão de projeto era **quem cede**.
+
+### Quem cede, e por quê
+
+Cede o builder. As duas opções resolviam o sintoma:
+
+| opção | custo |
+|---|---|
+| o `/mira-fast` emite palcos `sv-slide-N` nos formatos Studio | quebra o contrato `04#R6`, que é comum aos quatro formatos, e faz o pipeline conhecer detalhe de template |
+| **o builder preserva o palco existente** | mexe num runtime herdado por todo deck, com risco coberto por teste |
+
+A segunda mantém um contrato só para os quatro formatos e resolve os dois bugs críticos com a
+mesma regra. Foi a escolhida.
+
+### O que mudou
+
+1. `layoutDe(sec)` — o layout que uma seção já montada representa, com a mesma regra que
+   `semear()` já usava.
+2. `garantirPalco(sec, n)` — o palco é do deck. Se a seção traz um, ele fica inteiro, com os
+   ids que tiver. O builder só assume `sv-slide-N` quando não há palco nenhum, ou quando o
+   `<svg>` está sem id.
+3. **Reaproveitamento por posição** em `montarSecao`: seção existente com o mesmo layout é
+   preservada e recebe só o título do roteiro. Recriar do zero virou exceção.
+4. A remoção passou a tirar do DOM apenas o que **não** foi reaproveitado. O `insertBefore`
+   reposiciona as preservadas na ordem do roteiro sem trocar a identidade do elemento.
+
+O caso que as Agent Notes mandavam conferir (o filtro `:not([data-mira-fixed])` que o handoff
+original supunha existir) não foi introduzido: ele não existe neste repositório e o
+reaproveitamento por posição resolve o problema sem precisar dele.
+
+### Veredito de spec: `spec-gap`
+
+`04#R6` e `05#R3` definem o palco e o registro de triggers, e estão corretos. O que nunca foi
+escrito é a fronteira entre o runtime do formato e os slides gerados: quem manda no DOM depois
+do load. Adendo aditivo gerado, spec original intocada:
+
+`_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md` — R3b (quem manda no DOM), R3c (adoção de
+palco) e R3d (animação declarativa só em palco adotado). O adendo vale para os dois builders e
+é referenciado também pelo BUG-20260731-S3TX.
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `code` | `templates/decks/mira-studio-demo/index.html` | `layoutDe`, `garantirPalco`, reaproveitamento por posição, remoção seletiva ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `test` | `test/mira-studio-builders.test.mjs` | seis casos em navegador real ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md` | adendo aditivo do veredito `spec-gap` |
+
+Plano da correção, com o grafo de relações: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ deck gerado sob HTTP mantém os palcos com id de slug
+       ✖ a animação gerada toca em todos os slides sob HTTP
+       ✖ o roteiro.md continua mandando no título
+       ✔ o deck de demonstração escrito à mão continua funcionando
+
+depois ✔ os quatro
+```
+
+O quarto caso é o critério de aceite 4 (o uso que o template documenta não pode ser
+sacrificado) e passa antes e depois, que é o papel de uma guarda de não regressão.
+
+Suíte completa: 148 testes, 148 passando.
+
+### O que continua aberto
+
+O `localStorage` do teleprompter usa chaves literais (`mira-tp-text`, `mira-tp-ov-pos`),
+iguais para todo deck da mesma origem. Dois decks servidos na mesma porta compartilham o
+texto. Era observação de confiança média da varredura de 2026-07-31, continua sem bug próprio,
+e aparece aqui porque o teste do BUG-20260731-RNYU precisou limpar a chave para medir.
 
 ## Agent Notes
 

@@ -1,34 +1,21 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T01:30:00Z a partir de 1 bug -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T06:00:00Z a partir de 1 bugs -->
 
 # Matriz BUG ↔ SPEC · cli-mira-animator
 
-Spec efetiva = original + adendos vigentes.
+Spec efetiva = original + adendos vigentes. Adendo aparece aqui como qualquer outra seção de
+spec, porque é isso que ele é depois de vigente.
 
-| seção de spec | open | active | resolved |
-|---|---|---|---|
-| `mira-fast/sdd/01-invocacao-e-formatos.md#r7-montagem-do-esqueleto-do-deck` | — | VPUH | — |
-| **`addenda/bug-BUG-20260801-VPUH-v001.md#r7d`** (novo) | — | VPUH | — |
-| **spec-gap** | — | VPUH *(resolvido pelo adendo)* | — |
+| bug | seção de spec | veredito |
+|---|---|---|
+| VPUH | `_reversa_sdd/mira-fast/sdd/01-invocacao-e-formatos.md#r7-montagem-do-esqueleto-do-deck` | spec-gap |
 
-## Leitura
+## Adendos gerados por bugs deste contexto
 
-O `01#R7` era a única seção próxima do defeito, e por isso mesmo expôs a lacuna: ele
-estabelece o caminho canônico e trata `--theme` como parâmetro efetivo, mas nunca diz que
-existem templates que não aceitam tema, nem o que o CLI faz quando o marcador falta.
+- `_reversa_sdd/addenda/bug-BUG-20260801-VPUH-v001.md` — VPUH
 
-O `sandeco-just-animation-template` era exceção **codificada sem spec** desde sempre. O
-adendo regulariza isso: R7b nomeia o conjunto `THEME_AGNOSTIC` e o critério de entrada, R7c
-explica por que o bloco existe mesmo em template agnóstico, e R7d proíbe o CLI de declarar
-tema que não aplicou.
+> `_reversa_sdd/` está no `.gitignore` (linha 31). Os adendos existem no disco e são
+> referenciados pelos `bug.md`, mas não entram nos commits.
 
-## Adendos
+## Bugs sem seção de spec
 
-| adendo | desde | tipo | seção alvo |
-|---|---|---|---|
-| [`bug-BUG-20260801-VPUH-v001.md`](../../../_reversa_sdd/addenda/bug-BUG-20260801-VPUH-v001.md) | 2026-08-01 | aditivo | `01-invocacao-e-formatos.md`, complementa R7 |
-
-Imutável. Correção futura entra como `v002`.
-
-O adendo declara o que **não** decide: se os Studio deveriam ser temáveis, e se o
-`mesa-tatica` deveria. Os três entraram em `THEME_AGNOSTIC` por preservação de comportamento,
-não por análise de produto.
+Nenhum: todo bug deste contexto aponta ao menos uma seção.

@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-VPVV
 display_number: 5
 title: Contrato do mira-studio não exige class="capa" e a capa gerada vira um slide de câmera vazio
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: high
 priority: P1
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: inspection
@@ -32,8 +32,16 @@ blocking: []
 relationships:
   - bug: BUG-20260731-JZNJ
     type: related-to
-    state: proposed
-    evidence: []
+    state: supported
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "os dois aparecem no mesmo builder e no mesmo load, mas por mecanismos independentes: aqui a capa não tem palco, ela depende do clone de capaBase. Correções separadas, como o registro previa."
+  - bug: BUG-20260731-UDTY
+    type: related-to
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "mesma lacuna vista de dois ângulos: contrato de formato omisso e validador que não cobra"
 
 traceability:
   specs:
@@ -47,18 +55,74 @@ traceability:
     - "templates/decks/mira-studio-demo/index.html:441-445"
     - "templates/decks/mira-studio-demo/index.html:64"
     - "templates/decks/mira-studio-demo/index.html:479-480"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      O contrato do /mira-fast foi escrito depois do template e não espelhou a exigência da
+      classe. Como o validador só conferia a ausência de data-layout, a omissão do contrato
+      nunca produziu erro: contrato sem validação é contrato esquecido.
+    causal_path:
+      - "formato-mira-studio.md descreve a capa como 'section sem data-layout' e omite class=capa"
+      - "a folha emite <section> pelada, e validate-run aprova"
+      - "em file:// as regras section.capa e .capa::before não se aplicam"
+      - "sob HTTP querySelector('body > section.capa') devolve null"
+      - "a condição s.layout === 'capa' && capaBase é falsa e o fluxo escorre até o else"
+      - "a capa vira <section data-layout=camera><div class=cam-area></div></section>"
+      - "semear() rotula o slide 1 como camera e a perda vira permanente no roteiro.md"
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "1/1 na varredura de 2026-07-31, executando o parse do próprio deck gerado"
+      - ref: "fix/CHG-004.diff"
+        observation: "o validador reprovava zero vezes antes; três casos vermelhos passaram a existir"
+    code_refs:
+      - file: "agents/mira-fast/references/formato-mira-studio.md"
+        symbol: "Layout capa"
+        commit: "5433675"
+      - file: "agents/mira-fast/scripts/validate-run.mjs"
+        symbol: "validateFragment"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-VPVV · capa Studio sem class=\"capa\" é reprovada"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-VPVV · encerramento no layout capa também exige a classe"
+  regression_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-VPVV · capa Studio com class=\"capa\" passa"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-VPVV · a capa gerada continua capa sob HTTP"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: specification
+    artifact: "agents/mira-fast/references/formato-mira-studio.md"
+  - id: CHG-002
+    kind: code
+    artifact: "agents/mira-fast/scripts/validate-run.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "agents/mira-ultrafast/references/formato-mira-studio.md"
+  - id: CHG-004
+    kind: test
+    artifact: "test/mira-studio-contrato.test.mjs, test/mira-studio-builders.test.mjs"
+  - id: CHG-005
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-VPVV-v001.md"
+
+change_risk: baixa
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-VPVV-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Contrato do mira-studio não exige class="capa" e a capa gerada vira um slide de câmera vazio
@@ -161,7 +225,71 @@ no contrato, não no template: o template define `section.capa` desde a origem e
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### Causa raiz (confirmed)
+
+A omissão está no contrato, não no template: `section.capa` existe no template desde a origem
+e a skill `mira-studio` documenta o comportamento. O contrato do `/mira-fast` foi escrito
+depois (commit `5433675`) sem espelhar a exigência, e o validador nunca cobrou a classe. Sem
+cobrança, a omissão não produzia erro em lugar nenhum do pipeline.
+
+### O que mudou
+
+Duas pontas, exatamente como os critérios de aceite 1 e 2 pediam:
+
+1. **Contrato**: `formato-mira-studio.md` passa a prescrever `<section class="capa">` com
+   exemplo e com o motivo (a classe é o layout próprio e é o seletor que o builder usa). A
+   mesma exigência entrou na versão condensada que o `/mira-ultrafast` lê, que reusa o mesmo
+   validador e teria começado a falhar sem isso.
+2. **Validador**: fragmento de layout `capa` sem a classe é reprovado com
+   `capa Studio exige class="capa" na section`.
+
+O encerramento tinha o mesmo defeito (`validate-run` aceita `layout: capa` para tipo
+`encerramento`) e está coberto por caso próprio, como as Agent Notes pediam.
+
+### Veredito de spec: `spec-gap`
+
+`03#R9` prevê o layout `capa`, mas como a capa se **marca** no HTML nunca foi escrito. Adendo
+aditivo gerado, spec original intocada:
+
+`_reversa_sdd/addenda/bug-BUG-20260731-VPVV-v001.md` — R9b (marcação de layout no
+`mira-studio`, tabela dos quatro layouts) e R1d (regra de processo: o validador cobra o que o
+contrato prescreve). R1d existe porque a mesma lacuna produziu três bugs desta rodada:
+BUG-20260731-VPVV, BUG-20260731-UDTY e BUG-20260731-AMOM.
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `specification` | `agents/mira-fast/references/formato-mira-studio.md` | seção "Layout capa" com exemplo e o porquê ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `code` | `agents/mira-fast/scripts/validate-run.mjs` | reprova capa sem a classe ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `agents/mira-ultrafast/references/formato-mira-studio.md` | a mesma exigência na versão condensada ([diff](fix/CHG-003.diff)) |
+| CHG-004 | `test` | `test/mira-studio-contrato.test.mjs`, `test/mira-studio-builders.test.mjs` | validador reprova; a capa gerada continua capa sob HTTP ([diff](fix/CHG-004.diff)) |
+| CHG-005 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-VPVV-v001.md` | adendo aditivo |
+
+Plano da correção: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ capa Studio sem class="capa" é reprovada
+       ✖ encerramento no layout capa também exige a classe
+       ✔ capa Studio com class="capa" passa
+       ✔ a capa gerada continua capa sob HTTP
+
+depois ✔ os quatro
+```
+
+O caso em navegador já passava antes porque o fragmento do teste sempre emitiu a classe: ele
+mede o **efeito** da regra (a capa não vira câmera vazia), não a ausência dela. O vermelho
+honesto deste bug está no validador.
+
+### O que não mudou
+
+`semear()` continua rotulando o slide pelo `classList.contains('capa')`. Com o contrato
+cobrado, ela passa a acertar sozinha; a função não foi tocada.
 
 ## Agent Notes
 

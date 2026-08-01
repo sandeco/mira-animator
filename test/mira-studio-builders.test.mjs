@@ -1,0 +1,485 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { createServer } from 'node:http';
+import { createReadStream, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { dirname, extname, join, normalize, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { assembleRun } from '../agents/mira-fast/scripts/assemble-run.mjs';
+import { buildSkeleton } from '../agents/mira-ultrafast/scripts/build-skeleton.mjs';
+
+/**
+ * Builder do roteiro.md dos formatos Studio, em navegador de verdade.
+ *
+ *   BUG-20260731-JZNJ  mira-studio: o builder descartava o palco gerado e a
+ *                      animação nunca tocava sob HTTP
+ *   BUG-20260731-S3TX  mira-studio-full: o builder apagava TODOS os slides e os
+ *                      substituía pelo deck de demonstração embutido
+ *   BUG-20260731-VPVV  a capa gerada virava um slide de câmera vazio
+ *   BUG-20260731-UDTY  o slide full nascia sem .full-wrap
+ *   BUG-20260731-RNYU  o teleprompter em file:// mostrava as falas do template
+ *
+ * Estes defeitos são de runtime: só aparecem depois que o IIFE do template roda
+ * sobre o DOM. Reproduzi-los sem navegador seria reimplementar o navegador, então
+ * o teste roda o deck de verdade no Chromium do puppeteer, servido por HTTP e
+ * aberto por file://, que são os dois protocolos onde o comportamento diverge.
+ *
+ * Se o Chromium não puder subir (ambiente sem download do puppeteer), os casos
+ * são pulados com a razão à vista, nunca dados como verdes.
+ */
+
+const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+const limpar = [];
+
+let browser = null;
+let motivoSemBrowser = null;
+
+async function abrirBrowser() {
+  if (browser || motivoSemBrowser) return browser;
+  try {
+    const puppeteer = await import('puppeteer');
+    browser = await puppeteer.default.launch({
+      args: ['--no-sandbox', '--disable-dev-shm-usage', '--allow-file-access-from-files'],
+    });
+  } catch (error) {
+    motivoSemBrowser = error.message;
+  }
+  return browser;
+}
+
+test.after(async () => {
+  if (browser) await browser.close();
+  for (const dir of limpar) rmSync(dir, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+});
+
+// ------------------------------------------------------------------ servidor
+
+const MIME = {
+  '.html': 'text/html; charset=utf-8',
+  '.js': 'text/javascript; charset=utf-8',
+  '.cjs': 'text/javascript; charset=utf-8',
+  '.md': 'text/markdown; charset=utf-8',
+  '.css': 'text/css; charset=utf-8',
+};
+
+/** Servidor estático mínimo, com o /__mira_save que o builder usa ao semear. */
+function servir(dir) {
+  const salvos = [];
+  const server = createServer((req, res) => {
+    if (req.method === 'POST' && req.url === '/__mira_save') {
+      let corpo = '';
+      req.on('data', (parte) => { corpo += parte; });
+      req.on('end', () => {
+        try { salvos.push(JSON.parse(corpo)); } catch { /* corpo inválido não interessa ao teste */ }
+        res.writeHead(200).end('{}');
+      });
+      return;
+    }
+    const relativo = normalize(decodeURIComponent(req.url.split('?')[0])).replace(/^([/\\])+/, '');
+    const caminho = join(dir, relativo || 'index.html');
+    if (!resolve(caminho).startsWith(resolve(dir)) || !existsSync(caminho) || statSync(caminho).isDirectory()) {
+      res.writeHead(404).end('nao encontrado');
+      return;
+    }
+    res.writeHead(200, { 'Content-Type': MIME[extname(caminho)] ?? 'application/octet-stream' });
+    createReadStream(caminho).pipe(res);
+  });
+  return new Promise((ok) => {
+    server.listen(0, '127.0.0.1', () => ok({
+      url: `http://127.0.0.1:${server.address().port}`,
+      salvos,
+      fechar: () => new Promise((pronto) => server.close(pronto)),
+    }));
+  });
+}
+
+/** Carrega a URL e devolve o retrato do DOM depois que o builder rodou. */
+async function retratar(url) {
+  const page = await browser.newPage();
+  const erros = [];
+  page.on('pageerror', (erro) => erros.push(erro.message));
+  await page.goto(url, { waitUntil: 'load' });
+  await page.evaluate(() => new Promise((ok) => requestAnimationFrame(() => requestAnimationFrame(ok))));
+  const retrato = await page.evaluate(() => {
+    const secoes = Array.from(document.querySelectorAll('body > section'));
+    return {
+      total: secoes.length,
+      secoes: secoes.map((sec) => ({
+        layout: sec.getAttribute('data-layout'),
+        classe: sec.className,
+        titulo: (sec.querySelector('h1, h2')?.textContent ?? '').replace(/\s+/g, ' ').trim(),
+        palcos: Array.from(sec.querySelectorAll('.anim-stage')).map((palco) => ({
+          id: palco.id,
+          svg: palco.querySelector('svg')?.id ?? null,
+        })),
+        temCam: !!sec.querySelector('.cam-area'),
+        temFullWrap: !!sec.querySelector('.full-wrap'),
+        html: sec.innerHTML.length,
+      })),
+      teleprompter: (document.getElementById('tp-ov-body')?.textContent
+        ?? document.getElementById('mp-body')?.textContent ?? '').replace(/\s+/g, ' ').trim(),
+    };
+  });
+  await page.close();
+  return { ...retrato, erros };
+}
+
+// ------------------------------------------------------------------ fixtures
+
+const FALAS = [
+  'Fala propria do slide um, escrita pelo plano.',
+  'Fala propria do slide dois, escrita pelo plano.',
+  'Fala propria do slide tres, escrita pelo plano.',
+];
+
+const CAMPOS_ANIMADO = {
+  conceito: 'condição de corrida',
+  frase_causal: 'Quando dois fluxos escrevem, o resultado muda porque a ordem interfere.',
+  metafora: 'duas mãos servindo da mesma panela',
+  familia: 'cozinha',
+  verbo_causal: 'sobrepor',
+  silhueta: 'panela e conchas',
+  espaco: 'duas colunas',
+  movimento: 'alternância',
+  tempo: 'rajada com pausa',
+};
+
+function planoStudio() {
+  return {
+    versao: 2,
+    slug: 'teste-studio',
+    formato: 'mira-studio',
+    arquivo_saida: 'index.html',
+    deck_dir: 'decks/teste-studio',
+    titulo_deck: 'Deck gerado de teste',
+    paleta: { primaria: '#FF904D', fundo: '#000000', modo: 'cor-unica' },
+    tom: 'didático e direto',
+    total_slides: 3,
+    slides: [
+      { n: 1, slug_stage: 'capa', tipo: 'capa', modo_folha: 'estatica', layout: 'capa', titulo: 'Corte de 80 por cento', fala: FALAS[0] },
+      { n: 2, slug_stage: 'corrida', js_id: 'corrida', tipo: 'animado', modo_folha: 'animada', layout: 'split', titulo: 'Dois fluxos', fala: FALAS[1], ...CAMPOS_ANIMADO },
+      { n: 3, slug_stage: 'panela', js_id: 'panela', tipo: 'animado', modo_folha: 'animada', layout: 'full', titulo: 'Uma panela', fala: FALAS[2], ...CAMPOS_ANIMADO },
+    ],
+    ledger: [
+      { n: 2, assinatura: 'cozinha | sobrepor | panela | colunas | alternância | rajada' },
+      { n: 3, assinatura: 'cozinha | sobrepor | panela | colunas | alternância | rajada' },
+    ],
+  };
+}
+
+function planoStudioFull() {
+  return {
+    versao: 2,
+    slug: 'teste-studio-full',
+    formato: 'mira-studio-full',
+    arquivo_saida: 'index-16x9.html',
+    deck_dir: 'decks/teste-studio-full',
+    titulo_deck: 'Deck gerado de teste 16x9',
+    paleta: { primaria: '#FF904D', fundo: '#000000', modo: 'cor-unica' },
+    tom: 'didático e direto',
+    total_slides: 3,
+    slides: [
+      { n: 1, slug_stage: 'abertura', tipo: 'card', modo_folha: 'estatica', layout: 'camera', fala: FALAS[0] },
+      { n: 2, slug_stage: 'corrida', js_id: 'corrida', tipo: 'animado', modo_folha: 'animada', layout: 'thirds', titulo: 'Dois fluxos', fala: FALAS[1], ...CAMPOS_ANIMADO },
+      { n: 3, slug_stage: 'panela', js_id: 'panela', tipo: 'animado', modo_folha: 'animada', layout: 'full', titulo: 'Uma panela', fala: FALAS[2], ...CAMPOS_ANIMADO },
+    ],
+    ledger: [
+      { n: 2, assinatura: 'cozinha | sobrepor | panela | colunas | alternância | rajada' },
+      { n: 3, assinatura: 'cozinha | sobrepor | panela | colunas | alternância | rajada' },
+    ],
+  };
+}
+
+function animacaoDe(slug, jsId) {
+  const pascal = jsId[0].toUpperCase() + jsId.slice(1);
+  return `<script>
+function animate${pascal}() {
+  clearTimeout(window.__${jsId}Timer);
+  window.__${jsId}Gen = (window.__${jsId}Gen || 0) + 1;
+  var svg = d3.select('#${slug}-svg');
+  if (svg.empty()) return;
+  var stage = svg.node().closest('.anim-stage');
+  if (!stage) return;
+  var r = stage.getBoundingClientRect();
+  svg.attr('viewBox', '0 0 960 ' + Math.max(1, Math.round(960 * r.height / Math.max(1, r.width))));
+  var cor = getComputedStyle(document.documentElement).getPropertyValue('--mira-primary').trim();
+  svg.selectAll('*').remove();
+  svg.append('circle').attr('cx', 480).attr('cy', 240).attr('r', 60).attr('fill', cor || 'currentColor');
+  window.__tocou = window.__tocou || {};
+  window.__tocou['${slug}'] = true;
+}
+</script>`;
+}
+
+function palco(slug) {
+  return `<div class="anim-stage" id="${slug}-stage"><svg id="${slug}-svg" preserveAspectRatio="xMidYMid meet"></svg></div>`;
+}
+
+function fragmentoStudio(slide) {
+  const cabecalho = `<!-- @MIRA:FAST slide=${String(slide.n).padStart(2, '0')} stage=${slide.slug_stage} kind=${slide.modo_folha === 'animada' ? 'animated' : 'static'} -->`;
+  let html;
+  if (slide.layout === 'capa') {
+    html = `<section class="capa"><h1>${slide.titulo}</h1><p>Subtitulo curto do deck.</p></section>`;
+  } else if (slide.layout === 'camera') {
+    html = '<section data-layout="camera"><div class="cam-area"></div></section>';
+  } else if (slide.layout === 'split') {
+    html = `<section data-layout="split"><div class="split-top"><h2>${slide.titulo}</h2><!-- @MIRA:SIZE 3/10 -->${palco(slide.slug_stage)}</div><div class="cam-area"></div></section>`;
+  } else if (slide.layout === 'thirds') {
+    html = `<section data-layout="thirds"><div class="thirds-main"><h2>${slide.titulo}</h2><!-- @MIRA:SIZE 3/10 -->${palco(slide.slug_stage)}</div><div class="cam-area"></div></section>`;
+  } else {
+    const miolo = `<h2>${slide.titulo}</h2><!-- @MIRA:SIZE 3/10 -->${palco(slide.slug_stage)}`;
+    const wrapper = slide.formatoPai === 'mira-studio-full' ? 'full-main' : 'full-wrap';
+    html = `<section data-layout="full"><div class="${wrapper}">${miolo}</div></section>`;
+  }
+  const js = slide.modo_folha === 'animada' ? animacaoDe(slide.slug_stage, slide.js_id) : '<script></script>';
+  return `${cabecalho}\n${html}\n<!-- @MIRA:FAST css -->\n<style></style>\n<!-- @MIRA:FAST js -->\n${js}`;
+}
+
+/** Monta um deck de verdade: esqueleto do template real + Fase 3 real. */
+function deckGerado(plano) {
+  const root = mkdtempSync(join(tmpdir(), 'mira-builders-'));
+  limpar.push(root);
+  const deck = join(root, 'deck');
+  const fast = join(deck, 'mira', 'fast');
+  mkdirSync(fast, { recursive: true });
+  mkdirSync(join(deck, 'references'), { recursive: true });
+  writeFileSync(join(deck, 'references', 'quadro-metaforas.md'), '# Quadro\n');
+  buildSkeleton(plano.formato, deck, { projectRoot: ROOT });
+  writeFileSync(join(fast, 'plano.json'), JSON.stringify(plano, null, 2));
+  for (const slide of plano.slides) {
+    writeFileSync(
+      join(fast, `slide-${String(slide.n).padStart(2, '0')}.html`),
+      fragmentoStudio({ ...slide, formatoPai: plano.formato }),
+    );
+  }
+  assembleRun(deck, { projectRoot: ROOT });
+  return deck;
+}
+
+/** Cópia fiel do deck de demonstração do template, com o roteiro.md ao lado. */
+function deckDemonstracao(pasta, arquivo) {
+  const root = mkdtempSync(join(tmpdir(), 'mira-demo-'));
+  limpar.push(root);
+  const deck = join(root, 'deck');
+  mkdirSync(join(deck, 'assets', 'vendor'), { recursive: true });
+  mkdirSync(join(deck, 'mira'), { recursive: true });
+  const origem = join(ROOT, 'templates', 'decks', pasta);
+  writeFileSync(join(deck, arquivo), readFileSync(join(origem, arquivo)));
+  writeFileSync(join(deck, 'roteiro.md'), readFileSync(join(origem, 'roteiro.md')));
+  for (const vendor of ['d3.v7.min.js', 'mp4-muxer.js']) {
+    const de = join(ROOT, 'templates', 'vendor', vendor);
+    if (existsSync(de)) writeFileSync(join(deck, 'assets', 'vendor', vendor), readFileSync(de));
+  }
+  for (const modulo of ['mira-edit.js', 'mira-edit-free.js', 'mira-draw.js', 'mira-camera.js', 'mira-record.js', 'mira-record-16x9.js']) {
+    const de = join(ROOT, 'templates', 'authoring', modulo);
+    if (existsSync(de)) writeFileSync(join(deck, 'mira', modulo), readFileSync(de));
+  }
+  return deck;
+}
+
+/** Roda o corpo com o browser pronto, ou pula o caso dizendo por quê. */
+function casoDeNavegador(nome, corpo) {
+  test(nome, async (t) => {
+    if (!(await abrirBrowser())) {
+      t.skip(`Chromium do puppeteer indisponível: ${motivoSemBrowser}`);
+      return;
+    }
+    await corpo();
+  });
+}
+
+// -------------------------------------------------- mira-studio (BUG JZNJ)
+
+casoDeNavegador('BUG-20260731-JZNJ · deck gerado sob HTTP mantém os palcos com id de slug', async () => {
+  const deck = deckGerado(planoStudio());
+  const servidor = await servir(deck);
+  try {
+    const retrato = await retratar(`${servidor.url}/index.html`);
+    assert.equal(retrato.total, 3, 'o builder mudou a quantidade de slides');
+
+    const ids = retrato.secoes.flatMap((sec) => sec.palcos.map((p) => `${p.id}/${p.svg}`));
+    assert.deepEqual(ids, ['corrida-stage/corrida-svg', 'panela-stage/panela-svg']);
+    assert.ok(!ids.some((id) => id.includes('sv-slide')), 'palco genérico substituiu o palco gerado');
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-JZNJ · a animação gerada toca em todos os slides sob HTTP', async () => {
+  const deck = deckGerado(planoStudio());
+  const servidor = await servir(deck);
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${servidor.url}/index.html`, { waitUntil: 'load' });
+    // O observer só dispara quando o palco entra em tela: percorre o deck.
+    // 'instant': o scroll-behavior smooth do template deixaria o observer
+    // medindo o meio da rolagem em vez do slide já enquadrado.
+    await page.evaluate(async () => {
+      for (const sec of document.querySelectorAll('body > section')) {
+        sec.scrollIntoView({ behavior: 'instant', block: 'center' });
+        await new Promise((ok) => setTimeout(ok, 200));
+      }
+    });
+    const tocou = await page.evaluate(() => window.__tocou ?? {});
+    assert.deepEqual(tocou, { corrida: true, panela: true }, 'alguma animação gerada não tocou');
+  } finally {
+    await page.close();
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-VPVV · a capa gerada continua capa sob HTTP', async () => {
+  const deck = deckGerado(planoStudio());
+  const servidor = await servir(deck);
+  try {
+    const capa = (await retratar(`${servidor.url}/index.html`)).secoes[0];
+    assert.match(capa.classe, /\bcapa\b/, 'a capa perdeu a classe');
+    assert.equal(capa.layout, null, 'a capa virou um slide com data-layout');
+    assert.equal(capa.temCam, false, 'a capa virou área de câmera vazia');
+    assert.match(capa.titulo, /Corte de 80 por cento/);
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-UDTY · o slide full gerado tem .full-wrap nos dois protocolos', async () => {
+  const deck = deckGerado(planoStudio());
+  const servidor = await servir(deck);
+  try {
+    const http = await retratar(`${servidor.url}/index.html`);
+    const file = await retratar(`file://${join(deck, 'index.html')}`);
+    assert.equal(http.secoes[2].temFullWrap, true, 'full sem .full-wrap sob HTTP');
+    assert.equal(file.secoes[2].temFullWrap, true, 'full sem .full-wrap em file://');
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-JZNJ · o roteiro.md continua mandando no título', async () => {
+  const deck = deckGerado(planoStudio());
+  const roteiro = join(deck, 'roteiro.md');
+  writeFileSync(roteiro, readFileSync(roteiro, 'utf8').replace('Dois fluxos', 'Titulo vindo do *roteiro*'), 'utf8');
+  const servidor = await servir(deck);
+  try {
+    const retrato = await retratar(`${servidor.url}/index.html`);
+    assert.match(retrato.secoes[1].titulo, /Titulo vindo do roteiro/, 'o título do roteiro.md não chegou ao slide');
+    assert.deepEqual(retrato.secoes[1].palcos, [{ id: 'corrida-stage', svg: 'corrida-svg' }], 'o título trocado derrubou o palco');
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-JZNJ · o deck de demonstração escrito à mão continua funcionando', async () => {
+  const deck = deckDemonstracao('mira-studio-demo', 'index.html');
+  const servidor = await servir(deck);
+  try {
+    const retrato = await retratar(`${servidor.url}/index.html`);
+    assert.equal(retrato.total, 4, 'o deck de demonstração perdeu slides');
+    const svgs = retrato.secoes.flatMap((sec) => sec.palcos.map((p) => p.svg));
+    assert.deepEqual(svgs, ['sv-slide-3', 'sv-slide-4'], 'os palcos autorais sv-slide-N sumiram');
+    assert.match(retrato.secoes[0].classe, /\bcapa\b/);
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+// --------------------------------------------- mira-studio-full (BUG S3TX)
+
+casoDeNavegador('BUG-20260731-S3TX · deck gerado em file:// mantém os slides gerados', async () => {
+  const deck = deckGerado(planoStudioFull());
+  const retrato = await retratar(`file://${join(deck, 'index-16x9.html')}`);
+  assert.equal(retrato.total, 3, 'o array DEFAULT do template substituiu os slides gerados');
+  assert.deepEqual(
+    retrato.secoes.flatMap((sec) => sec.palcos.map((p) => `${p.id}/${p.svg}`)),
+    ['corrida-stage/corrida-svg', 'panela-stage/panela-svg'],
+  );
+  assert.ok(!retrato.secoes.some((sec) => /Linha de Produção|Órbita da Produção/.test(sec.titulo)),
+    'títulos do deck de demonstração vazaram');
+});
+
+casoDeNavegador('BUG-20260731-S3TX · deck gerado sob HTTP mantém os slides e os palcos gerados', async () => {
+  const deck = deckGerado(planoStudioFull());
+  const servidor = await servir(deck);
+  try {
+    const retrato = await retratar(`${servidor.url}/index-16x9.html`);
+    assert.equal(retrato.total, 3);
+    assert.deepEqual(
+      retrato.secoes.flatMap((sec) => sec.palcos.map((p) => `${p.id}/${p.svg}`)),
+      ['corrida-stage/corrida-svg', 'panela-stage/panela-svg'],
+    );
+    assert.match(retrato.secoes[1].titulo, /Dois fluxos/);
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-S3TX · a animação gerada toca no 16x9 sob HTTP', async () => {
+  const deck = deckGerado(planoStudioFull());
+  const servidor = await servir(deck);
+  const page = await browser.newPage();
+  try {
+    await page.goto(`${servidor.url}/index-16x9.html`, { waitUntil: 'load' });
+    // 'instant': o scroll-behavior smooth do template deixaria o observer
+    // medindo o meio da rolagem em vez do slide já enquadrado.
+    await page.evaluate(async () => {
+      for (const sec of document.querySelectorAll('body > section')) {
+        sec.scrollIntoView({ behavior: 'instant', block: 'center' });
+        await new Promise((ok) => setTimeout(ok, 200));
+      }
+    });
+    assert.deepEqual(await page.evaluate(() => window.__tocou ?? {}), { corrida: true, panela: true });
+  } finally {
+    await page.close();
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando sob HTTP', async () => {
+  const deck = deckDemonstracao('mira-studio-full-demo', 'index-16x9.html');
+  const servidor = await servir(deck);
+  try {
+    const retrato = await retratar(`${servidor.url}/index-16x9.html`);
+    assert.equal(retrato.total, 5, 'o deck de demonstração 16x9 perdeu slides');
+    assert.match(retrato.secoes[1].titulo, /Linha de Produção/);
+    assert.match(retrato.secoes[3].titulo, /Produção ao Vivo/);
+    const svgs = retrato.secoes.flatMap((sec) => sec.palcos.map((p) => p.svg));
+    assert.deepEqual(svgs, ['sv-slide-2', 'sv-slide-3', 'sv-slide-4'],
+      'os palcos declarativos do deck de demonstração sumiram');
+  } finally {
+    await servidor.fechar();
+  }
+});
+
+casoDeNavegador('BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando em file://', async () => {
+  const deck = deckDemonstracao('mira-studio-full-demo', 'index-16x9.html');
+  const retrato = await retratar(`file://${join(deck, 'index-16x9.html')}`);
+  assert.equal(retrato.total, 5);
+  assert.deepEqual(
+    retrato.secoes.flatMap((sec) => sec.palcos.map((p) => p.svg)),
+    ['sv-slide-2', 'sv-slide-3', 'sv-slide-4'],
+  );
+});
+
+// ------------------------------------------------------------- BUG RNYU
+
+casoDeNavegador('BUG-20260731-RNYU · o teleprompter em file:// mostra a fala do plano', async () => {
+  const deck = deckGerado(planoStudio());
+  const html = readFileSync(join(deck, 'index.html'), 'utf8');
+  assert.ok(!html.includes('Um roteiro, três formatos. Este é o deck vertical'),
+    'a fala de demonstração do template ficou no deck gerado');
+
+  const page = await browser.newPage();
+  try {
+    const url = `file://${join(deck, 'index.html')}`;
+    // O critério do bug é "com localStorage limpo": em file:// a chave
+    // `mira-tp-text` é a mesma para toda a origem, então o texto de um deck
+    // aberto antes venceria o fallback e mascararia o que está sendo medido.
+    await page.goto(url, { waitUntil: 'load' });
+    await page.evaluate(() => localStorage.clear());
+    await page.goto(url, { waitUntil: 'load' });
+    const texto = await page.evaluate(() => (document.getElementById('mp-body')?.textContent ?? '').trim());
+    assert.match(texto, /Fala propria do slide um/, `teleprompter mostrou: ${texto}`);
+  } finally {
+    await page.close();
+  }
+});

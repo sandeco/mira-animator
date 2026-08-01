@@ -1,0 +1,16 @@
+diff --git a/agents/mira-ultrafast/references/formato-mira-studio.md b/agents/mira-ultrafast/references/formato-mira-studio.md
+new file mode 100644
+index 0000000..1e89840
+--- /dev/null
++++ b/agents/mira-ultrafast/references/formato-mira-studio.md
+@@ -0,0 +1,10 @@
++# Formato Mira Studio 9:16
++
++Todo slide exige `layout: capa | camera | split | full` e `fala`. Layout `camera` é estático e contém `.cam-area`. Animados usam `split` ou `full`, preservam a geometria nativa e `@MIRA:SIZE 5/10`. A saída é `index.html` e gera `roteiro.md`.
++
++Estrutura cobrada pelo validador:
++
++- `capa`: `<section class="capa">` (sem `data-layout`). Sem a classe, a capa vira câmera vazia sob HTTP.
++- `split`: `.split-top` + `.cam-area`.
++- `full`: `.full-wrap` envolvendo `<h2>` e o palco; sem `.cam-area`. O wrapper carrega a área segura de 4,63%.
++- Palco animado: `<div class="anim-stage" id="SLUG-stage"><svg id="SLUG-svg" ...></svg></div>`. A classe e os dois ids são obrigatórios.

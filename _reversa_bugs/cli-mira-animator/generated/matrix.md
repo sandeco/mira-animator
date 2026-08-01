@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T01:30:00Z a partir de 1 bug -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T06:00:00Z a partir de 1 bugs -->
 
 # Matriz de relações BUG ↔ BUG · cli-mira-animator
 
@@ -6,23 +6,23 @@
 
 | origem | tipo | destino | contexto do destino | state | evidência |
 |---|---|---|---|---|---|
-| VPUH | related-to | OI56 | **templates-studio** | supported | o marcador ausente é o único sintoma de template do OI56, e é a causa deste bug |
+| VPUH | related-to | OI56 | **templates-studio** | **supported** | o marcador @MIRA:THEME ausente é o único dos três sintomas do OI56 que é mesmo defeito de template, e é a causa deste bug. Pôr o marcador nos três templates corrige os dois; a falha silenciosa do CLI sobrevive à correção dos templates. |
+
+Todos os bugs deste contexto têm ao menos uma aresta própria.
 
 ## Arestas que chegam de outro contexto
 
-| origem | contexto | tipo | destino | state | evidência |
-|---|---|---|---|---|---|
-| OI56 | templates-studio | **caused-by** | VPUH | supported | mesmo pelo caminho canônico, o esqueleto Studio reprovava por falta do `@MIRA:THEME` |
+| origem | contexto da origem | tipo | destino | state |
+|---|---|---|---|---|
+| OI56 | templates-studio | caused-by | VPUH | **supported** |
 
-A aresta `caused-by` é direcional e está gravada uma vez só, no OI56. Ela diz que a metade
-Studio do OI56 era causada por este bug, e é a razão de os dois terem sido corrigidos juntos.
+## Estado epistemológico
 
-## Cluster
+| state | arestas |
+|---|---|
+| supported | 1 |
+| confirmed | 0 |
+| proposed | 0 |
+| rejected | 0 |
 
-Contexto de um bug só. Ele fecha o cluster "geração de decks Studio pelo `/mira-fast`", que
-nasceu em `templates-studio` e se espalhou por três contextos.
-
-O que este contexto acrescenta ao cluster: os outros bugs são do pipeline de geração; este é
-do CLI, e atinge gente que nunca usou o `/mira-fast`. Foi encontrado por inspeção, não por
-relato, e ninguém tinha reclamado dele porque não quebra nada visível: o deck abre, só ignora
-a flag.
+Aresta `proposed` é hipótese e não entra no grafo como fato.

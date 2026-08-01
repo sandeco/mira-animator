@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-ETPU
 display_number: 10
 title: Falha tardia da montagem deixa o deck meio instalado, com módulos e launcher mas sem HTML
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: medium
 priority: P2
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: inspection
@@ -39,18 +39,65 @@ traceability:
     - "agents/mira-fast/scripts/assemble-run.mjs:319"
     - "agents/mira-fast/scripts/assemble-run.mjs:339-345"
     - "agents/mira-fast/scripts/assemble-run.mjs:160-179"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+    - "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md#r4b-a-montagem-nao-deixa-deck-meio-instalado"
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      installRuntime copiava para dentro do deck antes das checagens finais e da publicação.
+      A publicação do HTML sempre foi atômica, com backup e restauração; a instalação do
+      runtime não tinha nada parecido, e acontecia primeiro.
+    causal_path:
+      - "installRuntime copia módulos, servidor, launchers e vendor (linha 319)"
+      - "os três slots são preenchidos e a saída é montada"
+      - "uma checagem tardia falha, ou a publicação atômica falha"
+      - "a exceção sobe e nada desfaz as cópias"
+      - "o deck fica com launcher na raiz, mira/ populado e assets/vendor/ cheio, sem index.html"
+      - "o usuário executa o launcher e o servidor sobe servindo um deck que não existe"
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "1/1: mira-camera.js, mira-studio-server.cjs, o .bat e o d3 CRIADOS; index.html ausente"
+      - ref: "fix/CHG-002.diff"
+        observation: "três casos: deck limpo, deck com runtime anterior, e fonte de runtime ausente"
+    code_refs:
+      - file: "agents/mira-fast/scripts/assemble-run.mjs"
+        symbol: "assembleRun / installRuntime"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-ETPU · falha tardia não deixa runtime instalado num deck limpo"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-ETPU · fonte de runtime ausente é detectada antes de copiar"
+  regression_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-ETPU · falha tardia não deixa runtime instalado num deck limpo"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-ETPU · runtime de uma montagem anterior sobrevive a uma falha"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: code
+    artifact: "agents/mira-fast/scripts/assemble-run.mjs"
+  - id: CHG-002
+    kind: test
+    artifact: "test/mira-studio-contrato.test.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
+
+change_risk: baixa
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Falha tardia da montagem deixa o deck meio instalado, com módulos e launcher mas sem HTML
@@ -158,7 +205,94 @@ A primeira parece mais segura e mais barata.
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### A escolha entre as duas correções
+
+O registro apresentava as duas e recomendava a primeira. **Confirmada: mover, não desfazer.**
+Desfazer é arriscado num deck que talvez já tivesse esses arquivos de uma montagem anterior, e
+o teste `runtime de uma montagem anterior sobrevive a uma falha` existe justamente para provar
+que nada é removido.
+
+A observação do registro sobre `stripModuleTags` também se confirmou: ele depende da lista de
+módulos, e essa lista é `FORMAT_MODULES[format]`, conhecida sem copiar arquivo nenhum. Foi o
+que permitiu separar o plano da execução.
+
+### Causa raiz (confirmed)
+
+A posição de `installRuntime` no fluxo. A publicação do HTML sempre foi cuidadosa (escrita
+atômica com backup e restauração, coberta pelo teste `falha não substitui uma saída válida
+anterior`); a instalação do runtime não tinha nada parecido e acontecia antes.
+
+### O que mudou
+
+`installRuntime` foi partido em dois:
+
+- **`runtimePlan(projectRoot, deckDir, format)`** resolve a lista de origem e destino e
+  **confere que toda origem existe**, sem escrever nada. Falta alguma, aborta nomeando os
+  arquivos.
+- **`installRuntime(plan)`** só copia, e só roda depois de `publishOutput`.
+
+A ordem normativa ficou: validar → resolver runtime → conferir fontes → montar e checar →
+publicar atomicamente → copiar runtime → semear `roteiro.md`. Falha em qualquer etapa até a
+publicação não deixa arquivo novo no deck, além do `montagem.log`.
+
+O log passou a registrar `runtime: N arquivo(s) instalado(s)`, que é o critério de aceite 3.
+
+### Nota sobre a reprodução
+
+O registro sugeria provocar a falha pela contagem de `section` com um comentário no bloco `js`.
+Esse caminho **não existe mais**: a correção do BUG-20260731-BNO4 fez a contagem ignorar
+comentário, e as duas checagens tardias passaram a ser inalcançáveis por entrada válida (o
+próprio BUG-20260731-K4NR já registrava isso na Resolution dele).
+
+A reprodução usa então a falha da publicação atômica: `index.html` existindo como **diretório**
+no deck. É uma falha genuinamente tardia, depois de todas as checagens, e é o pior caso para
+este bug. O resultado antes da correção é o mesmo que a evidência original registrou: runtime
+instalado, deck ausente.
+
+### Veredito de spec: `spec-gap`
+
+`05#R4` define o que copiar e `#R6` o que pode existir na raiz. Nenhuma das duas prevê o estado
+intermediário. Adendo aditivo gerado:
+
+`_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md` — R4b (a ordem normativa das sete etapas) e
+R4c (o log conta o que foi instalado).
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `code` | `agents/mira-fast/scripts/assemble-run.mjs` | `runtimePlan()` confere sem copiar; `installRuntime()` roda depois de publicar ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `test` | `test/mira-studio-contrato.test.mjs` | três casos de falha ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md` | adendo aditivo |
+
+Plano da correção: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ falha tardia não deixa runtime instalado num deck limpo
+       ✖ fonte de runtime ausente é detectada antes de copiar
+       ✔ runtime de uma montagem anterior sobrevive a uma falha
+
+depois ✔ os três
+```
+
+O terceiro passava antes porque a montagem nunca removeu nada; ele é guarda de não regressão da
+correção, que poderia ter introduzido remoção.
+
+### O resíduo aceito
+
+Se a cópia falhar por erro de I/O **depois** de as origens terem sido conferidas, o deck fica
+com `index.html` e sem algum módulo. É estritamente melhor que o estado anterior: o deck ainda
+exibe os slides, só perde edição, pintura ou câmera, e o log registra. Está escrito no adendo,
+não escondido.
+
+### Herança
+
+O `/mira-ultrafast` delega para o mesmo `assembleRun` e herda a correção.
 
 ## Agent Notes
 

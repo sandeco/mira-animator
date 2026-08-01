@@ -4,7 +4,16 @@ Saída final: `index.html`. Todo slide tem `fala` no plano; o roteiro e os módu
 
 ## Layout `capa`
 
-Use uma section sem `data-layout`, com título e subtítulo. Vale somente para tipo capa ou encerramento.
+Section sem `data-layout` e **com `class="capa"`**, título e subtítulo. Vale somente para tipo capa ou encerramento.
+
+```html
+<section class="capa">
+  <h1>TÍTULO</h1>
+  <p>SUBTÍTULO</p>
+</section>
+```
+
+A classe não é decoração: `section.capa` é o layout próprio da capa, e o builder do `roteiro.md` usa `body > section.capa` para reconhecer o slide. Sem ela a capa vira uma área de câmera vazia.
 
 ## Layout `camera`
 
@@ -37,10 +46,12 @@ Animação retrato sem câmera:
 
 ```html
 <section data-layout="full">
-  <h2>TÍTULO</h2>
-  <!-- @MIRA:SIZE 3/10 -->
-  <div class="anim-stage" id="SLUG-stage"><svg id="SLUG-svg" viewBox="0 0 960 1522.5"></svg></div>
+  <div class="full-wrap">
+    <h2>TÍTULO</h2>
+    <!-- @MIRA:SIZE 3/10 -->
+    <div class="anim-stage" id="SLUG-stage"><svg id="SLUG-svg" viewBox="0 0 960 1522.5"></svg></div>
+  </div>
 </section>
 ```
 
-Use eixo vertical dominante. Não inclua `.cam-area`.
+O `.full-wrap` carrega a área segura do formato (4,63% do lado, o padrão `mira-squared`). Sem ele o slide encosta nas bordas. Use eixo vertical dominante e não inclua `.cam-area`.

@@ -1,0 +1,18 @@
+diff --git a/test/mira-fast-assemble.test.mjs b/test/mira-fast-assemble.test.mjs
+index a9bc116..92a58b4 100644
+--- a/test/mira-fast-assemble.test.mjs
++++ b/test/mira-fast-assemble.test.mjs
+@@ -167,9 +167,11 @@ function animatedFragment(format) {
+   if (format === 'mira') {
+     html = '<section><div class="slide-main"><h2>Dois fluxos, <span class="accent">uma panela</span></h2><!-- @MIRA:SIZE 3/10 --><div class="anim-stage" id="corrida-stage"><svg id="corrida-svg" preserveAspectRatio="xMidYMid meet"></svg></div></div></section>';
+   } else if (format === 'mira-studio') {
+-    html = '<section data-layout="split"><div class="split-top"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 --><div id="corrida-stage"><svg viewBox="0 0 960 960"></svg></div></div><div class="cam-area"></div></section>';
++    // O palco tem que vir completo (.anim-stage + id no <svg>), como o contrato
++    // prescreve: o fixture frouxo era o que deixava BUG-20260731-AMOM invisível.
++    html = '<section data-layout="split"><div class="split-top"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 --><div class="anim-stage" id="corrida-stage"><svg id="corrida-svg" viewBox="0 0 960 960"></svg></div></div><div class="cam-area"></div></section>';
+   } else if (format === 'mira-studio-full') {
+-    html = '<section data-layout="thirds"><div class="thirds-main"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 --><div id="corrida-stage"><svg viewBox="0 0 1280 720"></svg></div></div><div class="cam-area"></div></section>';
++    html = '<section data-layout="thirds"><div class="thirds-main"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 --><div class="anim-stage" id="corrida-stage"><svg id="corrida-svg" viewBox="0 0 1280 720"></svg></div></div><div class="cam-area"></div></section>';
+   } else {
+     html = '<section class="slide"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 --><div id="corrida-stage"><svg viewBox="0 0 960 1522.5"></svg></div></section>';
+     css = '#corrida-stage { height: auto; aspect-ratio: 128 / 203; }';

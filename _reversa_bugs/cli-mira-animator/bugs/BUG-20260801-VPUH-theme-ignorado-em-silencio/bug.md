@@ -85,6 +85,9 @@ change_risk:
     - "o conjunto THEME_AGNOSTIC preserva exatamente o comportamento de hoje"
     - "não verificado em navegador: não há um neste ambiente"
 
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260801-VPUH-v001.md"
+
 change_set:
   - id: CHG-001
     kind: test

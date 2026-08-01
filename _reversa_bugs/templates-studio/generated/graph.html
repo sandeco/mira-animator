@@ -1,204 +1,111 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T01:30:00Z a partir de 4 bugs -->
 <!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Grafo de Bugs · templates-studio</title>
+<title>Bugs · templates-studio</title>
 <style>
   :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
         --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
   *{box-sizing:border-box}
   body{margin:0;background:var(--bg);color:var(--ink);
     font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  .wrap{max-width:1220px;margin:0 auto;padding:32px 20px 64px}
-  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
-  h2{font-size:18px;margin:40px 0 12px;letter-spacing:-.01em}
-  .meta{color:var(--muted);font-size:13px;margin:0 0 4px}
-  .legend-note{color:var(--muted);font-size:13px;margin:0 0 24px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0 8px}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
   .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
-  .card .n{font-size:26px;font-weight:650;line-height:1.1}
+  .card .n{font-size:22px;font-weight:650}
   .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
-  .card.red .n{color:var(--red)}.card.green .n{color:var(--green)}.card.blue .n{color:var(--blue)}
-  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;
-    padding:16px;overflow-x:auto;margin-top:12px}
-  .graph svg{display:block;min-width:1170px}
-  .node rect{fill:#1b1e27;stroke-width:1.6}
-  .node:hover rect{fill:#232733}
-  .node text{fill:var(--ink);font-size:13px}
-  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
-  .node .sub{fill:var(--muted);font-size:11.5px}
-  .node .st{font-size:11.5px;font-weight:600}
-  .sev-critical rect,.sev-high rect{stroke:var(--red)}
-  .sev-medium rect{stroke:var(--yellow)}
-  .ext rect{stroke:#7f8c8d;stroke-dasharray:4 3}
-  .edge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
-  .edge-lbl{fill:var(--muted);font-size:11px}
+  .card.green .n{color:var(--green)}.card.red .n{color:var(--red)}.card.yellow .n{color:var(--yellow)}
   table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
   th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
-  td.t{min-width:300px}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
   a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
-  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
-  .p-open{color:var(--red);border-color:var(--red)}
-  .p-crit{color:var(--red);border-color:var(--red)}
-  .p-high{color:var(--yellow);border-color:var(--yellow)}
-  .p-fix{color:var(--green);border-color:var(--green)}
-  .fixado rect{stroke:var(--green);stroke-width:2.2}
-  .p-med{color:var(--blue);border-color:var(--blue)}
-  p.prose{color:#c9cdd8;max-width:80ch}
-  .empty{color:var(--muted);font-style:italic}
   code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .critical{color:var(--red);border-color:var(--red)}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .medium{color:var(--blue);border-color:var(--blue)}
+  .active{color:var(--green);border-color:var(--green)}
+  .open{color:var(--muted);border-color:var(--muted)}
+  p.prose{color:#c9cdd8;max-width:82ch}
 </style>
 </head>
 <body>
 <div class="wrap">
+<h1>Bugs · templates-studio</h1>
+<p class="meta">gerado por <code>/reversa-debugger-graph</code> em 2026-08-01T06:00:00Z · 4 bug(s) · closure policy <code>package</code></p>
 
-  <h1>Grafo de Bugs · templates-studio</h1>
-  <p class="meta">Gerado por <code>/reversa-debugger-graph</code> · 2026-08-01T01:30:00Z ·
-     4 bugs neste contexto (6 nós no grafo, 2 de outro contexto) · 0 inconsistências</p>
-  <p class="legend-note">Arestas tracejadas = relação <strong>proposed</strong> (hipótese, não vínculo demonstrado).
-     Nó com borda cinza tracejada pertence ao contexto <code>mira-fast</code>.</p>
+<div class="cards">
+  <div class="card"><div class="n">4</div><div class="k">total</div></div>
+  <div class="card green"><div class="n">4</div><div class="k">corrigidos, aguardando entrega</div></div>
+  <div class="card red"><div class="n">0</div><div class="k">abertos</div></div>
+  <div class="card yellow"><div class="n">0</div><div class="k">travados com DONE.md</div></div>
+</div>
 
-  <div class="cards">
-    <div class="card"><div class="n">4</div><div class="k">bugs no contexto</div></div>
-    <div class="card green"><div class="n">0</div><div class="k">resolved · fixed</div></div>
-    <div class="card red"><div class="n">3</div><div class="k">abertos</div></div>
-    <div class="card blue"><div class="n">1</div><div class="k">corrigido, entregando</div></div>
-    <div class="card"><div class="n">0</div><div class="k">inconsistências</div></div>
-  </div>
+<h2>Bugs</h2>
+<table>
+<thead><tr><th>#</th><th>ID</th><th>sev</th><th>estado</th><th>título</th><th>causa raiz</th><th>testes</th><th>veredito</th></tr></thead>
+<tbody>
+<tr>
+  <td>1</td>
+  <td><a href="../bugs/BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">JZNJ</a></td>
+  <td><span class="pill critical">critical</span> P1</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Builder do roteiro.md descarta o palco do slide e a animação nunca toca no mira-studio servido por HTTP</td>
+  <td>confirmed</td>
+  <td>1 repro · 3 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr>
+  <td>2</td>
+  <td><a href="../bugs/BUG-20260731-S3TX-studio-full-apaga-slides/bug.md">S3TX</a></td>
+  <td><span class="pill critical">critical</span> P0</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Template mira-studio-full apaga todos os slides gerados e os substitui pelo deck de demonstração</td>
+  <td>confirmed</td>
+  <td>2 repro · 3 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr>
+  <td>3</td>
+  <td><a href="../bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">OI56</a></td>
+  <td><span class="pill high">high</span> P1</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Fase 1 parte do template cru em vez do caminho canônico e o esqueleto nasce reprovado nos quatro formatos</td>
+  <td>confirmed</td>
+  <td>3 repro · 4 regr</td>
+  <td>spec-correta</td>
+</tr>
+<tr>
+  <td>8</td>
+  <td><a href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/bug.md">RNYU</a></td>
+  <td><span class="pill medium">medium</span> P2</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Falas de demonstração do template vazam para todo deck gerado e viram o teleprompter em file://</td>
+  <td>confirmed</td>
+  <td>3 repro · 2 regr</td>
+  <td>spec-gap</td>
+</tr>
+</tbody>
+</table>
 
-  <h2>Grafo</h2>
-  <div class="graph">
-    <svg viewBox="0 0 1170 420" role="img" aria-label="Grafo de relações do contexto templates-studio">
-      <defs><marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3">
-        <circle cx="3" cy="3" r="2.4" fill="#9aa0ae"/></marker></defs>
+<h2>Travados (DONE.md)</h2>
+<p class="prose">Nenhum. A closure policy <code>package</code> exige merge e versão publicada;
+até lá, nenhum bug recebe a trava e nenhuma pasta vira somente leitura.</p>
 
-      <path class="edge" d="M260 65 C288 65 288 205 310 205" marker-start="url(#dot)" marker-end="url(#dot)"/>
-      <path class="edge" d="M260 205 H310" marker-start="url(#dot)" marker-end="url(#dot)"/>
-      <text class="edge-lbl" x="285" y="196" text-anchor="middle">related-to</text>
-      <path class="edge" d="M260 345 C288 345 288 205 310 205" marker-start="url(#dot)" marker-end="url(#dot)"/>
-      <path class="edge" d="M560 205 H610" marker-start="url(#dot)" marker-end="url(#dot)"/>
-      <text class="edge-lbl" x="585" y="196" text-anchor="middle">related-to</text>
-      <path class="edge" d="M860 205 H910" marker-start="url(#dot)" marker-end="url(#dot)"/>
-      <text class="edge-lbl" x="885" y="196" text-anchor="middle">related-to</text>
-
-      <a class="node sev-critical" href="../bugs/BUG-20260731-S3TX-studio-full-apaga-slides/bug.md">
-        <rect x="10" y="10" width="250" height="110" rx="9"/>
-        <text class="num" x="26" y="33">#2 · S3TX</text>
-        <text x="26" y="55">studio-full apaga</text>
-        <text x="26" y="73">todos os slides</text>
-        <text class="sub" x="26" y="94">critical · P0</text>
-        <text class="st" x="26" y="112" fill="#e05260">open · triaging</text>
-      </a>
-      <a class="node sev-medium" href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/bug.md">
-        <rect x="10" y="150" width="250" height="110" rx="9"/>
-        <text class="num" x="26" y="173">#8 · RNYU</text>
-        <text x="26" y="195">falas de demonstração</text>
-        <text x="26" y="213">vazam para o deck</text>
-        <text class="sub" x="26" y="234">medium · P2</text>
-        <text class="st" x="26" y="252" fill="#e05260">open · triaging</text>
-      </a>
-      <a class="node ext" href="../../mira-fast/bugs/BUG-20260731-VPVV-capa-sem-classe-vira-camera/bug.md">
-        <rect x="10" y="290" width="250" height="110" rx="9"/>
-        <text class="num" x="26" y="313">#5 · VPVV — mira-fast</text>
-        <text x="26" y="335">capa vira</text>
-        <text x="26" y="353">câmera vazia</text>
-        <text class="sub" x="26" y="374">high · P1</text>
-        <text class="st" x="26" y="392" fill="#e05260">open · triaging</text>
-      </a>
-
-      <a class="node sev-critical" href="../bugs/BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">
-        <rect x="310" y="150" width="250" height="110" rx="9"/>
-        <text class="num" x="326" y="173">#1 · JZNJ</text>
-        <text x="326" y="195">builder do roteiro</text>
-        <text x="326" y="213">descarta o palco</text>
-        <text class="sub" x="326" y="234">critical · P1 · 4 arestas</text>
-        <text class="st" x="326" y="252" fill="#e05260">open · triaging</text>
-      </a>
-
-      <a class="node fixado" href="../bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">
-        <rect x="610" y="150" width="250" height="110" rx="9"/>
-        <text class="num" x="626" y="173">#3 · OI56</text>
-        <text x="626" y="195">Fase 1 parte do</text>
-        <text x="626" y="213">template cru</text>
-        <text class="sub" x="626" y="234">high · P1 · 4 formatos</text>
-        <text class="st" x="626" y="252" fill="#4fbf8b">active · delivering</text>
-      </a>
-
-      <a class="node ext" href="../../mira-fast/bugs/BUG-20260731-K4NR-validador-section-em-comentario/bug.md">
-        <rect x="910" y="150" width="250" height="110" rx="9"/>
-        <text class="num" x="926" y="173">#4 · K4NR — mira-fast</text>
-        <text x="926" y="195">validador vê section</text>
-        <text x="926" y="213">em comentário</text>
-        <text class="sub" x="926" y="234">high · P1 · spec-gap</text>
-        <text class="st" x="926" y="252" fill="#e05260">open · triaging</text>
-      </a>
-    </svg>
-  </div>
-
-  <p class="prose">O nó central é o <strong>JZNJ</strong>, com quatro arestas: três chegam
-  nele e uma sai. Isso não faz dele a causa dos outros. Ele é o ponto onde o runtime que o
-  template já trazia encontra o contrato que o <code>/mira-fast</code> passou a exigir, e
-  quase todo defeito desta área passa por esse encontro. Como todas as arestas estão em
-  <strong>proposed</strong>, o que o desenho mostra é parentesco observado, não cadeia causal
-  provada. A história, em uma frase: o <code>roteiro.md</code> virou fonte da verdade em
-  2026-07-19, o <code>/mira-fast</code> chegou em 2026-07-26 escrevendo slides com ids
-  próprios, e ninguém escreveu o contrato entre os dois.</p>
-
-  <h2>Bugs abertos / ativos</h2>
-  <table>
-    <tr><th>#</th><th>ID</th><th>sev</th><th>prio</th><th class="t">título</th><th>origem</th><th>status</th></tr>
-    <tr><td>2</td>
-      <td><a href="../bugs/BUG-20260731-S3TX-studio-full-apaga-slides/bug.md">BUG-20260731-S3TX</a></td>
-      <td><span class="pill p-crit">critical</span></td><td>P0</td>
-      <td class="t">Template mira-studio-full apaga todos os slides gerados e os substitui pelo deck de demonstração</td>
-      <td>manual-report</td><td><span class="pill p-open">open</span> triaging</td></tr>
-    <tr><td>1</td>
-      <td><a href="../bugs/BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">BUG-20260731-JZNJ</a></td>
-      <td><span class="pill p-crit">critical</span></td><td>P1</td>
-      <td class="t">Builder do roteiro.md descarta o palco do slide e a animação nunca toca sob HTTP</td>
-      <td>manual-report</td><td><span class="pill p-open">open</span> triaging</td></tr>
-    <tr><td>3</td>
-      <td><a href="../bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">BUG-20260731-OI56</a></td>
-      <td><span class="pill p-high">high</span></td><td>P1</td>
-      <td class="t">Fase 1 parte do template cru em vez do caminho canônico e o esqueleto nasce reprovado nos quatro formatos</td>
-      <td>manual-report</td><td><span class="pill p-fix">active</span> delivering</td></tr>
-    <tr><td>8</td>
-      <td><a href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/bug.md">BUG-20260731-RNYU</a></td>
-      <td><span class="pill p-med">medium</span></td><td>P2</td>
-      <td class="t">Falas de demonstração do template vazam para todo deck e viram o teleprompter em file://</td>
-      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
-  </table>
-
-  <h2>Correção de 2026-08-01 · OI56 + VPUH</h2>
-  <p class="prose">O OI56 foi <strong>reescrito</strong> antes de ser corrigido: registrado
-  como "o template não tem nenhum marcador @MIRA", provou-se defeito da <em>instrução</em> da
-  Fase 1, atingindo os quatro formatos e não só os Studio. Dois dos três sintomas originais
-  foram desmentidos por medição: o <code>@MIRA:RESPONSIVE</code> é injetado pelo CLI e nunca
-  foi contrato de template, e os slots <code>@MIRA:FAST:*</code> são da Fase 1. O que sobrou
-  virou bug próprio no contexto
-  <a href="../../cli-mira-animator/generated/graph.html">cli-mira-animator</a>.</p>
-  <table>
-    <tr><th>etapa</th><th>resultado</th></tr>
-    <tr><td>causa raiz</td><td><span class="pill p-fix">confirmed</span> a skill mandava copiar o template, pulando o <code>ensureResponsive</code>; a spec 01#R7 mandava preferir o CLI</td></tr>
-    <tr><td>alcance real</td><td>os quatro formatos. O <code>mira</code>, o mais usado, também nascia reprovado</td></tr>
-    <tr><td>por que ninguém viu</td><td>nenhum teste alimentava o pipeline com template real; o fixture montava o esqueleto à mão já com todos os blocos</td></tr>
-    <tr><td>suíte completa</td><td><strong>119 tests, 119 pass, 0 fail</strong></td></tr>
-    <tr><td>veredito de spec</td><td><code>spec-correta</code>: a spec estava certa, a skill divergiu</td></tr>
-    <tr><td>fecha?</td><td><strong>não.</strong> Closure policy <code>package</code> exige merge e versão publicada</td></tr>
-  </table>
-
-  <h2>Concluídos (travados)</h2>
-  <p class="empty">Nenhum bug tem <code>DONE.md</code>. Nada foi fechado neste contexto.</p>
-
-  <h2>Varredura de 2026-07-31</h2>
-  <p class="prose">O pente-fino
-  (<a href="../inspections/2026-07-31-decks-studio/report.md">report.md</a>) montou um deck
-  <code>mira-studio</code> real e reproduziu em execução o JZNJ e o OI56. O S3TX continua
-  baseado em leitura de código, porque a varredura montou um deck 9:16 e não um 16:9. O RNYU
-  nasceu ali. Onze achados no total, sete promovidos a bug, quatro mantidos como observação.</p>
+<h2>Planos de correção</h2>
+<table>
+<thead><tr><th>bug</th><th>risco</th><th>plano</th></tr></thead>
+<tbody>
+<tr><td>JZNJ</td><td>média</td><td><a href="../bugs/BUG-20260731-JZNJ-builder-roteiro-descarta-palco/fix/plan.html">fix/plan.html</a></td></tr>
+<tr><td>S3TX</td><td>média</td><td><a href="../bugs/BUG-20260731-S3TX-studio-full-apaga-slides/fix/plan.html">fix/plan.html</a></td></tr>
+<tr><td>OI56</td><td>baixa</td><td><a href="../bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/fix/plan.html">fix/plan.html</a></td></tr>
+<tr><td>RNYU</td><td>baixa</td><td><a href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/fix/plan.html">fix/plan.html</a></td></tr>
+</tbody>
+</table>
 
 </div>
 </body>

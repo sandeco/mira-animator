@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · BUG-20260731-UDTY</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:40px 0 10px;letter-spacing:-.01em;
+     border-bottom:1px solid var(--line);padding-bottom:8px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:18px;font-weight:650;line-height:1.25}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.red .n{color:var(--red)}.card.green .n{color:var(--green)}
+  .card.yellow .n{color:var(--yellow)}.card.blue .n{color:var(--blue)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .box.ok{border-color:var(--green)}
+  .box.warn{border-color:var(--yellow)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  ol.steps,ul.steps{color:#c9cdd8;max-width:82ch}
+  ol.steps li,ul.steps li{margin-bottom:6px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .p-crit{color:var(--red);border-color:var(--red)}
+  .p-high{color:var(--yellow);border-color:var(--yellow)}
+  .p-med{color:var(--blue);border-color:var(--blue)}
+  .p-conf{color:var(--green);border-color:var(--green)}
+  .p-prop{color:var(--muted);border-color:var(--muted)}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+  .graph svg{display:block;min-width:760px}
+  .node rect{fill:#1b1e27;stroke-width:1.6}
+  .node:hover rect{fill:#232733}
+  .node text{fill:var(--ink);font-size:13px}
+  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
+  .focus rect{stroke:var(--green);stroke-width:2.4}
+  .sev-critical rect{stroke:var(--red)}.sev-high rect{stroke:var(--yellow)}.sev-medium rect{stroke:var(--blue)}
+  .edge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+  .edge-lbl{fill:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · #6 BUG-20260731-UDTY</h1>
+<p class="meta">contexto <code>mira-fast</code> · <span class="pill p-med">medium</span> · prioridade P2 · 2026-08-01</p>
+
+<div class="box warn">
+  <b>Como ler este documento.</b> Ele foi escrito na sessão autônoma de 2026-08-01, em que
+  o usuário autorizou explicitamente seguir sem gate de aprovação
+  (<i>"resolve todos os bugs sem me perguntar mais nada; se precisar de opções use as
+  opções de sua recomendação"</i>). Por isso ele descreve o plano <b>que foi executado</b>,
+  e não um plano à espera de aprovação. As decisões de projeto que normalmente iriam a
+  menu estão registradas em "Estratégia escolhida" e no veredito de spec.
+</div>
+
+<h2>O defeito</h2>
+<p class="prose">Contrato do layout full omite .full-wrap e o slide perde a área segura do formato</p>
+
+<h2>Causa raiz <span class="pill p-conf">confirmed</span></h2>
+<p class="prose">O contrato do layout <code>full</code> do mira-studio mandava pendurar &lt;h2&gt; e palco direto na &lt;section&gt;, enquanto o padding de área segura mora em <code>section[data-layout="full"] .full-wrap</code>. O contrato irmão do 16x9 já incluía os wrappers; só este ficou de fora.</p>
+
+<h2>Estratégia escolhida</h2>
+<p class="prose">Correção direta, igual à do VPVV: contrato prescreve o wrapper, validador cobra.</p>
+<div class="cards">
+  <div class="card green"><div class="n">baixa</div><div class="k">risco da mudança</div></div>
+  <div class="card blue"><div class="n">spec-gap</div><div class="k">veredito de spec</div></div>
+  <div class="card green"><div class="n">correção direta</div><div class="k">sem debate multiagente</div></div>
+</div>
+<p class="prose"><b>Motivos do risco:</b> aperta a validação de fragmento e não toca em geometria existente.</p>
+
+<h2>Correction Change Set</h2>
+<table>
+<thead><tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr></thead>
+<tbody>
+<tr><td><code>CHG-001</code></td><td>specification</td><td><code>agents/mira-fast/references/formato-mira-studio.md</code></td><td>seção "Layout full" passa a envolver <h2> e palco em <div class="full-wrap"></td></tr>
+<tr><td><code>CHG-002</code></td><td>code</td><td><code>agents/mira-fast/scripts/validate-run.mjs</code></td><td>reprova fragmento full sem o wrapper, como já reprovava split sem split-top</td></tr>
+<tr><td><code>CHG-003</code></td><td>specification</td><td><code>agents/mira-ultrafast/references/formato-mira-studio.md</code></td><td>a mesma exigência na versão condensada</td></tr>
+<tr><td><code>CHG-004</code></td><td>test</td><td><code>test/mira-studio-contrato.test.mjs, test/mira-studio-builders.test.mjs</code></td><td>validador reprova sem wrapper; enquadramento igual em file:// e HTTP</td></tr>
+<tr><td><code>CHG-005</code></td><td>specification</td><td><code>_reversa_sdd/addenda/bug-BUG-20260731-UDTY-v001.md</code></td><td>adendo aditivo do contrato do layout full</td></tr>
+</tbody>
+</table>
+
+<h2>Testes</h2>
+<table>
+<thead><tr><th>papel</th><th>caso</th><th>o que prova</th></tr></thead>
+<tbody>
+<tr><td>reprodução</td><td><code>BUG-20260731-UDTY · full do mira-studio sem .full-wrap é reprovado</code></td><td>o validador aprovava o slide sem área segura</td></tr>
+<tr><td>regressão</td><td><code>BUG-20260731-UDTY · full do mira-studio com .full-wrap passa</code></td><td>a regra não reprova o fragmento correto</td></tr>
+<tr><td>regressão</td><td><code>BUG-20260731-UDTY · o slide full gerado tem .full-wrap nos dois protocolos</code></td><td>critério de aceite 3, medido em navegador</td></tr>
+</tbody>
+</table>
+
+<h2>Riscos e o que fica de fora</h2>
+<div class="box">
+<p class="prose">O viewBox fixo que o contrato prescreve para os Studio (e proíbe no formato `mira`) continua como está. É assimetria conhecida, anotada no bug, e não foi tocada aqui.</p>
+</div>
+
+<h2>Relações deste bug</h2>
+<div class="graph">
+<svg viewBox="0 0 760 260" role="img" aria-label="relações do bug">
+<path class="edge" d="M 160 70 C 160 130, 380 110, 380 150"/>
+<text class="edge-lbl" x="170" y="120">related-to · supported</text>
+<path class="edge" d="M 410 70 C 410 130, 380 110, 380 150"/>
+<text class="edge-lbl" x="420" y="120">related-to · supported</text>
+<a class="node" href="../../../../mira-fast/bugs/BUG-20260731-VPVV-capa-sem-classe-vira-camera/bug.md">
+      <rect x="60" y="20" width="200" height="50" rx="9"/>
+      <text class="num" x="74" y="40">BUG-20260731-VPVV</text>
+      <text class="sub" x="74" y="58" style="fill:#9aa0ae;font-size:11.5px">ver bug.md</text>
+    </a>
+<a class="node" href="../../../../mira-fast/bugs/BUG-20260731-AMOM-validador-studio-frouxo/bug.md">
+      <rect x="310" y="20" width="200" height="50" rx="9"/>
+      <text class="num" x="324" y="40">BUG-20260731-AMOM</text>
+      <text class="sub" x="324" y="58" style="fill:#9aa0ae;font-size:11.5px">ver bug.md</text>
+    </a>
+<a class="node focus sev-medium" href="../bug.md">
+    <rect x="230" y="150" width="300" height="62" rx="9"/>
+    <text class="num" x="244" y="174">#6 · BUG-20260731-UDTY</text>
+    <text x="244" y="196" style="font-size:12.5px">este bug</text>
+  </a>
+</svg>
+</div>
+<table>
+<thead><tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr></thead>
+<tbody>
+<tr><td><a href="../bug.md">BUG-20260731-UDTY</a></td><td>related-to</td><td><a href="../../../../mira-fast/bugs/BUG-20260731-VPVV-capa-sem-classe-vira-camera/bug.md">BUG-20260731-VPVV</a></td><td><span class="pill p-conf">supported</span></td></tr>
+<tr><td><a href="../bug.md">BUG-20260731-UDTY</a></td><td>related-to</td><td><a href="../../../../mira-fast/bugs/BUG-20260731-AMOM-validador-studio-frouxo/bug.md">BUG-20260731-AMOM</a></td><td><span class="pill p-conf">supported</span></td></tr>
+</tbody>
+</table>
+
+<h2>Ordem de correção da sessão</h2>
+<p class="prose">Oito bugs foram corrigidos numa sessão só. A ordem saiu do grafo: primeiro o
+contrato e o validador, que são a causa estrutural de metade dos achados, depois os dois
+builders, que são os defeitos críticos, e por último o que era só da montagem.</p>
+<ol class="steps">
+  <li><code>BUG-20260731-VPVV</code>, <code>UDTY</code>, <code>AMOM</code> — contrato de formato e validador de fragmento</li>
+  <li><code>BUG-20260731-JZNJ</code>, <code>S3TX</code> — builders do roteiro.md (os dois <span class="pill p-crit">critical</span>)</li>
+  <li><code>BUG-20260731-RNYU</code> — falas do plano no fallback do teleprompter</li>
+  <li><code>BUG-20260731-JJ6X</code> — roteiro.md do usuário preservado</li>
+  <li><code>BUG-20260731-ETPU</code> — ordem de instalação do runtime</li>
+</ol>
+
+</div>
+</body>
+</html>

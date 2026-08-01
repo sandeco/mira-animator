@@ -141,6 +141,34 @@ function buildRoteiro(plan) {
   return `${lines.join('\n').trimEnd()}\n`;
 }
 
+/**
+ * Array de fala que o teleprompter usa quando não há `roteiro.md`, isto é, em
+ * `file://`. Os templates Studio trazem as falas do próprio deck de demonstração
+ * ali dentro, e a montagem herdava o runtime inteiro sem tocar nelas: todo deck
+ * gerado nascia com o texto de exemplo do Mira (BUG-20260731-RNYU).
+ *
+ * Os dois formatos declaram o mesmo fallback com nomes diferentes.
+ */
+const SCRIPT_FALLBACK = Object.freeze({
+  'mira-studio': /(window\.__miraScript\s*=\s*)\[[\s\S]*?\]/,
+  'mira-studio-full': /(\bvar\s+SCRIPT\s*=\s*)\[[\s\S]*?\]/,
+});
+
+function applyScriptFallback(html, plan) {
+  const pattern = SCRIPT_FALLBACK[plan.formato];
+  if (!pattern) return { html, status: 'formato sem teleprompter' };
+  const matches = html.match(new RegExp(pattern.source, 'g')) ?? [];
+  if (matches.length === 0) return { html, status: 'array de fallback ausente no esqueleto' };
+  if (matches.length > 1) throw new Error(`array de fala do teleprompter duplicado no esqueleto: ${matches.length} ocorrências`);
+
+  const falas = plan.slides.map((slide) => slide.fala ?? '');
+  const literal = `[\n${falas.map((fala) => `                ${JSON.stringify(fala)}`).join(',\n')}\n            ]`;
+  return {
+    html: html.replace(pattern, (_, prefixo) => `${prefixo}${literal}`),
+    status: `${falas.length} do plano`,
+  };
+}
+
 function findTemplateDir(projectRoot, kind) {
   for (const candidate of [
     join(projectRoot, 'mira-templates', kind),
@@ -157,25 +185,45 @@ function copyRequired(source, destination) {
   copyFileSync(source, destination);
 }
 
-function installRuntime(projectRoot, deckDir, format) {
+/**
+ * Resolve o que a montagem vai copiar, sem copiar nada e sem escrever no deck.
+ *
+ * Separar o plano da execução é o que permite conferir todas as fontes antes de
+ * tocar no deck: montagem que falha não pode deixar launcher e módulos numa raiz
+ * sem `index.html` (BUG-20260731-ETPU).
+ */
+function runtimePlan(projectRoot, deckDir, format) {
   const modules = FORMAT_MODULES[format];
   if (!modules) throw new Error(`formato sem módulos definidos: ${format}`);
   const authoringDir = findTemplateDir(projectRoot, 'authoring');
-  for (const module of modules) {
-    copyRequired(join(authoringDir, module), join(deckDir, 'mira', module));
+  const copies = modules.map((module) => ({
+    from: join(authoringDir, module),
+    to: join(deckDir, 'mira', module),
+  }));
+
+  if (STUDIO_FILES[format]) {
+    const studioDir = findTemplateDir(projectRoot, 'studio');
+    const vendorDir = findTemplateDir(projectRoot, 'vendor');
+    copies.push({
+      from: join(studioDir, 'mira-studio-server.cjs'),
+      to: join(deckDir, 'mira', 'mira-studio-server.cjs'),
+    });
+    for (const launcher of STUDIO_FILES[format]) {
+      copies.push({ from: join(studioDir, launcher), to: join(deckDir, launcher) });
+    }
+    for (const vendor of ['d3.v7.min.js', 'mp4-muxer.js']) {
+      copies.push({ from: join(vendorDir, vendor), to: join(deckDir, 'assets', 'vendor', vendor) });
+    }
   }
 
-  if (!STUDIO_FILES[format]) return modules;
-  const studioDir = findTemplateDir(projectRoot, 'studio');
-  const vendorDir = findTemplateDir(projectRoot, 'vendor');
-  copyRequired(join(studioDir, 'mira-studio-server.cjs'), join(deckDir, 'mira', 'mira-studio-server.cjs'));
-  for (const launcher of STUDIO_FILES[format]) {
-    copyRequired(join(studioDir, launcher), join(deckDir, launcher));
-  }
-  for (const vendor of ['d3.v7.min.js', 'mp4-muxer.js']) {
-    copyRequired(join(vendorDir, vendor), join(deckDir, 'assets', 'vendor', vendor));
-  }
-  return modules;
+  const faltando = copies.filter((copy) => !existsSync(copy.from)).map((copy) => copy.from);
+  if (faltando.length) throw new Error(`arquivo obrigatório ausente: ${faltando.join(', ')}`);
+  return { modules, copies };
+}
+
+function installRuntime(plan) {
+  for (const copy of plan.copies) copyRequired(copy.from, copy.to);
+  return plan.modules;
 }
 
 function stripModuleTags(html, modules) {
@@ -316,8 +364,14 @@ export function assembleRun(deckPath, options = {}) {
       return { slide, ...extractFragment(fragment, slide) };
     });
 
-    const modules = installRuntime(projectRoot, deckDir, plan.formato);
+    // Resolve e confere as fontes do runtime, mas NÃO copia nada ainda: a
+    // instalação só acontece depois que a saída passou por todas as checagens e
+    // foi publicada (BUG-20260731-ETPU).
+    const runtime = runtimePlan(projectRoot, deckDir, plan.formato);
+    const { modules } = runtime;
     skeleton = stripModuleTags(skeleton, modules);
+    const fallback = applyScriptFallback(skeleton, plan);
+    skeleton = fallback.html;
     const slides = parts
       .map(({ slide, html }) => `<!-- @MIRA:FAST:SLIDE ${String(slide.n).padStart(2, '0')} ${slide.slug_stage} -->\n${html}`)
       .join('\n\n');
@@ -350,11 +404,25 @@ export function assembleRun(deckPath, options = {}) {
 
     const outputPath = join(deckDir, plan.arquivo_saida);
     publishOutput(outputPath, output);
+    installRuntime(runtime);
 
+    // O roteiro.md é do usuário: a montagem só o semeia quando ele não existe.
+    // Re-montar um deck editado não pode apagar fala escrita à mão nem a que o
+    // teleprompter gravou sozinho (BUG-20260731-JJ6X).
     const roteiro = buildRoteiro(plan);
-    if (roteiro !== null) writeFileSync(join(deckDir, 'roteiro.md'), roteiro, 'utf8');
+    const roteiroPath = join(deckDir, 'roteiro.md');
+    let roteiroStatus = 'não se aplica a este formato';
+    if (roteiro !== null) {
+      if (existsSync(roteiroPath)) {
+        roteiroStatus = 'preservado (já existia; a montagem não sobrescreve)';
+      } else {
+        writeFileSync(roteiroPath, roteiro, 'utf8');
+        roteiroStatus = 'criado a partir do plano';
+      }
+    }
 
     log.push(`formato: ${plan.formato}`, `slides: ${plan.slides.length}`, `saida: ${basename(outputPath)}`);
+    log.push(`falas: ${fallback.status}`, `roteiro.md: ${roteiroStatus}`, `runtime: ${runtime.copies.length} arquivo(s) instalado(s)`);
     for (const result of leafResults) {
       log.push(`slide ${result.n}: ok=${result.ok !== false}; attempts=${result.attempts ?? '?'}; validation=${result.validation ?? 'pass'}`);
     }

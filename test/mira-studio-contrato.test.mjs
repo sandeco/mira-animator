@@ -1,0 +1,409 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+  statSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join, relative } from 'node:path';
+import { assembleRun, SLOT_MARKERS } from '../agents/mira-fast/scripts/assemble-run.mjs';
+import { validateFragment } from '../agents/mira-fast/scripts/validate-run.mjs';
+
+/**
+ * Contrato dos formatos Studio no lado Node do pipeline.
+ *
+ * Cobre cinco bugs do registro, todos da mesma família: o contrato prescreve uma
+ * coisa, o validador cobra outra, e a montagem escreve por cima do que é do
+ * usuário.
+ *
+ *   BUG-20260731-VPVV  capa Studio sem class="capa"
+ *   BUG-20260731-UDTY  layout full sem .full-wrap
+ *   BUG-20260731-AMOM  animado Studio sem .anim-stage e sem id no <svg>
+ *   BUG-20260731-RNYU  falas de demonstração do template vazam para o deck
+ *   BUG-20260731-JJ6X  re-montagem sobrescreve o roteiro.md do usuário
+ *   BUG-20260731-ETPU  falha tardia deixa o deck meio instalado
+ *
+ * O builder do roteiro em navegador é assunto de mira-studio-builders.test.mjs.
+ */
+
+const roots = [];
+const allModules = [
+  'mira-edit.js', 'mira-edit-free.js', 'mira-draw.js',
+  'mira-camera.js', 'mira-record.js', 'mira-record-16x9.js',
+];
+
+test.after(() => {
+  for (const root of roots) rmSync(root, { recursive: true, force: true, maxRetries: 5, retryDelay: 50 });
+});
+
+// ---------------------------------------------------------------- fragmentos
+
+/** Slide animado mínimo, com os campos que validateFragment exige do plano. */
+function animado(layout, extra = {}) {
+  return {
+    n: 2,
+    slug_stage: 'corrida',
+    js_id: 'corrida',
+    tipo: 'animado',
+    modo_folha: 'animada',
+    layout,
+    titulo: 'Dois fluxos',
+    fala: 'Explique a corrida.',
+    conceito: 'condição de corrida',
+    frase_causal: 'Quando dois fluxos escrevem, o resultado muda porque a ordem interfere.',
+    metafora: 'duas mãos servindo da mesma panela',
+    familia: 'cozinha',
+    verbo_causal: 'sobrepor',
+    silhueta: 'panela e conchas',
+    espaco: 'duas colunas',
+    movimento: 'alternância',
+    tempo: 'rajada com pausa',
+    ...extra,
+  };
+}
+
+const JS_ANIMADO = `<script>
+function animateCorrida() {
+  clearTimeout(window.__corridaTimer);
+  window.__corridaGen = (window.__corridaGen || 0) + 1;
+}
+</script>`;
+
+function envelope(slide, html, js = JS_ANIMADO) {
+  const kind = slide.modo_folha === 'animada' ? 'animated' : 'static';
+  return `<!-- @MIRA:FAST slide=${String(slide.n).padStart(2, '0')} stage=${slide.slug_stage} kind=${kind} -->
+${html}
+<!-- @MIRA:FAST css -->
+<style></style>
+<!-- @MIRA:FAST js -->
+${js}`;
+}
+
+const PALCO_OK = '<div class="anim-stage" id="corrida-stage"><svg id="corrida-svg" viewBox="0 0 960 960"></svg></div>';
+const PALCO_SEM_CLASSE = '<div id="corrida-stage"><svg id="corrida-svg" viewBox="0 0 960 960"></svg></div>';
+const PALCO_SEM_ID_SVG = '<div class="anim-stage" id="corrida-stage"><svg viewBox="0 0 960 960"></svg></div>';
+
+function splitStudio(palco) {
+  return `<section data-layout="split"><div class="split-top"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 -->${palco}</div><div class="cam-area"></div></section>`;
+}
+
+function fullStudio(palco, { wrap = true } = {}) {
+  const miolo = `<h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 -->${palco}`;
+  const corpo = wrap ? `<div class="full-wrap">${miolo}</div>` : miolo;
+  return `<section data-layout="full">${corpo}</section>`;
+}
+
+function thirdsStudioFull(palco) {
+  return `<section data-layout="thirds"><div class="thirds-main"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 -->${palco}</div><div class="cam-area"></div></section>`;
+}
+
+// ------------------------------------------------- BUG-20260731-VPVV (capa)
+
+const CAPA_SLIDE = {
+  n: 1, slug_stage: 'capa', tipo: 'capa', modo_folha: 'estatica', layout: 'capa', titulo: 'Corte de 80 por cento', fala: 'Abra pela capa.',
+};
+
+test('BUG-20260731-VPVV · capa Studio sem class="capa" é reprovada', () => {
+  const semClasse = envelope(CAPA_SLIDE, '<section><h1>Corte de 80 por cento</h1><p>Subtitulo curto.</p></section>', '<script></script>');
+  const erros = validateFragment(CAPA_SLIDE, semClasse, { formato: 'mira-studio' });
+  assert.ok(
+    erros.some((erro) => /class="capa"/.test(erro)),
+    `esperava erro sobre class="capa", veio: ${JSON.stringify(erros)}`,
+  );
+});
+
+test('BUG-20260731-VPVV · capa Studio com class="capa" passa', () => {
+  const comClasse = envelope(CAPA_SLIDE, '<section class="capa"><h1>Corte de 80 por cento</h1><p>Subtitulo curto.</p></section>', '<script></script>');
+  assert.deepEqual(validateFragment(CAPA_SLIDE, comClasse, { formato: 'mira-studio' }), []);
+});
+
+test('BUG-20260731-VPVV · encerramento no layout capa também exige a classe', () => {
+  const slide = { ...CAPA_SLIDE, n: 4, slug_stage: 'fim', tipo: 'encerramento', titulo: 'Obrigado' };
+  const semClasse = envelope(slide, '<section><h1>Obrigado</h1></section>', '<script></script>');
+  assert.ok(validateFragment(slide, semClasse, { formato: 'mira-studio' }).some((erro) => /class="capa"/.test(erro)));
+});
+
+// ------------------------------------------------- BUG-20260731-UDTY (full)
+
+test('BUG-20260731-UDTY · full do mira-studio sem .full-wrap é reprovado', () => {
+  const slide = animado('full');
+  const erros = validateFragment(slide, envelope(slide, fullStudio(PALCO_OK, { wrap: false })), { formato: 'mira-studio' });
+  assert.ok(
+    erros.some((erro) => /full-wrap/.test(erro)),
+    `esperava erro sobre full-wrap, veio: ${JSON.stringify(erros)}`,
+  );
+});
+
+test('BUG-20260731-UDTY · full do mira-studio com .full-wrap passa', () => {
+  const slide = animado('full');
+  assert.deepEqual(validateFragment(slide, envelope(slide, fullStudio(PALCO_OK)), { formato: 'mira-studio' }), []);
+});
+
+// ------------------------------------------------- BUG-20260731-AMOM (palco)
+
+test('BUG-20260731-AMOM · animado Studio sem .anim-stage é reprovado nos dois formatos', () => {
+  const split = animado('split');
+  const errosSplit = validateFragment(split, envelope(split, splitStudio(PALCO_SEM_CLASSE)), { formato: 'mira-studio' });
+  assert.ok(errosSplit.some((erro) => /anim-stage/.test(erro)), `mira-studio: ${JSON.stringify(errosSplit)}`);
+
+  const thirds = animado('thirds');
+  const errosThirds = validateFragment(thirds, envelope(thirds, thirdsStudioFull(PALCO_SEM_CLASSE)), { formato: 'mira-studio-full' });
+  assert.ok(errosThirds.some((erro) => /anim-stage/.test(erro)), `mira-studio-full: ${JSON.stringify(errosThirds)}`);
+});
+
+test('BUG-20260731-AMOM · animado Studio sem id no <svg> é reprovado nos dois formatos', () => {
+  const split = animado('split');
+  const errosSplit = validateFragment(split, envelope(split, splitStudio(PALCO_SEM_ID_SVG)), { formato: 'mira-studio' });
+  assert.ok(errosSplit.some((erro) => /svg/.test(erro)), `mira-studio: ${JSON.stringify(errosSplit)}`);
+
+  const thirds = animado('thirds');
+  const errosThirds = validateFragment(thirds, envelope(thirds, thirdsStudioFull(PALCO_SEM_ID_SVG)), { formato: 'mira-studio-full' });
+  assert.ok(errosThirds.some((erro) => /svg/.test(erro)), `mira-studio-full: ${JSON.stringify(errosThirds)}`);
+});
+
+test('BUG-20260731-AMOM · palco completo passa nos quatro layouts animados dos Studio', () => {
+  const casos = [
+    ['mira-studio', animado('split'), splitStudio(PALCO_OK)],
+    ['mira-studio', animado('full'), fullStudio(PALCO_OK)],
+    ['mira-studio-full', animado('thirds'), thirdsStudioFull(PALCO_OK)],
+    ['mira-studio-full', animado('full'), `<section data-layout="full"><div class="full-main"><h2>Dois fluxos</h2><!-- @MIRA:SIZE 3/10 -->${PALCO_OK}</div></section>`],
+  ];
+  for (const [formato, slide, html] of casos) {
+    assert.deepEqual(
+      validateFragment(slide, envelope(slide, html), { formato }),
+      [],
+      `${formato}/${slide.layout} deveria passar`,
+    );
+  }
+});
+
+test('BUG-20260731-AMOM · a assimetria com o formato mira não volta', () => {
+  // O mesmo palco frouxo tem que doer nos quatro formatos, não só no mira.
+  const slide = animado('split');
+  const frouxo = envelope(slide, splitStudio(PALCO_SEM_CLASSE));
+  assert.ok(validateFragment(slide, frouxo, { formato: 'mira-studio' }).length > 0);
+});
+
+// ----------------------------------------------------------------- fixture
+
+function planFor(format, { slides } = {}) {
+  const outputs = { 'mira-studio': 'index.html', 'mira-studio-full': 'index-16x9.html' };
+  const lista = slides ?? [
+    { n: 1, slug_stage: 'abertura', tipo: 'card', modo_folha: 'estatica', layout: 'camera', fala: 'Fala propria do slide um.' },
+    { ...animado(format === 'mira-studio' ? 'split' : 'thirds'), fala: 'Fala propria do slide dois.' },
+  ];
+  return {
+    versao: 2,
+    slug: `teste-${format}`,
+    formato: format,
+    arquivo_saida: outputs[format],
+    deck_dir: `decks/teste-${format}`,
+    titulo_deck: `Teste ${format}`,
+    paleta: { primaria: '#FF904D', fundo: '#000000', modo: 'cor-unica' },
+    tom: 'didático e direto',
+    total_slides: lista.length,
+    slides: lista,
+    ledger: lista.filter((slide) => slide.modo_folha === 'animada')
+      .map((slide) => ({ n: slide.n, assinatura: 'cozinha | sobrepor | panela' })),
+  };
+}
+
+/**
+ * Esqueleto de teste que carrega o array de fallback do teleprompter tal como
+ * os templates reais carregam: `window.__miraScript` no mira-studio e
+ * `var SCRIPT` no mira-studio-full.
+ */
+function skeletonFor(format) {
+  const fallback = format === 'mira-studio'
+    ? `            window.__miraScript = [
+                'Um roteiro, três formatos. Este é o deck vertical do Mira Studio.',
+                'Aqui a câmera preenche a coluna inteira: só você falando.'
+            ];`
+    : `            var SCRIPT = [
+                'Abertura direto na câmera: você em tela cheia, falando com a lente.',
+                'No layout de terços, a animação ocupa os dois terços da esquerda.'
+            ];`;
+  return `<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<title>Teste</title>
+<style>
+/* @MIRA:THEME:START */
+:root { --primary: #FF904D; }
+/* @MIRA:THEME:END */
+body > section:first-of-type h1,
+body > section:first-of-type h2 { text-wrap: balance; }
+/* @MIRA:RESPONSIVE:START */
+body { max-width: 100%; }
+/* @MIRA:RESPONSIVE:END */
+</style>
+${SLOT_MARKERS.cssStart}
+${SLOT_MARKERS.cssEnd}
+</head>
+<body>
+${SLOT_MARKERS.slidesStart}
+${SLOT_MARKERS.slidesEnd}
+<script id="roteiro-builder">
+        (function () {
+${fallback}
+        })();
+</script>
+${SLOT_MARKERS.jsStart}
+${SLOT_MARKERS.jsEnd}
+</body>
+</html>
+`;
+}
+
+function fragmentoDoSlide(format, slide) {
+  if (slide.modo_folha !== 'animada') {
+    return envelope(slide, '<section data-layout="camera"><div class="cam-area"></div></section>', '<script></script>');
+  }
+  const palco = `<div class="anim-stage" id="${slide.slug_stage}-stage"><svg id="${slide.slug_stage}-svg" viewBox="0 0 960 960"></svg></div>`;
+  const html = format === 'mira-studio' ? splitStudio(palco) : thirdsStudioFull(palco);
+  return envelope(slide, html);
+}
+
+function fixture(format, options = {}) {
+  const root = mkdtempSync(join(tmpdir(), 'mira-studio-contrato-'));
+  roots.push(root);
+  const deck = join(root, 'decks', `teste-${format}`);
+  const fast = join(deck, 'mira', 'fast');
+  const authoring = join(root, 'mira-templates', 'authoring');
+  const studio = join(root, 'mira-templates', 'studio');
+  const vendor = join(root, 'mira-templates', 'vendor');
+  for (const dir of [fast, join(deck, 'references'), authoring, studio, vendor]) mkdirSync(dir, { recursive: true });
+  for (const module of allModules) writeFileSync(join(authoring, module), `// ${module}\n`);
+  for (const file of [
+    'mira-studio-server.cjs', 'mira-studio-windows.bat',
+    'mira-studio-16x9-windows.bat', 'mira-studio-16x9-apple.command',
+  ]) writeFileSync(join(studio, file), `# ${file}\n`);
+  for (const file of ['d3.v7.min.js', 'mp4-muxer.js']) writeFileSync(join(vendor, file), `// ${file}\n`);
+
+  const plan = planFor(format, options);
+  writeFileSync(join(deck, 'references', 'quadro-metaforas.md'), '# Quadro\n');
+  writeFileSync(join(fast, 'plano.json'), JSON.stringify(plan, null, 2));
+  writeFileSync(join(fast, 'esqueleto.html'), skeletonFor(format));
+  for (const slide of plan.slides) {
+    writeFileSync(join(fast, `slide-${String(slide.n).padStart(2, '0')}.html`), fragmentoDoSlide(format, slide));
+  }
+  return { root, deck, fast, plan };
+}
+
+/** Lista relativa de tudo que existe no deck, para comparar antes e depois. */
+function arvore(dir, base = dir) {
+  const out = [];
+  for (const nome of readdirSync(dir)) {
+    const caminho = join(dir, nome);
+    if (statSync(caminho).isDirectory()) out.push(...arvore(caminho, base));
+    else out.push(relative(base, caminho).split('\\').join('/'));
+  }
+  return out.sort();
+}
+
+// ------------------------------------------------- BUG-20260731-RNYU (falas)
+
+for (const format of ['mira-studio', 'mira-studio-full']) {
+  test(`BUG-20260731-RNYU · ${format}: falas do plano substituem as do template`, () => {
+    const { root, deck, plan } = fixture(format);
+    const { output } = assembleRun(deck, { projectRoot: root });
+    const html = readFileSync(output, 'utf8');
+
+    for (const demo of ['Um roteiro, três formatos', 'Abertura direto na câmera']) {
+      assert.ok(!html.includes(demo), `fala de demonstração vazou: ${demo}`);
+    }
+    for (const slide of plan.slides) {
+      assert.ok(html.includes(slide.fala), `fala do plano ausente: ${slide.fala}`);
+    }
+    assert.match(readFileSync(join(deck, 'mira', 'fast', 'montagem.log'), 'utf8'), /falas: /);
+  });
+}
+
+test('BUG-20260731-RNYU · o fallback cobre todos os slides, não só os quatro primeiros', () => {
+  const slides = Array.from({ length: 6 }, (_, i) => ({
+    n: i + 1,
+    slug_stage: `slide${i + 1}`,
+    tipo: 'card',
+    modo_folha: 'estatica',
+    layout: 'camera',
+    fala: `Fala numero ${i + 1}.`,
+  }));
+  const { root, deck } = fixture('mira-studio', { slides });
+  const html = readFileSync(assembleRun(deck, { projectRoot: root }).output, 'utf8');
+  for (let i = 1; i <= 6; i += 1) assert.ok(html.includes(`Fala numero ${i}.`), `fala ${i} ausente`);
+});
+
+// ------------------------------------------------ BUG-20260731-JJ6X (roteiro)
+
+test('BUG-20260731-JJ6X · re-montagem preserva o roteiro.md editado', () => {
+  const { root, deck } = fixture('mira-studio');
+  assembleRun(deck, { projectRoot: root });
+  const roteiro = join(deck, 'roteiro.md');
+  const editado = `${readFileSync(roteiro, 'utf8')}\n\nEDICAO DO USUARIO QUE NAO PODE SUMIR\n`;
+  writeFileSync(roteiro, editado, 'utf8');
+
+  assembleRun(deck, { projectRoot: root });
+  assert.equal(readFileSync(roteiro, 'utf8'), editado, 're-montagem sobrescreveu o roteiro do usuário');
+  assert.match(readFileSync(join(deck, 'mira', 'fast', 'montagem.log'), 'utf8'), /roteiro\.md: preservado/);
+});
+
+test('BUG-20260731-JJ6X · a primeira montagem semeia o roteiro e registra no log', () => {
+  const { root, deck } = fixture('mira-studio');
+  assembleRun(deck, { projectRoot: root });
+  assert.match(readFileSync(join(deck, 'roteiro.md'), 'utf8'), /## Slide 1 \| camera/);
+  assert.match(readFileSync(join(deck, 'mira', 'fast', 'montagem.log'), 'utf8'), /roteiro\.md: criado/);
+});
+
+// -------------------------------------------- BUG-20260731-ETPU (meio deck)
+
+test('BUG-20260731-ETPU · falha tardia não deixa runtime instalado num deck limpo', () => {
+  const { root, deck } = fixture('mira-studio');
+  // index.html como diretório: a publicação atômica falha depois das checagens.
+  mkdirSync(join(deck, 'index.html'), { recursive: true });
+  writeFileSync(join(deck, 'index.html', 'ocupado.txt'), 'nao sou um deck\n');
+
+  const antes = arvore(deck);
+  assert.throws(() => assembleRun(deck, { projectRoot: root }));
+  const depois = arvore(deck).filter((caminho) => caminho !== 'mira/fast/montagem.log');
+  const novos = depois.filter((caminho) => !antes.includes(caminho));
+
+  assert.deepEqual(novos, [], `a falha deixou arquivos para trás: ${JSON.stringify(novos)}`);
+  assert.equal(existsSync(join(deck, 'mira', 'mira-camera.js')), false);
+  assert.equal(existsSync(join(deck, 'mira-studio-windows.bat')), false);
+  assert.equal(existsSync(join(deck, 'assets', 'vendor', 'd3.v7.min.js')), false);
+  assert.match(readFileSync(join(deck, 'mira', 'fast', 'montagem.log'), 'utf8'), /resultado: FAIL/);
+});
+
+test('BUG-20260731-ETPU · runtime de uma montagem anterior sobrevive a uma falha', () => {
+  const { root, deck } = fixture('mira-studio');
+  assembleRun(deck, { projectRoot: root });
+  const modulo = join(deck, 'mira', 'mira-camera.js');
+  assert.ok(existsSync(modulo));
+
+  rmSync(join(deck, 'index.html'));
+  mkdirSync(join(deck, 'index.html'), { recursive: true });
+  writeFileSync(join(deck, 'index.html', 'ocupado.txt'), 'nao sou um deck\n');
+  assert.throws(() => assembleRun(deck, { projectRoot: root }));
+
+  assert.ok(existsSync(modulo), 'a falha apagou o runtime de uma montagem anterior');
+  assert.ok(existsSync(join(deck, 'assets', 'vendor', 'd3.v7.min.js')));
+});
+
+test('BUG-20260731-ETPU · fonte de runtime ausente é detectada antes de copiar', () => {
+  const { root, deck } = fixture('mira-studio');
+  rmSync(join(root, 'mira-templates', 'vendor', 'mp4-muxer.js'));
+
+  const antes = arvore(deck);
+  assert.throws(() => assembleRun(deck, { projectRoot: root }), /mp4-muxer\.js/);
+  const novos = arvore(deck)
+    .filter((caminho) => caminho !== 'mira/fast/montagem.log')
+    .filter((caminho) => !antes.includes(caminho));
+  assert.deepEqual(novos, [], `copiou antes de conferir as fontes: ${JSON.stringify(novos)}`);
+});

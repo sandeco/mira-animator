@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-AMOM
 display_number: 11
 title: Validador de fragmento dos formatos Studio aceita palco sem .anim-stage e svg sem id
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: medium
 priority: P2
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: inspection
@@ -32,8 +32,10 @@ blocking: []
 relationships:
   - bug: BUG-20260731-UDTY
     type: related-to
-    state: proposed
-    evidence: []
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "corrigidos juntos no mesmo bloco do validador, como as Agent Notes pediam: o contrato do full omitia o wrapper e o validador não cobrava nem o que o contrato já dizia"
 
 traceability:
   specs:
@@ -43,18 +45,66 @@ traceability:
     - "agents/mira-fast/scripts/validate-run.mjs:182-198"
     - "agents/mira-fast/scripts/validate-run.mjs:162-175"
     - "test/mira-fast-assemble.test.mjs:170-172"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      As checagens de palco cresceram junto com o formato mira e nunca foram estendidas aos
+      Studio. O fixture de test/mira-fast-assemble.test.mjs consagrava o fragmento frouxo,
+      então a lacuna nunca produziu vermelho e nada no repositório apontava para ela.
+    causal_path:
+      - "validateFragment cobra .anim-stage e id do svg apenas no ramo format === 'mira'"
+      - "o ramo dos formatos Studio cobra só data-layout e a presença dos wrappers"
+      - "fragmento animado Studio sem .anim-stage e sem id no svg passa com zero erros"
+      - "o palco não recebe altura (a classe carrega flex e min-height no template)"
+      - "animação que faça svg.node().closest('.anim-stage') recebe null e quebra"
+      - "o fixture do repositório usa exatamente esse fragmento frouxo e o teste passa"
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "mesmo fragmento: mira-studio aprova com [], formato mira coleta cinco erros"
+      - ref: "fix/CHG-002.diff"
+        observation: "ao apertar o validador, os dois fixtures Studio ficaram vermelhos, confirmando que consagravam a lacuna"
+    code_refs:
+      - file: "agents/mira-fast/scripts/validate-run.mjs"
+        symbol: "validateFragment"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-AMOM · animado Studio sem .anim-stage é reprovado nos dois formatos"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-AMOM · animado Studio sem id no <svg> é reprovado nos dois formatos"
+  regression_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-AMOM · palco completo passa nos quatro layouts animados dos Studio"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-AMOM · a assimetria com o formato mira não volta"
 
-spec_verdict: null
+spec_verdict: spec-correta
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: code
+    artifact: "agents/mira-fast/scripts/validate-run.mjs"
+  - id: CHG-002
+    kind: test
+    artifact: "test/mira-fast-assemble.test.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "agents/mira-ultrafast/references/formato-mira-studio.md, agents/mira-ultrafast/references/formato-mira-studio-full.md"
+  - id: CHG-004
+    kind: test
+    artifact: "test/mira-studio-contrato.test.mjs"
+
+change_risk: baixa
+addenda: []
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Validador de fragmento dos formatos Studio aceita palco sem .anim-stage e svg sem id
@@ -165,7 +215,75 @@ animações do próprio template fazem exatamente isso
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### Causa raiz (confirmed)
+
+A hipótese do registro se confirmou, e a confirmação veio do próprio conserto: ao apertar o
+validador, os dois fixtures Studio de `test/mira-fast-assemble.test.mjs` ficaram vermelhos na
+hora, com `animado Studio exige .anim-stage | id do svg ausente`.
+
+Isso fecha o caminho causal. O fixture não estava frouxo por acaso: ele foi escrito assim
+**porque** o validador permitia, e enquanto ele existisse assim, nada no repositório apontava
+para a lacuna.
+
+### O que mudou
+
+1. **Validador**: uma checagem comum aos dois formatos Studio, para folha animada, exigindo
+   `class="anim-stage"` e `id="<slug_stage>-svg"`. É a mesma exigência que o formato `mira` já
+   fazia, e a mesma que `04#R6` já escrevia.
+2. **Fixtures**: `test/mira-fast-assemble.test.mjs` passa a emitir o palco do contrato, com a
+   classe e os dois ids. Critério de aceite 3.
+3. **Contratos condensados do `/mira-ultrafast`**: as duas versões terse passaram a listar a
+   estrutura cobrada. O `/mira-ultrafast` reusa este mesmo validador, e sem isso teria começado
+   a falhar sem que o agente soubesse o que emitir.
+
+### Veredito de spec: `spec-correta`
+
+Único caso desta rodada em que a spec já estava certa. `04#R6` define o palco como
+`<div class="anim-stage" id="<slug_stage>-stage">` com `<svg id="<slug_stage>-svg">`, e
+`05#R1` existe para que fragmento fora do contrato seja rejeitado com o motivo registrado. O
+código é que divergia: cobrava do `mira` e não cobrava dos Studio.
+
+Nenhum adendo gerado. A regra de processo que evita a repetição ("o validador cobra o que o
+contrato prescreve") está em R1d do adendo do BUG-20260731-VPVV, que cita este bug.
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `code` | `agents/mira-fast/scripts/validate-run.mjs` | folha animada Studio exige `.anim-stage` e id do svg ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `test` | `test/mira-fast-assemble.test.mjs` | fixtures passam a exercitar o contrato real ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | contratos condensados do `/mira-ultrafast` | a estrutura cobrada, na versão terse ([diff](fix/CHG-003.diff)) |
+| CHG-004 | `test` | `test/mira-studio-contrato.test.mjs` | cinco casos nos quatro layouts animados ([diff](fix/CHG-004.diff)) |
+
+Plano da correção: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ animado Studio sem .anim-stage é reprovado nos dois formatos
+       ✖ animado Studio sem id no <svg> é reprovado nos dois formatos
+       ✖ a assimetria com o formato mira não volta
+       ✔ palco completo passa nos quatro layouts animados dos Studio
+
+depois ✔ os quatro
+
+efeito colateral esperado, e observado:
+       ✖ montagem determinística cobre mira-studio        (fixture frouxo)
+       ✖ montagem determinística cobre mira-studio-full   (fixture frouxo)
+       → verdes depois do CHG-002
+```
+
+Suíte completa: 148 testes, 148 passando.
+
+### O que continua aberto
+
+O palco colapsado **não foi medido em pixels** no navegador. A afirmação sobre dimensionamento
+continua vindo do CSS do template (`.anim-stage { flex: 1 1 auto; min-height: 0 }`), como as
+Agent Notes já registravam, e nenhum teste de regressão visual foi escrito. O que os testes
+provam é que o fragmento fora do contrato passa a ser rejeitado, que é o critério de aceite.
 
 ## Agent Notes
 

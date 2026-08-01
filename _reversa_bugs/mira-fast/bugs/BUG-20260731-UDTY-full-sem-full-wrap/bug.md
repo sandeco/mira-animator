@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-UDTY
 display_number: 6
 title: Contrato do layout full omite .full-wrap e o slide perde a área segura do formato
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: medium
 priority: P2
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: inspection
@@ -32,8 +32,16 @@ blocking: []
 relationships:
   - bug: BUG-20260731-VPVV
     type: related-to
-    state: proposed
-    evidence: []
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "mesma lacuna: contrato de formato omisso e validador que não cobra. Corrigidos juntos, no mesmo arquivo de contrato e no mesmo bloco do validador."
+  - bug: BUG-20260731-AMOM
+    type: related-to
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "o AMOM já apontava para corrigir os dois juntos; o contrato do full omitia o wrapper e o validador não cobrava nem o que o contrato já dizia"
 
 traceability:
   specs:
@@ -44,18 +52,69 @@ traceability:
     - "agents/mira-fast/scripts/validate-run.mjs:190"
     - "templates/decks/mira-studio-demo/index.html:103-108"
     - "templates/decks/mira-studio-demo/index.html:450-452"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      Descuido de escrita do contrato, não decisão. O contrato irmão do 16x9 inclui os
+      wrappers nos dois layouts que os exigem, e o contrato do mira-studio inclui .split-top
+      no split. Só o full do mira-studio ficou de fora, e o validador não cobrava.
+    causal_path:
+      - "formato-mira-studio.md manda pendurar <h2> e palco direto na <section>"
+      - "a folha emite o slide sem .full-wrap, e validate-run aprova"
+      - "a regra section[data-layout=full] .full-wrap não se aplica a nada"
+      - "em file:// o slide renderiza sem os 4,63% de área segura"
+      - "sob HTTP o builder do roteiro CRIA o .full-wrap ao reconstruir e o padding volta"
+      - "o mesmo deck exibe dois enquadramentos diferentes conforme o protocolo"
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "1/1: full-wrap só aparecia na regra CSS e no builder, nunca dentro do slide"
+      - ref: "fix/CHG-004.diff"
+        observation: "o caso em navegador mede o wrapper presente nos dois protocolos"
+    code_refs:
+      - file: "agents/mira-fast/references/formato-mira-studio.md"
+        symbol: "Layout full"
+        commit: "5433675"
+  reproduction_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-UDTY · full do mira-studio sem .full-wrap é reprovado"
+  regression_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-UDTY · full do mira-studio com .full-wrap passa"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-UDTY · o slide full gerado tem .full-wrap nos dois protocolos"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: specification
+    artifact: "agents/mira-fast/references/formato-mira-studio.md"
+  - id: CHG-002
+    kind: code
+    artifact: "agents/mira-fast/scripts/validate-run.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "agents/mira-ultrafast/references/formato-mira-studio.md"
+  - id: CHG-004
+    kind: test
+    artifact: "test/mira-studio-contrato.test.mjs, test/mira-studio-builders.test.mjs"
+  - id: CHG-005
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-UDTY-v001.md"
+
+change_risk: baixa
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-UDTY-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Contrato do layout full omite .full-wrap e o slide perde a área segura do formato
@@ -155,7 +214,67 @@ do contrato, não decisão.
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### Causa raiz (confirmed)
+
+Descuido de escrita do contrato, confirmado pela comparação que o registro já sugeria: o
+contrato irmão `formato-mira-studio-full.md` inclui `.thirds-main` e `.full-main` nos dois
+layouts que os exigem, e o próprio `formato-mira-studio.md` inclui `.split-top` no `split`.
+Só o `full` do `mira-studio` ficou de fora.
+
+O agravante é o que torna o defeito visível: sob HTTP o builder do roteiro **cria** o
+`.full-wrap` ao reconstruir. O mesmo deck aparecia com um enquadramento em `file://` e outro
+sob HTTP.
+
+### O que mudou
+
+1. **Contrato**: a seção "Layout `full`" passa a envolver `<h2>` e palco em
+   `<div class="full-wrap">`, com uma frase explicando que o wrapper carrega a área segura de
+   4,63%. A versão condensada do `/mira-ultrafast` recebeu a mesma exigência.
+2. **Validador**: fragmento `full` do `mira-studio` sem o wrapper é reprovado com
+   `full Studio exige full-wrap`, do mesmo jeito que já reprovava `split` sem `split-top`.
+
+Conforme as Agent Notes, o valor do padding **não** saiu deste bug: continua vindo de
+`_reversa_sdd/sdd/enquadramento-seguro-de-plataforma.md` e do CSS do template. O adendo fixa
+que o slide gerado tem que receber essa geometria, não qual é ela.
+
+### Veredito de spec: `spec-gap`
+
+`03#R9` prevê o layout `full`, e a spec de enquadramento define a área segura. A ligação entre
+as duas (qual elemento carrega o padding no slide gerado) nunca foi escrita. Adendo aditivo:
+
+`_reversa_sdd/addenda/bug-BUG-20260731-UDTY-v001.md` — R9c, wrapper de área segura.
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `specification` | `agents/mira-fast/references/formato-mira-studio.md` | layout `full` com `.full-wrap` ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `code` | `agents/mira-fast/scripts/validate-run.mjs` | reprova `full` sem o wrapper ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `agents/mira-ultrafast/references/formato-mira-studio.md` | a mesma exigência na versão condensada ([diff](fix/CHG-003.diff)) |
+| CHG-004 | `test` | `test/mira-studio-contrato.test.mjs`, `test/mira-studio-builders.test.mjs` | validador reprova; enquadramento igual nos dois protocolos ([diff](fix/CHG-004.diff)) |
+| CHG-005 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-UDTY-v001.md` | adendo aditivo |
+
+Plano da correção: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ full do mira-studio sem .full-wrap é reprovado
+       ✔ full do mira-studio com .full-wrap passa
+       ✔ o slide full gerado tem .full-wrap nos dois protocolos
+
+depois ✔ os três
+```
+
+### O que continua aberto
+
+O `viewBox` fixo. O contrato dos Studio prescreve `viewBox="0 0 960 1522.5"` enquanto o
+formato `mira` **proíbe** viewBox fixo e exige cálculo em JavaScript. A assimetria estava
+anotada nas Agent Notes deste bug e continua de pé: não foi tocada, porque mexer nela é mudar
+o contrato de animação dos dois formatos Studio, muito além do escopo deste defeito.
 
 ## Agent Notes
 

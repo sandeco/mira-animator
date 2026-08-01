@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-JJ6X
 display_number: 7
 title: Re-montagem sobrescreve o roteiro.md editado pelo usuário sem aviso
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: high
 priority: P1
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: inspection
@@ -38,18 +38,63 @@ traceability:
   affected_code:
     - "agents/mira-fast/scripts/assemble-run.mjs:350-351"
     - "agents/mira-fast/scripts/assemble-run.mjs:124-142"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+    - "_reversa_sdd/addenda/bug-BUG-20260731-JJ6X-v001.md#r7c-escrita-do-roteiromd"
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      A spec declarava o roteiro.md fonte da verdade do formato, mas nunca disse o que a
+      re-montagem faz com um arquivo que já existe. Sem essa regra, a Fase 3 gravava
+      incondicionalmente a partir do plano.
+    causal_path:
+      - "buildRoteiro(plan) monta o texto a partir de plan.slides[].fala, texto da Fase 1"
+      - "writeFileSync(join(deckDir, 'roteiro.md'), roteiro) roda sem existsSync"
+      - "não há comparação, backup nem entrada no montagem.log"
+      - "a re-montagem devolve as falas do plano e apaga o que o usuário escreveu"
+      - "o teleprompter grava o roteiro.md sozinho a cada 800 ms, então o trabalho destruído pode nunca ter passado por um editor"
+    evidence:
+      - ref: "evidence/execucao.md"
+        observation: "1/1: edicao do usuario sobreviveu? false; voltou para a fala do plano? true"
+      - ref: "fix/CHG-002.diff"
+        observation: "montar, editar, montar de novo: a edição sobrevive byte a byte"
+    code_refs:
+      - file: "agents/mira-fast/scripts/assemble-run.mjs"
+        symbol: "assembleRun"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-JJ6X · re-montagem preserva o roteiro.md editado"
+  regression_tests:
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-JJ6X · re-montagem preserva o roteiro.md editado"
+    - "test/mira-studio-contrato.test.mjs::BUG-20260731-JJ6X · a primeira montagem semeia o roteiro e registra no log"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: code
+    artifact: "agents/mira-fast/scripts/assemble-run.mjs"
+  - id: CHG-002
+    kind: test
+    artifact: "test/mira-studio-contrato.test.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-JJ6X-v001.md"
+
+change_risk: baixa
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-JJ6X-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Re-montagem sobrescreve o roteiro.md editado pelo usuário sem aviso
@@ -146,7 +191,78 @@ re-montagem com fragmentos novos e roteiro antigo pode ficar fora de sincronia, 
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### A decisão de projeto que precedia a correção
+
+O registro colocava a pergunta certa: semear só na ausência, ou reconciliar plano e arquivo?
+E registrava o custo dos dois lados: "nunca sobrescrever" pode deixar roteiro antigo com
+fragmentos novos.
+
+**Escolhida: semear só na ausência.** O motivo é o próprio `05#R7`: o `roteiro.md` é declarado
+fonte da verdade do formato e feito para o usuário abrir no editor dele. Reconciliar exigiria a
+montagem decidir, fala a fala, quem está mais certo, o plano da Fase 1 ou o texto que o usuário
+escreveu depois. Não existe critério honesto para isso. Quem reconcilia é o usuário, editando o
+arquivo.
+
+O custo é aceito e está escrito no adendo: uma re-montagem pode deixar roteiro e HTML fora de
+sincronia. O log diz que preservou; conferir é do usuário. Sincronizar sozinho seria voltar a
+decidir por ele, que é exatamente o defeito.
+
+### Causa raiz (confirmed)
+
+`assemble-run.mjs:350-351` gravava sem `existsSync`, sem comparação, sem backup e sem linha no
+log. O agravante que o registro apontava se confirma: o deck grava o `roteiro.md` sozinho a
+cada 800 ms enquanto o usuário digita no teleprompter, então o trabalho destruído podia nunca
+ter passado por um editor de texto.
+
+### O que mudou
+
+| situação | antes | depois | linha no log |
+|---|---|---|---|
+| arquivo não existe | grava | grava | `roteiro.md: criado a partir do plano` |
+| arquivo já existe | **sobrescreve em silêncio** | **não toca** | `roteiro.md: preservado (já existia; a montagem não sobrescreve)` |
+| formato sem roteiro | nada, sem rastro | nada | `roteiro.md: não se aplica a este formato` |
+
+Critério de aceite 3 atendido: toda escrita **e toda omissão** aparece no `montagem.log`. Antes
+nem a escrita aparecia.
+
+### Veredito de spec: `spec-gap`
+
+`05#R7` declara o que o arquivo é; `R7b` mostra o cuidado do resto da montagem com o que já
+está no deck. O que a re-montagem faz com um `roteiro.md` existente nunca foi escrito. Adendo
+aditivo gerado, spec original intocada:
+
+`_reversa_sdd/addenda/bug-BUG-20260731-JJ6X-v001.md` — R7c, com a tabela das três situações, o
+porquê de semear e não reconciliar, e o custo aceito.
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `code` | `agents/mira-fast/scripts/assemble-run.mjs` | semeia só na ausência; status no `montagem.log` ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `test` | `test/mira-studio-contrato.test.mjs` | edição sobrevive à re-montagem; primeira montagem semeia e registra ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-JJ6X-v001.md` | adendo aditivo |
+
+Plano da correção: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ re-montagem preserva o roteiro.md editado
+       ✖ a primeira montagem semeia o roteiro e registra no log
+
+depois ✔ os dois
+```
+
+O determinismo da montagem não mudou: o `roteiro.md` nunca entrou no hash da saída, e o teste
+`montagem determinística` continua comparando dois runs byte a byte.
+
+### Herança
+
+O `/mira-ultrafast` delega para o mesmo `assembleRun` e herda a correção, como as Agent Notes
+anteciparam.
 
 ## Agent Notes
 

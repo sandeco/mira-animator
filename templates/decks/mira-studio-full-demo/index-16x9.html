@@ -720,9 +720,19 @@
              Título (thirds): *palavra* vira a cor de destaque
              animação (thirds): "linha: A, B, C, D" ou "orbita: A, B, C @ NÚCLEO"
            Layout, título e animação valem ao recarregar; o TEXTO sincroniza ao
-           vivo (bloco do teleprompter). Sem roteiro.md (file:// ou 404), o deck
-           monta os 5 slides padrão abaixo. A busca é síncrona de propósito: os
-           módulos (câmera, gravação, edição) leem as seções logo em seguida. */
+           vivo (bloco do teleprompter). A busca é síncrona de propósito: os
+           módulos (câmera, gravação, edição) leem as seções logo em seguida.
+
+           PRESERVAR É O PADRÃO. A seção que já está no HTML manda na ESTRUTURA
+           (palco, ids); o roteiro.md manda no TÍTULO e no TEXTO. O builder só
+           recria do zero quando não há seção naquela posição ou o roteiro pede
+           outro layout, e o array DEFAULT dos 5 slides de demonstração só entra
+           quando o <body> não tem seção nenhuma para preservar. Sem isso, um
+           deck gerado pelo /mira-fast perdia a Fase 2 inteira no load.
+
+           A animação declarativa (`linha:` / `orbita:`) só toca no palco que o
+           builder adotou, isto é, no <svg> que estava sem id. Palco com id
+           próprio já tem a animação dele e não é tocado. */
         (function () {
             var DEFAULT = [
                 { layout: 'camera' },
@@ -803,11 +813,34 @@
                     }
                 } catch (e) { spec = null; }
             }
-            var slides = spec || DEFAULT;
-            /* remonta as seções (as estáticas do HTML são só fallback sem JS) */
-            document.querySelectorAll('body > section').forEach(function (s) { s.remove(); });
+            var estaticas = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+            /* As <section> do HTML são o deck. O array DEFAULT só entra quando
+               não há seção nenhuma para preservar: um deck gerado pelo /mira-fast
+               abre em file:// sem roteiro.md, e substituir o conteúdo dele pelo
+               deck de demonstração apagava a Fase 2 inteira. */
+            var slides = spec || (estaticas.length ? null : DEFAULT);
             var anchor = document.getElementById('mira-prompter');
-            slides.forEach(function (sl, i) {
+
+            /* layout que uma seção já montada representa */
+            function layoutDe(sec) {
+                return sec.getAttribute('data-layout') || 'camera';
+            }
+
+            /* O palco é do deck. Se a seção já traz um <svg> com id, ele fica: é
+               assim que o palco gerado (<slug>-svg) sobrevive. O builder só
+               assume o id genérico sv-slide-N quando o <svg> não tem id, e é
+               apenas nesse caso que a animação declarativa do roteiro toca. */
+            function garantirPalco(sec, n) {
+                var stage = sec.querySelector('.anim-stage');
+                if (!stage) return false;
+                var svg = stage.querySelector('svg');
+                if (!svg) return false;
+                if (svg.id) return false;
+                svg.id = 'sv-slide-' + n;
+                return true;
+            }
+
+            function criarSecao(sl, n) {
                 var sec = document.createElement('section');
                 sec.setAttribute('data-layout', sl.layout);
                 if (sl.layout !== 'camera') {
@@ -818,7 +851,7 @@
                     var stage = document.createElement('div');
                     stage.className = 'anim-stage';
                     var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                    svg.id = 'sv-slide-' + (i + 1);
+                    svg.id = 'sv-slide-' + n;
                     svg.setAttribute('preserveAspectRatio', 'xMidYMid meet');
                     stage.appendChild(svg);
                     main.appendChild(h2);
@@ -830,10 +863,56 @@
                     cam.className = 'cam-area';
                     sec.appendChild(cam);
                 }
-                document.body.insertBefore(sec, anchor);
+                return sec;
+            }
+
+            /* Sem roteiro.md e com seções no HTML: o deck fica como está. Só
+               adota os palcos sem id, para a animação declarativa deste template
+               continuar tocando em file://. */
+            if (!slides) {
+                estaticas.forEach(function (sec, i) {
+                    if (layoutDe(sec) === 'camera') return;
+                    if (!garantirPalco(sec, i + 1)) return;
+                    var padrao = DEFAULT[i];
+                    if (!padrao || !padrao.anim) return;
+                    if (padrao.anim.tipo === 'orbita') animOrbita('sv-slide-' + (i + 1), padrao.anim.itens, padrao.anim.centro);
+                    else animLinha('sv-slide-' + (i + 1), padrao.anim.itens);
+                });
+                return;
+            }
+
+            /* BUG-20260731-S3TX · REAPROVEITAMENTO POR POSIÇÃO: a seção
+               existente manda na estrutura
+               (palco, ids, chrome), o roteiro.md manda no título e no texto.
+               Recriar do zero só quando não há seção nesta posição ou o roteiro
+               pede outro layout. */
+            var adotados = [];
+            var novas = slides.map(function (sl, i) {
+                var original = estaticas[i];
+                if (original && layoutDe(original) === sl.layout) {
+                    if (sl.layout !== 'camera') {
+                        var h2 = original.querySelector('h2');
+                        if (h2 && sl.titulo) {
+                            h2.textContent = '';
+                            h2.appendChild(tituloFrag(sl.titulo));
+                        }
+                        adotados[i] = garantirPalco(original, i + 1);
+                    }
+                    return original;
+                }
+                adotados[i] = sl.layout !== 'camera';
+                return criarSecao(sl, i + 1);
             });
+
+            estaticas.forEach(function (sec) {
+                if (novas.indexOf(sec) === -1) sec.remove();
+            });
+            novas.forEach(function (sec) { document.body.insertBefore(sec, anchor); });
+
+            /* a animação declarativa do roteiro só toca no palco que o builder
+               adotou; palco com id próprio já tem a animação dele */
             slides.forEach(function (sl, i) {
-                if (sl.layout === 'camera') return;
+                if (sl.layout === 'camera' || !adotados[i] || !sl.anim) return;
                 if (sl.anim.tipo === 'orbita') animOrbita('sv-slide-' + (i + 1), sl.anim.itens, sl.anim.centro);
                 else animLinha('sv-slide-' + (i + 1), sl.anim.itens);
             });

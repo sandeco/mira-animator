@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-S3TX
 display_number: 2
 title: Template mira-studio-full apaga todos os slides gerados e os substitui pelo deck de demonstração
-status: open
-phase: triaging
+status: active
+phase: delivering
 severity: critical
 priority: P0
 created: 2026-07-31
-updated: 2026-07-31
+updated: 2026-08-01
 
 origin:
   type: manual-report
@@ -24,7 +24,7 @@ security_suspected: false
 
 reproduction:
   classification: deterministic
-  rate: "não executado nesta sessão; leitura de código indica falha incondicional"
+  rate: "1/1 em navegador real (Chromium/puppeteer), nos dois protocolos, antes da correção"
   suspected_triggers: []
 
 blocking: []
@@ -32,8 +32,10 @@ blocking: []
 relationships:
   - bug: BUG-20260731-JZNJ
     type: related-to
-    state: proposed
-    evidence: []
+    state: supported
+    evidence:
+      - ref: "fix/plan.html"
+        observation: "os dois builders sofriam da mesma política (recriar por padrão) e receberam a mesma correção (preservar por padrão), em arquivos diferentes"
 
 traceability:
   specs:
@@ -41,24 +43,73 @@ traceability:
     - "_reversa_sdd/mira-fast/sdd/05-fase-3-montagem.md#r3-registro-de-triggers-rf10"
     - "_reversa_sdd/mira-fast/sdd/05-fase-3-montagem.md#r7-roteiromd-do-mira-studio-full-rf17"
     - "_reversa_sdd/mira-fast/sdd/03-fase-1-plano.md#r9-especificidade-por-formato"
+    - "_reversa_sdd/addenda/bug-BUG-20260731-S3TX-v001.md#r3e-conteudo-de-demonstracao-do-template"
+    - "_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md#r3b-quem-manda-no-dom-depois-do-load"
   affected_code:
     - "templates/decks/mira-studio-full-demo/index-16x9.html:711-719"
     - "templates/decks/mira-studio-full-demo/index-16x9.html:780-793"
     - "templates/decks/mira-studio-full-demo/index-16x9.html:795-819"
     - "templates/decks/mira-studio-full-demo/index-16x9.html:820-824"
     - "agents/mira-fast/scripts/assemble-run.mjs:124-142"
-  root_cause: null
-  reproduction_tests: []
-  regression_tests: []
+  root_cause:
+    state: confirmed
+    hypothesis: >-
+      O builder removia todas as section do body antes de saber se havia algo que valia
+      preservar, e tratava o array DEFAULT de demonstração como conteúdo, não como último
+      recurso. A política estava invertida: recriar era o padrão, preservar não existia.
+    causal_path:
+      - "o IIFE captura o roteiro.md (só sob HTTP) ou cai no array DEFAULT embutido"
+      - "document.querySelectorAll('body > section').forEach(s => s.remove()) roda sem guarda"
+      - "cada slide é recriado do zero, com palco svg#sv-slide-N"
+      - "o palco gerado <slug_stage>-stage deixa de existir no DOM"
+      - "o registro de triggers do /mira-fast não acha nada para observar e nada é reportado"
+      - "em file:// o mesmo caminho substitui o conteúdo pelos cinco slides de demonstração"
+    evidence:
+      - ref: "evidence/reproducao-navegador.md"
+        observation: "1/1 nos dois protocolos: 3 slides gerados viravam 5 de demonstração em file://, e palcos sv-slide-N sob HTTP"
+      - ref: "fix/CHG-002.diff"
+        observation: "os cinco casos em navegador real que vermelharam antes e verdearam depois"
+    code_refs:
+      - file: "templates/decks/mira-studio-full-demo/index-16x9.html"
+        symbol: "IIFE slides nascem do roteiro.md"
+        commit: "456b38b"
+  reproduction_tests:
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-S3TX · deck gerado em file:// mantém os slides gerados"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-S3TX · deck gerado sob HTTP mantém os slides e os palcos gerados"
+  regression_tests:
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-S3TX · a animação gerada toca no 16x9 sob HTTP"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando sob HTTP"
+    - "test/mira-studio-builders.test.mjs::BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando em file://"
 
-spec_verdict: null
+spec_verdict: spec-gap
 
-change_set: []
+change_set:
+  - id: CHG-001
+    kind: code
+    artifact: "templates/decks/mira-studio-full-demo/index-16x9.html"
+  - id: CHG-002
+    kind: test
+    artifact: "test/mira-studio-builders.test.mjs"
+  - id: CHG-003
+    kind: specification
+    artifact: "_reversa_sdd/addenda/bug-BUG-20260731-S3TX-v001.md"
+
+change_risk: média
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-S3TX-v001.md"
+
+delivery:
+  branch: agent/documentacao-completa-mira
+  base_commit: 456b38b
+  committed: false
+  pr: null
+  merged: false
+  published_version: null
 
 closure:
   policy: package
   satisfied: false
-resolution_kind: null
+resolution_kind: fixed
 ---
 
 # Template mira-studio-full apaga todos os slides gerados e os substitui pelo deck de demonstração
@@ -176,7 +227,96 @@ escolher a correção.
 
 ## Resolution
 
-Em aberto.
+Corrigido em 2026-08-01. **Não fechado**: a closure policy é `package` e exige merge e versão
+publicada. Estado atual `active` / `delivering`.
+
+### Reprodução
+
+O registro classificava como `deterministic` por leitura de código, e as Agent Notes exigiam
+reprodução em execução antes do diagnóstico, porque a severidade P0 dependia disso.
+Reproduzido em navegador real (Chromium via puppeteer), com um deck montado pelo pipeline de
+verdade: esqueleto do template pelo `build-skeleton.mjs`, fragmentos gerados, `assembleRun`
+real. A severidade P0 se confirma:
+
+| protocolo | antes da correção |
+|---|---|
+| `file://` | 3 slides gerados viravam os 5 slides de demonstração do template |
+| `http://` | estrutura vinha do `roteiro.md`, palcos eram `sv-slide-N`, `<slug>-stage` devolvia `null` |
+
+### Causa raiz (confirmed)
+
+A política do builder estava invertida. Ele **recriava por padrão** e nunca preservava:
+`document.querySelectorAll('body > section').forEach(s => s.remove())` rodava sem guarda
+nenhuma, e o array `DEFAULT` de demonstração era usado como conteúdo, não como último
+recurso.
+
+O caminho causal e as evidências estão no bloco `root_cause` do front matter.
+
+### A decisão de projeto que precedia a correção
+
+As Agent Notes levantavam a dúvida certa: os dois modelos de animação (D3 arbitrário do
+`/mira-fast` contra o vocabulário fechado `linha:` / `orbita:` do roteiro) podiam ser
+incompatíveis por construção, não só mal integrados.
+
+Não são. Eles convivem se a **posse do palco** decidir quem anima: palco que já tem `id` tem
+animação própria; palco que o builder adotou (porque o `<svg>` estava sem id) recebe a
+animação declarativa do roteiro. Um deck nunca precisa dos dois no mesmo palco.
+
+### O que mudou
+
+Três regras, todas no mesmo IIFE:
+
+1. **Preservar é o padrão.** A seção existente na mesma posição é reaproveitada quando o
+   layout bate; o roteiro aplica título e texto sobre ela. Recriar do zero só quando não há
+   seção naquela posição ou o layout difere.
+2. **O `DEFAULT` só entra quando não há o que preservar.** Sem `roteiro.md` e com seções no
+   `body`, o builder não toca no deck: apenas adota palcos sem id, para a animação
+   declarativa do deck de demonstração continuar tocando em `file://`.
+3. **A animação declarativa só toca em palco adotado.** É o que impede a animação de
+   demonstração de rodar por cima da metáfora que a Fase 2 escreveu.
+
+### Veredito de spec: `spec-gap`
+
+`04#R6` e `05#R3` fixam o contrato do palco e o registro de triggers; `05#R7` declara o
+`roteiro.md` fonte da verdade sem dizer sobre o quê. A fronteira entre o runtime do formato e
+os slides gerados nunca foi escrita. Adendo aditivo gerado, spec original intocada:
+
+- `_reversa_sdd/addenda/bug-BUG-20260731-S3TX-v001.md` — R3e (conteúdo de demonstração é
+  fallback de último recurso) e R3f (o `roteiro.md` do 16x9 não é destrutivo)
+- `_reversa_sdd/addenda/bug-BUG-20260731-JZNJ-v001.md` — R3b a R3d, a repartição geral entre
+  roteiro e HTML, compartilhada com o BUG-20260731-JZNJ
+
+### Change set
+
+| CHG | tipo | artefato | propósito |
+|---|---|---|---|
+| CHG-001 | `code` | `templates/decks/mira-studio-full-demo/index-16x9.html` | reaproveitamento por posição, `DEFAULT` só sem seções, animação declarativa restrita ao palco adotado ([diff](fix/CHG-001.diff)) |
+| CHG-002 | `test` | `test/mira-studio-builders.test.mjs` | cinco casos em navegador real ([diff](fix/CHG-002.diff)) |
+| CHG-003 | `specification` | `_reversa_sdd/addenda/bug-BUG-20260731-S3TX-v001.md` | adendo aditivo do veredito `spec-gap` |
+
+Plano da correção, com o grafo de relações: [fix/plan.html](fix/plan.html).
+
+### Prova vermelho → verde
+
+```
+antes  ✖ BUG-20260731-S3TX · deck gerado em file:// mantém os slides gerados
+       ✖ BUG-20260731-S3TX · deck gerado sob HTTP mantém os slides e os palcos gerados
+       ✖ BUG-20260731-S3TX · a animação gerada toca no 16x9 sob HTTP
+       ✔ BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando sob HTTP
+       ✔ BUG-20260731-S3TX · o deck de demonstração 16x9 continua funcionando em file://
+
+depois ✔ todos os cinco
+```
+
+Os dois casos do deck de demonstração já passavam antes: são guardas de não regressão do uso
+que o template documenta, e passar antes e depois é exatamente o que se espera deles.
+
+Suíte completa: 148 testes, 148 passando (eram 119 antes desta rodada).
+
+### Descoberta durante a correção
+
+O `/mira-ultrafast` consome este mesmo template pelo `build-skeleton.mjs` e herda a correção
+sem alteração própria, como as Agent Notes anteciparam.
 
 ## Agent Notes
 

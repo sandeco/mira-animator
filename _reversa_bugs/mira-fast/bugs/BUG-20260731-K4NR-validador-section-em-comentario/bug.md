@@ -86,6 +86,9 @@ change_risk:
     - "funções puras, sem estado compartilhado nem concorrência"
     - "reversível pelo diff, sem migração"
 
+addenda:
+  - "_reversa_sdd/addenda/bug-BUG-20260731-K4NR-v001.md"
+
 change_set:
   - id: CHG-001
     kind: test
