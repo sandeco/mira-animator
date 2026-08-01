@@ -64,6 +64,7 @@
     "templates/",
     "workflows/",
     "!templates/videos_header",
+    "CHANGELOG.md",
     "README.md",
     "LICENSE"
   ],
