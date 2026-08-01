@@ -10,7 +10,7 @@ import {
 import { createHash } from 'node:crypto';
 import { basename, dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { validateRun } from './validate-run.mjs';
+import { countSections, validateRun } from './validate-run.mjs';
 
 export const SLOT_MARKERS = Object.freeze({
   cssStart: '<!-- @MIRA:FAST:CSS:START -->',
@@ -194,7 +194,7 @@ function buildModuleTags(modules) {
   return modules.map((module) => `<script defer src="mira/${module}"></script>`).join('\n');
 }
 
-function validateSkeleton(skeleton, format) {
+export function validateSkeleton(skeleton, format) {
   const errors = [];
   for (const marker of Object.values(SLOT_MARKERS)) {
     if (count(skeleton, marker) !== 1) errors.push(`marcador de esqueleto ausente ou duplicado: ${marker}`);
@@ -230,7 +230,7 @@ function validateSkeleton(skeleton, format) {
   }
   if (slidesStart >= 0 && slidesEnd > slidesStart) {
     const outside = `${skeleton.slice(0, slidesStart)}${skeleton.slice(slidesEnd + SLOT_MARKERS.slidesEnd.length)}`;
-    if (/<section\b/i.test(outside)) errors.push('esqueleto contém <section> fora do slot de slides');
+    if (countSections(outside) > 0) errors.push('esqueleto contém <section> fora do slot de slides');
   }
   return errors;
 }
@@ -336,9 +336,13 @@ export function assembleRun(deckPath, options = {}) {
     output = replaceSlot(output, SLOT_MARKERS.jsStart, SLOT_MARKERS.jsEnd, js);
     output = `${output.trimEnd()}\n`;
 
-    const sectionCount = (output.match(/<section\b/gi) ?? []).length;
+    const sectionCount = countSections(output);
     if (sectionCount !== plan.slides.length) {
-      throw new Error(`saída possui ${sectionCount} section(s), esperado ${plan.slides.length}`);
+      const suspeitos = parts
+        .filter(({ html }) => countSections(html) !== 1)
+        .map(({ slide, html }) => `slide ${slide.n} (${slide.slug_stage}): ${countSections(html)}`);
+      const detalhe = suspeitos.length ? `; fragmento(s) fora do esperado: ${suspeitos.join(', ')}` : '';
+      throw new Error(`saída possui ${sectionCount} section(s), esperado ${plan.slides.length}${detalhe}`);
     }
     for (const module of modules) {
       if (count(output, `src="mira/${module}"`) !== 1) throw new Error(`módulo duplicado ou ausente: ${module}`);
