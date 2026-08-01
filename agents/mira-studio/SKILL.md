@@ -15,6 +15,10 @@ description: >-
 
 # Skill: Mira Studio (9:16 com câmera embutida, pronto para OBS)
 
+## Ordem zero — não negociável
+
+A primeira ação é resolver `deck_id = YYYY-MM-DD <slug>` com a data atual e criar, de uma vez, a pasta do deck e toda a árvore interna: `references/`, `assets/`, `assets/vendor/` e `mira/`. Nenhuma dessas pastas fica para depois. Isso acontece antes de mensagem intermediária, pergunta, leitura do deck de referência, coleta de roteiro, escolha de layout ou geração.
+
 Cria decks verticais 9:16 para gravação de vídeo (Reels, Shorts, TikTok, videoaula) em que o apresentador aparece AO VIVO dentro do próprio slide. Cada slide declara um layout, e o usuário escolhe **slide a slide, na conversa**:
 
 - **`camera`** — a webcam preenche a coluna inteira (você falando).
@@ -172,7 +176,14 @@ Sem GPU dedicada o launcher é inócuo (a flag aponta para a única GPU); o deck
 ```html
 <style id="mira-formato-multi">
   /* Coluna 9:16 cravada, generalista para a tela (saída OBS 1080x1920). */
-  :root { --fmt-w: calc(100vh * 9 / 16); --fmt-h: 100vh; }
+  :root {
+    --fmt-w: calc(100vh * 9 / 16); --fmt-h: 100vh;
+    /* Áreas seguras de plataforma (Reels + Shorts), % da largura da coluna. */
+    --sz-top: 27.78%;    /* 300/1080 — nav do Shorts / cabeçalho do Reels */
+    --sz-right: 11.11%;  /* 120/1080 — coluna de ações */
+    --sz-bottom: 40.74%; /* 440/1080 — legenda, handle, ticker de áudio */
+    --sz-left: 5.56%;    /*  60/1080 — margem */
+  }
   html { background: #333333; }
   body { background: #333333; display: flex; flex-direction: column; align-items: center; }
   body > section {
@@ -186,17 +197,19 @@ Sem GPU dedicada o launcher é inócuo (a flag aponta para a única GPU); o deck
   }
   /* camera: webcam na coluna inteira */
   section[data-layout="camera"] .cam-area { flex: 1 1 auto; min-height: 0; }
-  /* split: quadrado 1:1 no topo (área segura proporcional 50/1080) + câmera no resto */
+  /* split: quadrado 1:1 no topo + câmera intocada no resto */
   section[data-layout="split"] .split-top {
     width: 100%; aspect-ratio: 1 / 1; flex: 0 0 auto;
-    display: flex; flex-direction: column; padding: 4.63%;
+    display: flex; flex-direction: column;
+    padding: var(--sz-top) var(--sz-right) 4.63% var(--sz-left);
   }
   section[data-layout="split"] .split-top h2 { flex: 0 0 auto; }
   section[data-layout="split"] .cam-area { flex: 1 1 auto; min-height: 0; }
   /* full: animação vertical na coluna inteira */
   section[data-layout="full"] .full-wrap {
     flex: 1 1 auto; min-height: 0;
-    display: flex; flex-direction: column; padding: 4.63% 4.63% 3%;
+    display: flex; flex-direction: column;
+    padding: var(--sz-top) var(--sz-right) var(--sz-bottom) var(--sz-left);
   }
   section[data-layout="full"] h2 { flex: 0 0 auto; }
   /* palco: preenche todo o resto (viewBox casado em runtime pelo casarPalco) */
@@ -223,12 +236,13 @@ Os dois blocos estão no deck de referência; detalhes e regras completas em `ag
 
 ## Passos
 
-1. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um. Sem layout declarado, pergunte. O que ele vai FALAR em cada slide vai para o **`roteiro.md`**, não para dentro do HTML. Diga a ele, em uma linha, que dá para editar esse arquivo com o deck aberto: o texto aparece no teleprompter em cerca de 1,5 s.
-2. **Criar a estrutura.** `decks/<nome>/` com `index.html`, **`roteiro.md`** (um bloco `## Slide` por slide combinado, já com a fala do usuário no corpo, e a intro documentando a gramática e os layouts DESTE deck), `mira/` (edit, edit-free, draw, camera, record copiados de `templates/authoring/` + `mira-studio-server.cjs` de `templates/studio/`), `assets/vendor/mp4-muxer.js` (de `templates/vendor/`, obrigatório para os encoders do painel), `assets/vendor/d3.v7.min.js` quando houver animação, e `mira-studio-windows.bat` na raiz (de `templates/studio/`, launcher com preferência de alto desempenho).
+1. **Criar toda a estrutura — primeira ação obrigatória.** Antes de perguntar pelo roteiro, ler referências, escolher layouts ou gerar qualquer arquivo, derive o slug do pedido (ou use `novo-deck-studio`, com sufixo anticolisão), resolva `deck_id = YYYY-MM-DD <slug>` e crie `decks/<deck_id>/`, `references/`, `assets/`, `assets/vendor/` e `mira/`. Informe o caminho absoluto de `references/`. Nenhuma outra ação pode vir antes desta.
+2. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um. Sem layout declarado, pergunte. O que ele vai FALAR em cada slide vai para o **`roteiro.md`**, não para dentro do HTML. Diga a ele, em uma linha, que dá para editar esse arquivo com o deck aberto: o texto aparece no teleprompter em cerca de 1,5 s.
+   Depois, complete a estrutura com `index.html`, **`roteiro.md`**, módulos em `mira/`, vendor em `assets/vendor/` e `mira-studio-windows.bat` na raiz. As pastas já existentes são reutilizadas, nunca recriadas nem abandonadas.
 3. **Gerar os slides.** Um bloco `## Slide` no `roteiro.md` por slide e, no HTML, o `body > section` equivalente (fallback de `file://`) com `data-layout` correto; `.cam-area` nas áreas de câmera; animações nativas da geometria (quadrado no `split`, retrato no `full`) com `casarPalco` + enquadramento **uma vez** sobre a parte estática (reenquadrar a cada frame faz o palco reescalar junto com o que se move) e loop interno. Todo callback de `d3.timer` vai dentro de `try/catch`: uma exceção num deles congela a FILA inteira de timers do d3.
 4. **Injetar os blocos canônicos.** `<style id="mira-formato-multi">` (com o `isolation: isolate`), o **builder do `roteiro.md`** (antes das animações e dos `<script defer>`), `fitTitles`, navegação com dissolve (transição padrão), o **teleprompter completo** (painel + overlay + sincronização com o `.md` + `SCRIPT[]` só como fallback + chaves + editor `.me-ov` + bloco `#mira-studio-state` vazio + seed + salvar/Ctrl+S) e os cinco `<script defer src="mira/...">` antes de `</body>` (`mira-edit.js` → `mira-edit-free.js` → `mira-draw.js` → `mira-camera.js` → `mira-record.js`).
 5. **Verificar.** Servido em localhost: câmera nas áreas certas, permissão pedida uma vez, animações preenchendo, títulos em máx. 2 linhas. Painel lateral com as chaves T/O/G/E sincronizadas; editar o texto reflete no overlay; editar o `roteiro.md` no editor externo aparece no deck em ~1,5 s e digitar no painel grava no `.md` sem tocar na intro nem nos cabeçalhos; **Ctrl+S** grava posições e tamanhos, que sobrevivem ao reload. Gravando com `Element Capture: ON`, o overlay continua visível para você e **some do MP4** — e navegar entre slides durante a gravação não pode congelar o vídeo. Em `file://`: áreas verdes `#00FF00` puras.
-6. **Reportar.** Caminho do deck, o `roteiro.md` como lugar de escrever a fala (editável com o deck aberto), layout de cada slide (uma linha por slide), a gravação nativa (tecla R; encoder Auto/Hardware preferido/Software no painel; launcher Windows para inventário e preferência de alto desempenho) e a receita OBS como alternativa: servir com `node lib/mira-serve.js decks/<nome>` (ou `npx mira-animator serve`), Chrome em tela cheia, Captura de Janela no OBS, recorte na coluna, gravação 1080x1920.
+6. **Reportar.** Caminho do deck, o `roteiro.md` como lugar de escrever a fala (editável com o deck aberto), layout de cada slide (uma linha por slide), a gravação nativa (tecla R; encoder Auto/Hardware preferido/Software no painel; launcher Windows para inventário e preferência de alto desempenho) e a receita OBS como alternativa: servir com `node lib/mira-serve.js "decks/<deck_id>"` (ou `npx mira-animator serve`), Chrome em tela cheia, Captura de Janela no OBS, recorte na coluna, gravação 1080x1920.
 
 ## Edge cases (do mais comum ao menos)
 
@@ -244,8 +258,8 @@ Os dois blocos estão no deck de referência; detalhes e regras completas em `ag
 
 **Os que mais falham (cheque primeiro):**
 - [ ] Cada slide com o `data-layout` que o usuário pediu, na ordem do roteiro.
-- [ ] `split`: quadrado 1:1 exato no topo, animação PREENCHENDO o quadrado (Critério nº 1), câmera no resto.
-- [ ] `full`: animação vertical preenchendo o palco, sem faixa fina.
+- [ ] `split`: contêiner 1:1 exato, caixa informativa 900 × 730, palco elástico e câmera com a mesma altura do baseline.
+- [ ] `full`: caixa informativa 900 × 1180, animação vertical preenchendo o palco seguro.
 - [ ] Câmera: stream único, mudo, espelhado por padrão, tecla C alternando.
 - [ ] Fallback: em `file://` as áreas ficam `#00FF00` PURO, sem texto por cima.
 

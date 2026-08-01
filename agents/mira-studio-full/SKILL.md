@@ -18,6 +18,10 @@ description: >-
 
 # Skill: Mira Studio Full (16:9 com câmera embutida, gravação nativa)
 
+## Ordem zero — não negociável
+
+A primeira ação é resolver `deck_id = YYYY-MM-DD <slug>` com a data atual e criar, de uma vez, a pasta do deck e toda a árvore interna: `references/`, `assets/`, `assets/vendor/` e `mira/`. Nenhuma dessas pastas fica para depois. Isso acontece antes de mensagem intermediária, pergunta, leitura do deck de referência, coleta de roteiro, escolha de layout ou geração.
+
 Cria decks horizontais 16:9 full-hd para gravação de videoaula em que o apresentador aparece AO VIVO dentro do próprio slide. Cada slide declara um layout no `roteiro.md`:
 
 - **`camera`** — a webcam preenche o quadro inteiro (você falando).
@@ -155,8 +159,9 @@ Setas/espaço navegam · **T** painel do roteiro · **O** overlay de leitura · 
 
 ## Passos
 
-1. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um (`camera` ou `thirds`); sem layout declarado, pergunte. Para cada `thirds`, defina título curto e a animação (`linha:` com 2+ etapas ou `orbita:` com satélites e núcleo). A fala de cada slide vai para o **`roteiro.md`**, não para dentro do HTML. Diga em uma linha que dá para editar esse arquivo com o deck aberto (~1,5 s).
-2. **Criar a estrutura.** `decks/<nome>/` com `index-16x9.html` (a partir do deck de referência), **`roteiro.md`** (um bloco `## Slide` por slide combinado, com a fala do usuário e a intro documentando a gramática), `mira/` (edit, edit-free, draw, camera, record-16x9 copiados de `templates/authoring/` + `mira-studio-server.cjs` de `templates/studio/`), `assets/vendor/mp4-muxer.js` e `assets/vendor/d3.v7.min.js` (de `templates/vendor/`), e os launchers `mira-studio-16x9-windows.bat` / `mira-studio-16x9-apple.command` na raiz (de `templates/studio/`).
+1. **Criar toda a estrutura — primeira ação obrigatória.** Antes de perguntar pelo roteiro, ler referências, escolher layouts ou gerar qualquer arquivo, derive o slug do pedido (ou use `novo-deck-studio-full`, com sufixo anticolisão), resolva `deck_id = YYYY-MM-DD <slug>` e crie `decks/<deck_id>/`, `references/`, `assets/`, `assets/vendor/` e `mira/`. Informe o caminho absoluto de `references/`. Nenhuma outra ação pode vir antes desta.
+2. **Colher o roteiro.** Liste com o usuário os slides e o layout de cada um (`camera` ou `thirds`); sem layout declarado, pergunte. Para cada `thirds`, defina título curto e a animação (`linha:` com 2+ etapas ou `orbita:` com satélites e núcleo). A fala de cada slide vai para o **`roteiro.md`**, não para dentro do HTML. Diga em uma linha que dá para editar esse arquivo com o deck aberto (~1,5 s).
+   Depois, complete a estrutura com `index-16x9.html`, **`roteiro.md`**, módulos em `mira/`, vendor em `assets/vendor/` e os launchers na raiz. As pastas já existentes são reutilizadas, nunca recriadas nem abandonadas.
 3. **Gerar os slides.** No `roteiro.md`, cabeçalhos com layout/título/animação; no HTML, as `body > section` equivalentes como fallback de `file://` (mesma ordem, mesmos títulos). `.cam-area` em toda seção. As animações declarativas saem dos geradores canônicos; animação autoral extra se prende ao palco `sv-slide-N`.
 4. **Conferir os blocos canônicos.** Bloco de formato 16:9 (com `isolation: isolate` e o letterbox), builder do roteiro ANTES das animações e dos `<script defer>`, `fitTitles`, navegação com dissolve, teleprompter completo (painel + overlay + rolagem L/+/- + sincronização + `SCRIPT[]` fallback + bloco `#mira-studio-state` + seed por hash + salvar/Ctrl+S), desenho por slide, cheat-sheet `?`, e os cinco `<script defer src="mira/...">` antes de `</body>` nesta ordem: `mira-edit.js` → `mira-edit-free.js` → `mira-draw.js` → `mira-camera.js` → `mira-record-16x9.js`.
 5. **Verificar.** Servido pelo launcher: quadro 16:9 sem scroll horizontal, câmera no lugar certo por layout, permissão pedida uma vez, animações preenchendo os 2/3, títulos em máx. 2 linhas, editar o `roteiro.md` externo reflete em ~1,5 s, digitar no painel grava no `.md` sem tocar intro/cabeçalhos, Ctrl+S grava e sobrevive ao reload, gravando com Element Capture o overlay some do MP4 e navegar durante a gravação não congela o vídeo. Em `file://`: áreas verdes `#00FF00` puras.

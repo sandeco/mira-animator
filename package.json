@@ -50,6 +50,7 @@
     "agents/mira-copywriter",
     "agents/mira-extract",
     "agents/mira-fast",
+    "agents/mira-ultrafast",
     "agents/mira-get-videos",
     "agents/mira-image-prompt",
     "agents/mira-image-template",

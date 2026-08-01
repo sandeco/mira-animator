@@ -89,7 +89,7 @@ O `/mira-animator` manda apresentar o quadro ao usuário antes de codar quando o
 
 A troca é consciente e tem compensação obrigatória:
 
-1. O quadro fica salvo em `decks/<slug>/references/quadro-metaforas.md`, para revisão depois.
+1. O quadro fica salvo em `decks/<deck_id>/references/quadro-metaforas.md`, para revisão depois.
 2. Slide que não ficou bom se conserta chamando `/mira-animator` **nele, isoladamente**, o que é barato porque o deck gerado é um deck Mira normal.
 
 ## Formato do `quadro-metaforas.md`
@@ -99,7 +99,7 @@ Espelho humano do plano, gravado pela Fase 1 junto com o `plano.json`:
 ```markdown
 # Quadro de metáforas, <titulo_deck>
 
-Deck: decks/<slug> · Formato: <formato> · Slides animados: N
+Deck: decks/<deck_id> · Formato: <formato> · Slides animados: N
 
 | # | Conceito | Frase causal | Metáfora | Assinatura |
 |---|---|---|---|---|

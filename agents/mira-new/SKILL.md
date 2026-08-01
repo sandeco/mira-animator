@@ -21,35 +21,34 @@ Porta de entrada de uma nova apresentação. Numa conversa curta, colete o que o
 
 ## Regra de ouro
 
-Tudo o que esta skill cria ou edita vive **dentro de `decks/<tema>/`**. Nunca toque em arquivos fora de `decks/`, com a única exceção de registrar o deck no `mira.config.json` da raiz.
+Tudo o que esta skill cria ou edita vive **dentro de `decks/<deck_id>/`**. Nunca toque em arquivos fora de `decks/`, com a única exceção de registrar o deck no `mira.config.json` da raiz.
 
 ## Fluxo de Execução
 
-### Passo 1: Nome do tema (única pergunta antes da pasta existir)
+### Passo 1: Criar a estrutura — primeira ação obrigatória
 
-Pergunte **só o nome do tema**. Texto livre. Gere um **slug** em kebab-case, minúsculo, sem acento (ex.: "Spec Driven Development" → `spec-driven-development`). Confirme se houver ambiguidade.
+Esta é uma ordem operacional: **a primeira ação da skill é criar a pasta do deck e toda a árvore interna, de uma vez**. Antes disso, não faça pergunta, mensagem intermediária, leitura de referência, escolha de template, planejamento ou geração. `references/`, `assets/`, `assets/vendor/` e `mira/` não podem ser adiadas para outro passo.
 
-Não pergunte template, tema, cor nem descrição ainda. Com o slug na mão, vá direto para o Passo 2.
+Derive o slug diretamente do pedido em kebab-case, minúsculo e sem acento. Se o usuário chamou apenas `/mira-new`, use `novo-deck`; em colisão com deck já construído, use `novo-deck-2`, `novo-deck-3` etc. Defina **`deck_id = YYYY-MM-DD <slug>`**, usando a data local atual e exatamente um espaço. Exemplo: `2026-07-31 spec-driven-development`. Não pergunte o nome antes de criar. O nome pode ser refinado depois, mas a pasta precisa existir primeiro.
 
-### Passo 2: Criar a estrutura AGORA e parar
-
-**Antes de qualquer outra pergunta, antes de copiar qualquer template**, crie a estrutura de pastas do deck:
+Crie imediatamente:
 
 ```
-decks/<slug>/
-decks/<slug>/references/
-decks/<slug>/assets/
-decks/<slug>/mira/
+decks/<deck_id>/
+decks/<deck_id>/references/
+decks/<deck_id>/assets/
+decks/<deck_id>/assets/vendor/
+decks/<deck_id>/mira/
 ```
 
 Isso não é detalhe de ordem, é o ponto da skill. Sem a pasta no disco, o usuário não tem onde soltar o PDF, o print ou o documento que ele já tem na mão, e a conversa trava. A pasta primeiro, as escolhas depois.
 
-**Se `decks/<slug>/index.html` já existir**, aí sim é um deck montado de verdade: avise e pergunte se é para usar outro nome. **Se só a pasta existir, sem `index.html`**, é esqueleto de uma sessão anterior: **retome dentro dele**, liste o que já tem em `references/` e siga. Nunca peça outro nome nesse caso.
+**Se `decks/<deck_id>/index.html` já existir**, aí sim é um deck montado de verdade: avise e pergunte se é para usar outro nome. **Se só a pasta existir, sem `index.html`**, é esqueleto de uma sessão anterior: **retome dentro dele**, liste o que já tem em `references/` e siga. Nunca peça outro nome nesse caso.
 
 Com as pastas criadas, **pare** e ofereça os dois caminhos, sempre com o **caminho absoluto** da pasta de referências (caminho relativo não ajuda quem vai arrastar arquivo no explorador):
 
-> "Criei a estrutura em `<caminho absoluto de decks/<slug>>`. A pasta de referências está pronta:
-> `<caminho absoluto de decks/<slug>/references>`
+> "Criei a estrutura em `<caminho absoluto de decks/<deck_id>>`. A pasta de referências está pronta:
+> `<caminho absoluto de decks/<deck_id>/references>`
 >
 > Como você prefere começar?
 > **1.** Me contar aqui no chat do que trata a apresentação, e eu já registro.
@@ -57,13 +56,13 @@ Com as pastas criadas, **pare** e ofereça os dois caminhos, sempre com o **cami
 
 Trate a resposta assim, e nos dois casos o material **tem que acabar dentro de `references/`**:
 
-- **Escolheu 1 (texto no chat):** ouça a descrição e salve **na hora** como `decks/<slug>/references/_tema.md`. Não deixe para depois.
+- **Escolheu 1 (texto no chat):** ouça a descrição e salve **na hora** como `decks/<deck_id>/references/_tema.md`. Não deixe para depois.
 - **Escolheu 2 (vai soltar arquivos):** espere o aviso. Quando ele disser que terminou, **liste o que você encontrou** em `references/` antes de continuar. Se estiver vazia, diga isso e pergunte se ele quer descrever por texto no lugar.
 - **Os dois:** vale, salve o `_tema.md` e liste os arquivos.
 
-Só depois de ter referência ou descrição registrada siga para o Passo 3.
+Só depois de ter referência ou descrição registrada siga para o Passo 2.
 
-### Passo 3: Coletar o resto dos requisitos (conversacional)
+### Passo 2: Coletar o resto dos requisitos (conversacional)
 
 Pergunte de forma objetiva, com os defaults entre parênteses. Se o usuário já adiantou uma resposta, não pergunte de novo.
 
@@ -80,19 +79,19 @@ Pergunte de forma objetiva, com os defaults entre parênteses. Se o usuário já
    ```
 2. **Tema base** (identidade visual). Liste **dinamicamente** varrendo `mira-templates/themes/` (cada `.css`, exceto `base.css`, é um tema). Built-in: `mira-dark` (default, laranja), `light-minimal`, `corporate-blue` e `neon-emerald`; temas do `/mira-image-template` aparecem aqui também. **Se o template escolhido tiver um tema de mesmo nome** (templates derivados de imagem), use-o como **padrão** desse template, pois é a identidade que veio da imagem; o usuário ainda pode escolher outro.
 3. **Cor principal** (opcional). Sem pedido, use a cor do tema base. Se pedir uma cor (hex `#RRGGBB` ou nome como "roxo"), converta para hex e trate como override no Passo 5. Confirme a cor.
-4. **Descrição do tema**, só se ele escolheu o caminho 2 no Passo 2 e ainda não descreveu nada. Uma ou duas frases: do que trata, para quem, qual o objetivo. Salve como `references/_tema.md`. Se o `_tema.md` já existe, pule.
+4. **Descrição do tema**, só se ele escolheu o caminho 2 no Passo 1 e ainda não descreveu nada. Uma ou duas frases: do que trata, para quem, qual o objetivo. Salve como `references/_tema.md`. Se o `_tema.md` já existe, pule.
 
-### Passo 4: Montar o deck
+### Passo 3: Montar o deck
 
 Para os **templates built-in** (`mira-default`, `aula-capitulo`, `pitch-projeto`, `demo-tecnica`, `sandeco-just-animation-template`) com um **tema built-in**, use o comando canônico do Mira, que copia o esqueleto, injeta o CSS do tema e registra no config:
 
 ```bash
-npx mira-animator new <slug> --deck=<template> --theme=<tema-base>
+npx mira-animator new "<deck_id>" --deck=<template> --theme=<tema-base>
 ```
 
-A pasta já existe desde o Passo 2, e isso não é problema: o CLI só recusa quando encontra um `index.html` montado, então ele escreve dentro do esqueleto e **preserva o que estiver em `references/`**.
+A pasta já existe desde o Passo 1, e isso não é problema: o CLI só recusa quando encontra um `index.html` montado, então ele escreve dentro do esqueleto e **preserva o que estiver em `references/`**.
 
-Isso cria `decks/<slug>/index.html` com o tema base embutido (entre `/* @MIRA:THEME:START */` e `/* @MIRA:THEME:END */`). O comando **já deixa o deck offline por padrão**: copia as libs vendoradas (Tailwind, AOS, Lucide, D3, fonte Inter, embarcadas na instalação) para `decks/<slug>/assets/vendor/` e aponta o `<head>` para elas. O deck abre por `file://` sem internet e passa em firewall corporativo. Nada é baixado.
+Isso cria `decks/<deck_id>/index.html` com o tema base embutido (entre `/* @MIRA:THEME:START */` e `/* @MIRA:THEME:END */`). O comando **já deixa o deck offline por padrão**: copia as libs vendoradas (Tailwind, AOS, Lucide, D3, fonte Inter, embarcadas na instalação) para `decks/<deck_id>/assets/vendor/` e aponta o `<head>` para elas. O deck abre por `file://` sem internet e passa em firewall corporativo. Nada é baixado.
 
 > **Caso especial, `sandeco-just-animation-template`:** deck de **animação pura, multi-slide** (cada `<section>` é uma animação de tela cheia, sem títulos nem texto sobreposto), **multicor e theme-agnóstico**. Por isso o `new` **ignora o `--theme`** e mantém o bloco `@MIRA:THEME` neutro do próprio template; a cor vive numa paleta livre (nenhuma predominante), não na cor única do tema. Não aplique override de cor aqui. O preenchimento segue a seção "Variante: sandeco-just-animation-template" do `mira-animator`.
 
@@ -100,7 +99,7 @@ Isso cria `decks/<slug>/index.html` com o tema base embutido (entre `/* @MIRA:TH
 >
 > Use `aula-capitulo` quando o deck for **denso de conteúdo** (tabela, código, timeline, comparativo): lá o slide é um card com texto ao redor da animação, que é outro trabalho.
 
-> **Para templates ou temas do `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<slug>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece decks e temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local. **Depois, rode `node mira-templates/vendor/apply-offline.mjs decks/<slug>`** para deixar esse deck offline (a montagem manual não passa pelo CLI, então não recebe o offline automático). **Por fim, instale as ferramentas de autoria** — a montagem manual não copia os módulos de edição/pintura. Rode `npx mira-animator edit decks/<slug>`; sem npx, copie `mira-edit.js`, `mira-edit-free.js` e `mira-draw.js` de `mira-templates/authoring/` para `decks/<slug>/mira/` e injete antes do `</body>` as três tags `<script defer src="mira/...">` (com `mira-edit-free.js` depois de `mira-edit.js`).
+> **Para templates ou temas do `/mira-image-template`** (e como fallback sem npx em qualquer caso): monte na mão a partir da cópia local. Copie `mira-templates/decks/<template>/index.html` para `decks/<deck_id>/index.html`, substitua o bloco entre os marcadores `@MIRA:THEME` pelo CSS de `mira-templates/themes/<tema>.css` seguido de `mira-templates/themes/base.css`, e adicione o deck em `mira.config.json` (`decks[]`). O CLI só conhece decks e temas built-in, então templates/temas derivados de imagem **precisam** desta montagem local. **Depois, rode `node mira-templates/vendor/apply-offline.mjs "decks/<deck_id>"`** para deixar esse deck offline (a montagem manual não passa pelo CLI, então não recebe o offline automático). **Por fim, instale as ferramentas de autoria** — a montagem manual não copia os módulos de edição/pintura. Rode `npx mira-animator edit "decks/<deck_id>"`; sem npx, copie `mira-edit.js`, `mira-edit-free.js` e `mira-draw.js` de `mira-templates/authoring/` para `decks/<deck_id>/mira/` e injete antes do `</body>` as três tags `<script defer src="mira/...">` (com `mira-edit-free.js` depois de `mira-edit.js`).
 
 ### Passo 4.5: Lembranças do usuário (memória de preferências)
 
@@ -121,7 +120,7 @@ Uma consulta por papel de slide (nota de escopo só aparece quando o papel dela 
 
 ### Passo 5: Aplicar a cor principal custom (só se houver override)
 
-Se o usuário escolheu cor diferente da do tema base, edite o `:root` **dentro** dos marcadores `@MIRA:THEME` de `decks/<slug>/index.html`. A partir do hex `#RRGGBB` (componentes R, G, B em decimal), substitua **somente** estas variáveis derivadas da primária:
+Se o usuário escolheu cor diferente da do tema base, edite o `:root` **dentro** dos marcadores `@MIRA:THEME` de `decks/<deck_id>/index.html`. A partir do hex `#RRGGBB` (componentes R, G, B em decimal), substitua **somente** estas variáveis derivadas da primária:
 
 | Variável | Novo valor |
 |---|---|
@@ -139,12 +138,12 @@ Para `--mira-accent-2`, clareie a primária misturando ~35% de branco: para cada
 
 ### Passo 6: Fechar a intake de referências
 
-A pasta `decks/<slug>/references/` existe desde o Passo 2 e já pode ter material. Aqui você só absorve o que chegou depois. A intake segue as regras do `/mira-references` (copiar, nunca mover nem editar o original), aplicadas dentro de `decks/`:
+A pasta `decks/<deck_id>/references/` existe desde o Passo 1 e já pode ter material. Aqui você só absorve o que chegou depois. A intake segue as regras do `/mira-references` (copiar, nunca mover nem editar o original), aplicadas dentro de `decks/`:
 
-- **Caminho de arquivo/pasta:** copie para `decks/<slug>/references/`.
+- **Caminho de arquivo/pasta:** copie para `decks/<deck_id>/references/`.
 - **Texto colado:** salve como `.md` em `references/`.
-- **Link:** registre em `decks/<slug>/references/fontes.md`.
-- **Descrição do tema:** salve como `decks/<slug>/references/_tema.md` (semente do briefing que o `/mira-extract` vai ler), se ainda não foi salva no Passo 2.
+- **Link:** registre em `decks/<deck_id>/references/fontes.md`.
+- **Descrição do tema:** salve como `decks/<deck_id>/references/_tema.md` (semente do briefing que o `/mira-extract` vai ler), se ainda não foi salva no Passo 1.
 
 Se ainda não há material, tudo bem: repita o **caminho absoluto** da pasta e diga que ele pode soltar arquivos lá a qualquer momento. Para coletas maiores ou posteriores, acione o `/mira-references`.
 
@@ -153,9 +152,9 @@ Se ainda não há material, tudo bem: repita o **caminho absoluto** da pasta e d
 Mostre um resumo curto:
 
 ```
-Deck criado: decks/<slug>/
+Deck criado: decks/<deck_id>/
 Template: <template> | Tema: <tema-base> | Cor principal: <hex>
-Referências: <n> arquivo(s) em decks/<slug>/references/
+Referências: <n> arquivo(s) em decks/<deck_id>/references/
 ```
 
 Depois **ofereça** o próximo passo (não execute sem confirmar):
@@ -164,10 +163,10 @@ Depois **ofereça** o próximo passo (não execute sem confirmar):
 
 ## Regras Inegociáveis
 
-- **A estrutura de pastas nasce antes de qualquer escolha.** Colhido o nome, crie `decks/<slug>/` com `references/`, `assets/` e `mira/` na hora. Não pergunte template, tema nem cor antes disso.
+- **A estrutura de pastas é literalmente a primeira ação.** Derive o slug do pedido (ou use `novo-deck`) e crie `decks/<deck_id>/` com `references/`, `assets/vendor/` e `mira/` antes de qualquer pergunta, leitura, escolha ou planejamento.
 - **Há duas paradas obrigatórias.** A primeira logo depois de criar as pastas, para o usuário escolher entre descrever por texto ou soltar arquivos em `references/`, sempre com o **caminho absoluto** à mostra. A segunda no fim, antes do pipeline.
-- **Pasta existente sem `index.html` é esqueleto, não conflito.** Retome dentro dela e liste o que há em `references/`. Só peça outro nome quando existir `decks/<slug>/index.html`.
+- **Pasta existente sem `index.html` é esqueleto, não conflito.** Retome dentro dela e liste o que há em `references/`. Só peça outro nome quando existir `decks/<deck_id>/index.html`.
 - A skill **para no setup**. Só siga para o pipeline após o usuário confirmar.
-- Escreva apenas dentro de `decks/<slug>/` (mais o registro em `mira.config.json`). Nunca edite o original de uma referência.
+- Escreva apenas dentro de `decks/<deck_id>/` (mais o registro em `mira.config.json`). Nunca edite o original de uma referência.
 - O tema base deve ser um dos temas válidos (built-in ou derivado de imagem via `/mira-image-template`); a cor custom é aplicada **por cima** dele, só nas variáveis derivadas da primária.
 - Texto visível em português brasileiro com acentuação correta. Proibido travessão (—); use vírgula ou dois-pontos.

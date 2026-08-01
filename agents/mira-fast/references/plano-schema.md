@@ -1,6 +1,6 @@
 # Contrato do `plano.json`
 
-Caminho: `decks/<slug>/mira/fast/plano.json`. Escritor único: Fase 1.
+Caminho: `decks/<deck_id>/mira/fast/plano.json`. Escritor único: Fase 1.
 
 ## Raiz
 
