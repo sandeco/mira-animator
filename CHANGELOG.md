@@ -4,6 +4,43 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.52
+
+### Corrigido
+
+**Mudar a ordem dos slides agora leva o texto do roteiro junto.** Era o problema mais chato do
+Studio: você movia um slide e o teleprompter continuava mostrando a fala de quem estava
+naquela posição antes. A animação tocava debaixo do texto errado.
+
+Cada slide passou a ter um nome próprio, que aparece nos dois arquivos: uma linha
+`<!-- mira-slide-id: ... -->` no `roteiro.md` e um `data-mira-slide-id` no slide do
+`index.html`. O deck reconhece o slide pelo nome, não mais pela posição.
+
+Na prática: você pode mudar a ordem onde preferir, no seu editor de texto ou no modo de edição
+do deck (tecla **E**), e o slide vai inteiro — desenho, título e fala juntos. Vale para os dois
+formatos, o vertical 9:16 e o 16:9.
+
+Deck que você já tem continua funcionando como antes e não precisa de conversão. O nome só
+entra em deck novo.
+
+**Reordenar no modo E não perdia mais o roteiro (9:16).** No deck vertical, o Salvar reescrevia
+só o `index.html` e deixava o `roteiro.md` intocado, e no reload o deck voltava para a ordem
+antiga. Agora o Salvar grava os dois na mesma ordem. Se qualquer um dos dois recusar (roteiro
+com número de slides diferente do da tela, ou arquivo alterado por fora), nada é gravado e os
+dois continuam iguais.
+
+**Reordenar durante a gravação é recusado**, com aviso, em vez de bagunçar o take.
+
+**Deck gerado não corrompe mais ao salvar uma reordenação.** Os comentários de exemplo que o
+template usa para documentar os slides sobreviviam no deck montado, sem os slides que
+descreviam. O Salvar embaralhava esses comentários em vez dos slides: ou recusava, ou gravava
+um arquivo com o marcador de fim duplicado, com aviso verde de "Salvo".
+
+### Ainda não resolvido
+
+**A caneta não acompanha a reordenação.** Desenho feito com a tecla **P** continua guardado pela
+posição do slide, nos dois formatos. Mudou a ordem, o desenho fica no lugar antigo.
+
 ## 0.1.51
 
 ### Novidade
