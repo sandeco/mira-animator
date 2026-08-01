@@ -1,0 +1,271 @@
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-07-31T23:55:00Z a partir de 7 bugs -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafo de Bugs · mira-fast</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1220px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:18px;margin:40px 0 12px;letter-spacing:-.01em}
+  h3{font-size:15px;margin:24px 0 6px;color:var(--ink)}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 4px}
+  .legend-note{color:var(--muted);font-size:13px;margin:0 0 24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0 8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:26px;font-weight:650;line-height:1.1}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.red .n{color:var(--red)}.card.green .n{color:var(--green)}.card.blue .n{color:var(--blue)}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:16px;overflow-x:auto;margin-top:12px}
+  .graph svg{display:block;min-width:1170px}
+  .node rect{fill:#1b1e27;stroke-width:1.6}
+  .node:hover rect{fill:#232733}
+  .node text{fill:var(--ink);font-size:13px}
+  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
+  .node .sub{fill:var(--muted);font-size:11.5px}
+  .node .st{font-size:11.5px;font-weight:600}
+  .sev-critical rect,.sev-high rect{stroke:var(--red)}
+  .sev-medium rect{stroke:var(--yellow)}
+  .ext rect{stroke:#7f8c8d;stroke-dasharray:4 3}
+  .edge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+  .edge.solid{stroke:var(--green);stroke-dasharray:none;stroke-width:2}
+  .fixado rect{stroke:var(--green);stroke-width:2.2}
+  .edge-lbl{fill:var(--muted);font-size:11px}
+  .band{fill:none;stroke:#2f3444;stroke-width:1;stroke-dasharray:3 4}
+  .band-lbl{fill:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  td.t{min-width:300px}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .p-open{color:var(--red);border-color:var(--red)}
+  .p-high{color:var(--yellow);border-color:var(--yellow)}
+  .p-med{color:var(--blue);border-color:var(--blue)}
+  .p-fix{color:var(--green);border-color:var(--green)}
+  p.prose{color:#c9cdd8;max-width:80ch}
+  .empty{color:var(--muted);font-style:italic}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Grafo de Bugs · mira-fast</h1>
+  <p class="meta">Gerado por <code>/reversa-debugger-graph</code> · 2026-07-31T23:55:00Z ·
+     7 bugs neste contexto (9 nós no grafo, 2 de outro contexto) · 0 inconsistências</p>
+  <p class="legend-note">Arestas tracejadas = relação <strong>proposed</strong> (hipótese).
+     Arestas sólidas = <strong>supported</strong>, com evidência.
+     Nó com borda verde = corrigido em 2026-07-31, aguardando entrega.
+     Nó com borda cinza tracejada pertence ao contexto <code>templates-studio</code>.</p>
+
+  <div class="cards">
+    <div class="card"><div class="n">7</div><div class="k">bugs no contexto</div></div>
+    <div class="card green"><div class="n">2</div><div class="k">corrigidos, entregando</div></div>
+    <div class="card red"><div class="n">5</div><div class="k">abertos</div></div>
+    <div class="card blue"><div class="n">1</div><div class="k">adendo de spec</div></div>
+    <div class="card"><div class="n">0</div><div class="k">inconsistências</div></div>
+  </div>
+
+  <h2>Grafo</h2>
+  <div class="graph">
+    <svg viewBox="0 0 1170 470" role="img" aria-label="Grafo de relações do contexto mira-fast">
+      <defs><marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3">
+        <circle cx="3" cy="3" r="2.4" fill="#9aa0ae"/></marker></defs>
+
+      <rect class="band" x="4" y="22" width="1162" height="126" rx="8"/>
+      <text class="band-lbl" x="12" y="16">cluster A · contrato de formato incompleto</text>
+      <rect class="band" x="4" y="182" width="1162" height="126" rx="8"/>
+      <text class="band-lbl" x="12" y="176">cluster B · section como texto · CORRIGIDO NA RAIZ em 2026-07-31</text>
+      <rect class="band" x="4" y="342" width="272" height="126" rx="8"/>
+      <text class="band-lbl" x="12" y="336">isolado</text>
+
+      <path class="edge" d="M260 85 H310" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="285" y="76" text-anchor="middle">related-to</text>
+      <path class="edge" d="M560 85 H610" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="585" y="76" text-anchor="middle">related-to</text>
+      <path class="edge" d="M860 85 H910" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="885" y="76" text-anchor="middle">related-to</text>
+
+      <path class="edge solid" d="M260 245 H310" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="285" y="236" text-anchor="middle">related-to · supported</text>
+      <path class="edge solid" d="M560 245 H610" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="585" y="236" text-anchor="middle">related-to · supported</text>
+      <path class="edge" d="M860 245 H910" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="885" y="236" text-anchor="middle">related-to</text>
+
+      <a class="node sev-medium" href="../bugs/BUG-20260731-AMOM-validador-studio-frouxo/bug.md">
+        <rect x="10" y="30" width="250" height="110" rx="9"/>
+        <text class="num" x="26" y="53">#11 · AMOM</text>
+        <text x="26" y="75">validador Studio</text>
+        <text x="26" y="93">frouxo</text>
+        <text class="sub" x="26" y="114">medium · P2</text>
+        <text class="st" x="26" y="132" fill="#e05260">open · triaging</text>
+      </a>
+      <a class="node sev-medium" href="../bugs/BUG-20260731-UDTY-full-sem-full-wrap/bug.md">
+        <rect x="310" y="30" width="250" height="110" rx="9"/>
+        <text class="num" x="326" y="53">#6 · UDTY</text>
+        <text x="326" y="75">full sem .full-wrap</text>
+        <text x="326" y="93">perde a área segura</text>
+        <text class="sub" x="326" y="114">medium · P2</text>
+        <text class="st" x="326" y="132" fill="#e05260">open · triaging</text>
+      </a>
+      <a class="node sev-high" href="../bugs/BUG-20260731-VPVV-capa-sem-classe-vira-camera/bug.md">
+        <rect x="610" y="30" width="250" height="110" rx="9"/>
+        <text class="num" x="626" y="53">#5 · VPVV</text>
+        <text x="626" y="75">capa vira</text>
+        <text x="626" y="93">câmera vazia</text>
+        <text class="sub" x="626" y="114">high · P1</text>
+        <text class="st" x="626" y="132" fill="#e05260">open · triaging</text>
+      </a>
+      <a class="node ext" href="../../templates-studio/bugs/BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">
+        <rect x="910" y="30" width="250" height="110" rx="9"/>
+        <text class="num" x="926" y="53">#1 · JZNJ — templates-studio</text>
+        <text x="926" y="75">builder descarta</text>
+        <text x="926" y="93">o palco</text>
+        <text class="sub" x="926" y="114">critical · P1</text>
+        <text class="st" x="926" y="132" fill="#e05260">open · triaging</text>
+      </a>
+
+      <a class="node sev-medium" href="../bugs/BUG-20260731-ETPU-falha-tardia-deixa-deck-meio-instalado/bug.md">
+        <rect x="10" y="190" width="250" height="110" rx="9"/>
+        <text class="num" x="26" y="213">#10 · ETPU</text>
+        <text x="26" y="235">deck meio instalado</text>
+        <text x="26" y="253">na falha tardia</text>
+        <text class="sub" x="26" y="274">medium · P2</text>
+        <text class="st" x="26" y="292" fill="#e05260">open · triaging</text>
+      </a>
+      <a class="node fixado" href="../bugs/BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">
+        <rect x="310" y="190" width="250" height="110" rx="9"/>
+        <text class="num" x="326" y="213">#9 · BNO4</text>
+        <text x="326" y="235">contagem final conta</text>
+        <text x="326" y="253">comentário da folha</text>
+        <text class="sub" x="326" y="274">high · P1 · impact 2</text>
+        <text class="st" x="326" y="292" fill="#4fbf8b">active · delivering</text>
+      </a>
+      <a class="node fixado" href="../bugs/BUG-20260731-K4NR-validador-section-em-comentario/bug.md">
+        <rect x="610" y="190" width="250" height="110" rx="9"/>
+        <text class="num" x="626" y="213">#4 · K4NR</text>
+        <text x="626" y="235">esqueleto: section</text>
+        <text x="626" y="253">em comentário</text>
+        <text class="sub" x="626" y="274">high · P1 · adendo v001</text>
+        <text class="st" x="626" y="292" fill="#4fbf8b">active · delivering</text>
+      </a>
+      <a class="node ext" href="../../templates-studio/bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">
+        <rect x="910" y="190" width="250" height="110" rx="9"/>
+        <text class="num" x="926" y="213">#3 · OI56 — templates-studio</text>
+        <text x="926" y="235">esqueleto sem</text>
+        <text x="926" y="253">marcador @MIRA</text>
+        <text class="sub" x="926" y="274">high · P1 · spec-gap</text>
+        <text class="st" x="926" y="292" fill="#e05260">open · triaging</text>
+      </a>
+
+      <a class="node sev-high" href="../bugs/BUG-20260731-JJ6X-remontagem-sobrescreve-roteiro/bug.md">
+        <rect x="10" y="350" width="250" height="110" rx="9"/>
+        <text class="num" x="26" y="373">#7 · JJ6X</text>
+        <text x="26" y="395">re-montagem apaga</text>
+        <text x="26" y="413">o roteiro.md</text>
+        <text class="sub" x="26" y="434">high · P1 · data-corruption</text>
+        <text class="st" x="26" y="452" fill="#e05260">open · triaging</text>
+      </a>
+    </svg>
+  </div>
+
+  <h3>Cluster A · contrato de formato incompleto</h3>
+  <p class="prose">Três bugs, um arquivo:
+  <code>agents/mira-fast/references/formato-mira-studio.md</code>, escrito em 2026-07-26 a
+  partir de um template que já existia desde 2026-07-12. O contrato transcreveu
+  <code>camera</code> e <code>split</code> corretamente e omitiu o envoltório de
+  <code>capa</code> e de <code>full</code>, que é onde mora o CSS de cada layout. O validador
+  não cobra nenhuma das duas omissões. O que aponta para causa estrutural: o contrato irmão
+  do formato 16:9, escrito no mesmo commit, traz os envoltórios certos. Corrija os três
+  juntos, senão o contrato volta a divergir na próxima mudança do template.</p>
+
+  <h3>Cluster B · <code>&lt;section&gt;</code> como texto</h3>
+  <p class="prose">A mesma regex ingênua em três pontos do código, e em dois deles alguém já
+  contornou o sintoma sem tratar a causa: comentários reescritos numa instalação, e
+  <code>&lt;section&gt;</code> escapado para entidade no <code>build-skeleton.mjs</code>.
+  Quando o mesmo defeito já foi contornado duas vezes por caminhos diferentes, o que falta é
+  um utilitário comum. O ETPU entrou por adjacência, mas vale para qualquer falha tardia.</p>
+
+  <h3>Isolado · JJ6X</h3>
+  <p class="prose">Sem relação com nenhum outro. É o único bug do registro inteiro que
+  destrói trabalho do usuário em vez de estragar o deck gerado, e o único com sinal
+  <code>data-corruption</code>. Pode ser corrigido a qualquer momento, sem depender de nada.</p>
+
+  <h2>Bugs abertos / ativos</h2>
+  <table>
+    <tr><th>#</th><th>ID</th><th>sev</th><th>prio</th><th class="t">título</th><th>origem</th><th>status</th></tr>
+    <tr><td>5</td><td><a href="../bugs/BUG-20260731-VPVV-capa-sem-classe-vira-camera/bug.md">BUG-20260731-VPVV</a></td>
+      <td><span class="pill p-high">high</span></td><td>P1</td>
+      <td class="t">Contrato do mira-studio não exige class="capa" e a capa gerada vira um slide de câmera vazio</td>
+      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
+    <tr><td>7</td><td><a href="../bugs/BUG-20260731-JJ6X-remontagem-sobrescreve-roteiro/bug.md">BUG-20260731-JJ6X</a></td>
+      <td><span class="pill p-high">high</span></td><td>P1</td>
+      <td class="t">Re-montagem sobrescreve o roteiro.md editado pelo usuário sem aviso</td>
+      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
+    <tr><td>9</td><td><a href="../bugs/BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">BUG-20260731-BNO4</a></td>
+      <td><span class="pill p-high">high</span></td><td>P1</td>
+      <td class="t">Folha aprovada pelo validate-run derruba a montagem pela contagem final de section</td>
+      <td>inspection</td><td><span class="pill p-fix">active</span> delivering</td></tr>
+    <tr><td>4</td><td><a href="../bugs/BUG-20260731-K4NR-validador-section-em-comentario/bug.md">BUG-20260731-K4NR</a></td>
+      <td><span class="pill p-high">high</span></td><td>P1</td>
+      <td class="t">validateSkeleton reprova o esqueleto por section citado em comentário de documentação</td>
+      <td>manual-report</td><td><span class="pill p-fix">active</span> delivering</td></tr>
+    <tr><td>6</td><td><a href="../bugs/BUG-20260731-UDTY-full-sem-full-wrap/bug.md">BUG-20260731-UDTY</a></td>
+      <td><span class="pill p-med">medium</span></td><td>P2</td>
+      <td class="t">Contrato do layout full omite .full-wrap e o slide perde a área segura do formato</td>
+      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
+    <tr><td>10</td><td><a href="../bugs/BUG-20260731-ETPU-falha-tardia-deixa-deck-meio-instalado/bug.md">BUG-20260731-ETPU</a></td>
+      <td><span class="pill p-med">medium</span></td><td>P2</td>
+      <td class="t">Falha tardia da montagem deixa o deck meio instalado, com módulos e launcher mas sem HTML</td>
+      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
+    <tr><td>11</td><td><a href="../bugs/BUG-20260731-AMOM-validador-studio-frouxo/bug.md">BUG-20260731-AMOM</a></td>
+      <td><span class="pill p-med">medium</span></td><td>P2</td>
+      <td class="t">Validador de fragmento dos formatos Studio aceita palco sem .anim-stage e svg sem id</td>
+      <td>inspection</td><td><span class="pill p-open">open</span> triaging</td></tr>
+  </table>
+
+  <h2>Correção de 2026-07-31 · K4NR + BNO4</h2>
+  <p class="prose">Os dois foram corrigidos na raiz: a mesma regex ingênua estava em quatro
+  pontos do pipeline, e um deles (<code>validate-run.mjs:131-133</code>) só apareceu durante o
+  diagnóstico. Os quatro passaram a chamar <code>countSections</code>, e a regra do que conta
+  como elemento virou norma no adendo
+  <a href="../../../_reversa_sdd/addenda/bug-BUG-20260731-K4NR-v001.md">bug-BUG-20260731-K4NR-v001.md</a>,
+  item R1d.</p>
+  <table>
+    <tr><th>etapa</th><th>resultado</th></tr>
+    <tr><td>reprodução</td><td>cápsula determinística 3/3 antes, <strong>0/3 depois</strong>, com caso de controle</td></tr>
+    <tr><td>causa raiz</td><td><span class="pill p-fix">confirmed</span> nenhuma função separava marcação de prosa</td></tr>
+    <tr><td>testes</td><td>4 de reprodução vermelho→verde, 4 de regressão verdes o tempo todo</td></tr>
+    <tr><td>suíte completa</td><td><strong>111 tests, 111 pass, 0 fail</strong></td></tr>
+    <tr><td>veredito de spec</td><td>K4NR <code>spec-gap</code> (adendo aditivo) · BNO4 <code>spec-correta</code></td></tr>
+    <tr><td>arquivos tocados</td><td><code>validate-run.mjs</code>, <code>assemble-run.mjs</code>, <code>test/mira-fast-section-count.test.mjs</code></td></tr>
+    <tr><td>fecha?</td><td><strong>não.</strong> Closure policy <code>package</code> exige merge e versão publicada</td></tr>
+  </table>
+  <p class="prose">Ficou de fora por decisão: <code>agents/mira-ultrafast/scripts/build-skeleton.mjs</code>,
+  que tem o mesmo defeito na linha 24 e o contorna escapando a tag para entidade. É arquivo
+  novo, ainda não commitado; o contorno permanece funcionando e vira CHG próprio depois do
+  commit.</p>
+
+  <h2>Concluídos (travados)</h2>
+  <p class="empty">Nenhum bug tem <code>DONE.md</code>. Nada foi fechado neste contexto.</p>
+
+  <h2>Varredura de 2026-07-31</h2>
+  <p class="prose">Seis dos sete bugs deste contexto nasceram no pente-fino
+  (<a href="../inspections/2026-07-31-decks-studio/report.md">report.md</a>), todos
+  reproduzidos em execução num deck <code>mira-studio</code> montado com o template real. Os
+  scripts da reprodução estão em
+  <code>../inspections/2026-07-31-decks-studio/scripts/</code> e são reexecutáveis. Onze
+  achados no total, sete promovidos a bug, quatro mantidos como observação.</p>
+
+</div>
+</body>
+</html>

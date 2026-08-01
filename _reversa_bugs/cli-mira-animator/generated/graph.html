@@ -1,0 +1,143 @@
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T01:30:00Z a partir de 1 bug -->
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Grafo de Bugs · cli-mira-animator</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1120px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:18px;margin:38px 0 12px;letter-spacing:-.01em}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 4px}
+  .legend-note{color:var(--muted);font-size:13px;margin:0 0 24px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:24px 0 8px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:26px;font-weight:650;line-height:1.1}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.green .n{color:var(--green)}.card.blue .n{color:var(--blue)}.card.red .n{color:var(--red)}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+    padding:16px;overflow-x:auto;margin-top:12px}
+  .graph svg{display:block;min-width:640px}
+  .node rect{fill:#1b1e27;stroke-width:1.6}
+  .node:hover rect{fill:#232733}
+  .node text{fill:var(--ink);font-size:13px}
+  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
+  .node .sub{fill:var(--muted);font-size:11.5px}
+  .node .st{font-size:11.5px;font-weight:600}
+  .fixado rect{stroke:var(--green);stroke-width:2.2}
+  .ext rect{stroke:#7f8c8d;stroke-dasharray:4 3}
+  .edge{stroke:var(--green);stroke-width:2;fill:none}
+  .edge-lbl{fill:var(--muted);font-size:11px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  td.t{min-width:300px}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .p-med{color:var(--blue);border-color:var(--blue)}
+  .p-fix{color:var(--green);border-color:var(--green)}
+  p.prose{color:#c9cdd8;max-width:80ch}
+  .empty{color:var(--muted);font-style:italic}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55;color:#c9cdd8}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Grafo de Bugs · cli-mira-animator</h1>
+  <p class="meta">Gerado por <code>/reversa-debugger-graph</code> · 2026-08-01T01:30:00Z ·
+     1 bug neste contexto (2 nós no grafo, 1 de outro contexto) · 0 inconsistências</p>
+  <p class="legend-note">Aresta sólida = relação <strong>supported</strong>, com evidência.
+     Nó com borda verde = corrigido, aguardando entrega.
+     Nó com borda cinza tracejada pertence ao contexto <code>templates-studio</code>.</p>
+
+  <div class="cards">
+    <div class="card"><div class="n">1</div><div class="k">bug no contexto</div></div>
+    <div class="card green"><div class="n">1</div><div class="k">corrigido, entregando</div></div>
+    <div class="card red"><div class="n">0</div><div class="k">abertos</div></div>
+    <div class="card blue"><div class="n">1</div><div class="k">adendo de spec</div></div>
+    <div class="card"><div class="n">0</div><div class="k">inconsistências</div></div>
+  </div>
+
+  <h2>Grafo</h2>
+  <div class="graph">
+    <svg viewBox="0 0 640 180" role="img" aria-label="Grafo de relações do contexto cli-mira-animator">
+      <defs><marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3">
+        <circle cx="3" cy="3" r="2.4" fill="#4fbf8b"/></marker></defs>
+
+      <path class="edge" d="M270 85 H330" marker-start="url(#dot)" marker-end="url(#dot)"/>
+      <text class="edge-lbl" x="300" y="76" text-anchor="middle">caused-by</text>
+      <text class="edge-lbl" x="300" y="102" text-anchor="middle">supported</text>
+
+      <a class="node fixado" href="../bugs/BUG-20260801-VPUH-theme-ignorado-em-silencio/bug.md">
+        <rect x="10" y="30" width="260" height="110" rx="9"/>
+        <text class="num" x="26" y="53">#12 · VPUH</text>
+        <text x="26" y="75">--theme ignorado</text>
+        <text x="26" y="93">em silêncio</text>
+        <text class="sub" x="26" y="114">medium · P2 · impact 1</text>
+        <text class="st" x="26" y="132" fill="#4fbf8b">active · delivering</text>
+      </a>
+
+      <a class="node ext" href="../../templates-studio/bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">
+        <rect x="330" y="30" width="300" height="110" rx="9"/>
+        <text class="num" x="346" y="53">#3 · OI56 — templates-studio</text>
+        <text x="346" y="75">Fase 1 parte do</text>
+        <text x="346" y="93">template cru</text>
+        <text class="sub" x="346" y="114">high · P1</text>
+        <text class="st" x="346" y="132" fill="#4fbf8b">active · delivering</text>
+      </a>
+    </svg>
+  </div>
+
+  <p class="prose">Contexto de um bug só, e ele é a ponta de uma corrente que atravessa três
+  contextos e doze bugs. A aresta diz que a metade Studio do OI56 era <strong>causada</strong>
+  por este defeito: mesmo obtendo o esqueleto pelo caminho canônico, ele continuava reprovando
+  por falta do bloco <code>@MIRA:THEME</code>. Por isso os dois foram corrigidos na mesma
+  sessão. O grafo completo está em
+  <a href="../../templates-studio/generated/graph.html">templates-studio</a>.</p>
+
+  <h2>O que mudou em 2026-08-01</h2>
+  <p class="prose">O defeito era o CLI aplicar o tema por <code>String.replace</code>: sem
+  correspondência, o replace devolve a string intacta, sem erro, e a mensagem final declarava
+  sucesso mesmo assim. Três dos oito templates não traziam o par de marcadores.</p>
+  <pre>antes                                            depois
+Template: mira-studio-demo | Tema: mira-dark  →  Tema: próprio do template (theme-agnóstico)
+Template: mira-default     | Tema: mira-dark  →  Tema: mira-dark   (segue temável)</pre>
+  <table>
+    <tr><th>etapa</th><th>resultado</th></tr>
+    <tr><td>causa raiz</td><td><span class="pill p-fix">confirmed</span> replace sem correspondência falha calado</td></tr>
+    <tr><td>correção</td><td>3 templates ganham o par de marcadores; <code>animationOnly</code> vira o conjunto exportado <code>THEME_AGNOSTIC</code>; o CLI avisa quando o replace não casa</td></tr>
+    <tr><td>risco visual</td><td><strong>zero</strong>: nenhuma linha de CSS efetivo mudou, só comentários delimitadores</td></tr>
+    <tr><td>suíte completa</td><td><strong>119 tests, 119 pass, 0 fail</strong></td></tr>
+    <tr><td>veredito de spec</td><td><code>spec-gap</code>, adendo aditivo com R7b, R7c e R7d</td></tr>
+    <tr><td>fecha?</td><td><strong>não.</strong> Closure policy <code>package</code> exige merge e versão publicada</td></tr>
+  </table>
+  <p class="prose">Decisão de produto registrada no adendo: os Studio e a mesa tática entraram
+  em <code>THEME_AGNOSTIC</code> em vez de virarem temáveis, porque o <code>base.css</code> que
+  viria junto do tema atropelaria o layout deles. Torná-los temáveis continua possível, como
+  feature, com verificação visual — que este ambiente não permite fazer.</p>
+
+  <h2>Bugs abertos / ativos</h2>
+  <table>
+    <tr><th>#</th><th>ID</th><th>sev</th><th>prio</th><th class="t">título</th><th>origem</th><th>status</th></tr>
+    <tr><td>12</td>
+      <td><a href="../bugs/BUG-20260801-VPUH-theme-ignorado-em-silencio/bug.md">BUG-20260801-VPUH</a></td>
+      <td><span class="pill p-med">medium</span></td><td>P2</td>
+      <td class="t">npx mira-animator new ignora --theme em silêncio quando o template não traz o marcador @MIRA:THEME</td>
+      <td>inspection</td><td><span class="pill p-fix">active</span> delivering</td></tr>
+  </table>
+
+  <h2>Concluídos (travados)</h2>
+  <p class="empty">Nenhum bug tem <code>DONE.md</code>. Nada foi fechado neste contexto.</p>
+
+</div>
+</body>
+</html>

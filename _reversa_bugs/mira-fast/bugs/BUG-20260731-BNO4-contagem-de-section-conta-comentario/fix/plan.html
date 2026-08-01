@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · BNO4 (compartilhado com K4NR)</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:760px;margin:0 auto;padding:56px 20px}
+  h1{font-size:23px;margin:0 0 10px;letter-spacing:-.01em}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px 22px;margin:20px 0}
+  .box.go{border-color:var(--green)}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  p,li{color:#c9cdd8}
+  .big{font-size:17px;font-weight:600}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Plano de correção · BUG-20260731-BNO4</h1>
+  <p>Este bug está sendo corrigido junto com o <strong>BUG-20260731-K4NR</strong>: os dois têm a
+  mesma causa raiz e o mesmo change set. Para não manter duas cópias que divergem, o plano é
+  único e vive na pasta do K4NR.</p>
+
+  <div class="box go">
+    <p class="big">→ <a href="../../BUG-20260731-K4NR-validador-section-em-comentario/fix/plan.html">Abrir o plano de correção</a></p>
+  </div>
+
+  <div class="box">
+    <p>O que é deste bug, dentro daquele plano:</p>
+    <ul>
+      <li><strong>CHG-001</strong>: teste de reprodução do comentário no JS da folha, e teste de
+          regressão da saída com <code>section</code> a mais.</li>
+      <li><strong>CHG-002</strong>: a contagem do fragmento em
+          <code>validate-run.mjs:131-133</code>, manifestação nova encontrada no diagnóstico e
+          que o critério de aceite 3 deste bug já exigia.</li>
+      <li><strong>CHG-003</strong>: a contagem final em <code>assemble-run.mjs:339</code>, mais a
+          mensagem de erro passando a dizer qual slide contribuiu com o excesso.</li>
+    </ul>
+    <p>Veredito de spec recomendado para este bug: <code>spec-correta</code>. A spec já
+    estabelece que fragmento aprovado pelo validador é montável; foi o código que divergiu.</p>
+  </div>
+
+  <div class="box">
+    <p>Reprodução: <a href="../evidence/reproduction.md">cápsula</a> ·
+       <a href="../evidence/como-reproduzir.md">o que este bug reproduz</a> ·
+       <a href="../evidence/execucao.md">execução do pente-fino</a></p>
+    <p>Registro: <a href="../bug.md">bug.md deste bug</a> ·
+       <a href="../../BUG-20260731-K4NR-validador-section-em-comentario/bug.md">bug.md do K4NR</a></p>
+  </div>
+</div>
+</body>
+</html>

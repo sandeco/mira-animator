@@ -1,0 +1,27 @@
+diff --git a/templates/decks/mira-studio-demo/index.html b/templates/decks/mira-studio-demo/index.html
+index ede8b27..a5db515 100644
+--- a/templates/decks/mira-studio-demo/index.html
++++ b/templates/decks/mira-studio-demo/index.html
+@@ -18,12 +18,22 @@
+         :root {
+             --fmt-w: calc(100vh * 9 / 16);   /* coluna 9:16 cravada (saída OBS 1080x1920) */
+             --fmt-h: 100vh;
++        }
++        /* @MIRA:THEME:START */
++        /* Tema próprio deste formato. O template é THEME-AGNÓSTICO: o
++           "npx mira-animator new --theme=..." NÃO substitui este bloco (ver
++           THEME_AGNOSTIC em lib/commands/new.js). Os marcadores existem para o
++           contrato de esqueleto do /mira-fast, que exige o bloco @MIRA:THEME.
++           As variáveis de FORMATO (--fmt-*) ficam de fora de propósito: se um
++           dia este template passar a aceitar tema, elas não podem ser perdidas. */
++        :root {
+             --accent: #FF904D;
+             --bg: #0d0d0f;
+             --ink: #f4f4f5;
+             --muted: rgba(244, 244, 245, .58);
+             --line: rgba(255, 255, 255, .12);
+         }
++        /* @MIRA:THEME:END */
+         * { margin: 0; padding: 0; box-sizing: border-box; }
+         html { background: #333333; scroll-behavior: smooth; scroll-snap-type: y proximity; }
+         body {

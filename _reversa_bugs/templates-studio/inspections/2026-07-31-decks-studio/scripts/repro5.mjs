@@ -1,0 +1,23 @@
+import { readFileSync, writeFileSync, rmSync, cpSync } from 'node:fs';
+import { join } from 'node:path';
+import { validateSlideFile } from '/workspaces/.mira/agents/mira-fast/scripts/validate-run.mjs';
+const B='/tmp/claude-1000/-workspaces--mira/29f9cf5b-8d42-421c-8dee-88b6bc1e9364/scratchpad/pentefino';
+const src = join(B,'decks','2026-07-31 pente-fino-studio');
+const d = join(B,'exp5'); rmSync(d,{recursive:true,force:true}); cpSync(src,d,{recursive:true});
+console.log('=== EXP 5: fragmento Studio SEM class="anim-stage" e SEM id do svg ===');
+let f = readFileSync(join(d,'mira/fast/slide-03.html'),'utf8');
+f = f.replace('<div class="anim-stage" id="hub-central-stage"><svg id="hub-central-svg" viewBox="0 0 960 960">',
+              '<div id="hub-central-stage"><svg viewBox="0 0 960 960">');
+writeFileSync(join(d,'mira/fast/slide-03.html'), f);
+const v = validateSlideFile(d, 3);
+console.log('validate-run aprova?', v.ok, v.errors);
+console.log('\n=== EXP 6: mesmo fragmento no formato mira (para comparar) ===');
+const d2 = join(B,'exp6'); rmSync(d2,{recursive:true,force:true}); cpSync(src,d2,{recursive:true});
+const plano = JSON.parse(readFileSync(join(d2,'mira/fast/plano.json'),'utf8'));
+plano.formato='mira'; plano.arquivo_saida='index.html';
+for (const s of plano.slides) delete s.layout;
+writeFileSync(join(d2,'mira/fast/plano.json'), JSON.stringify(plano,null,2));
+writeFileSync(join(d2,'mira/fast/slide-03.html'), f);
+const v2 = validateSlideFile(d2, 3);
+console.log('validate-run aprova no formato mira?', v2.ok);
+console.log('erros que SO o formato mira cobra:', v2.errors.filter(e=>/anim-stage|svg|viewBox|slide-main/.test(e)));

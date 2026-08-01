@@ -1,0 +1,340 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · K4NR + BNO4</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:40px 0 10px;letter-spacing:-.01em;
+     border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:20px;font-weight:650;line-height:1.2}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.red .n{color:var(--red)}.card.green .n{color:var(--green)}
+  .card.yellow .n{color:var(--yellow)}.card.blue .n{color:var(--blue)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .box.warn{border-color:var(--yellow)}
+  .box.ok{border-color:var(--green)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre .add{color:var(--green)}pre .del{color:var(--red)}pre .ctx{color:var(--muted)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .p-high{color:var(--yellow);border-color:var(--yellow)}
+  .p-open{color:var(--red);border-color:var(--red)}
+  .p-conf{color:var(--green);border-color:var(--green)}
+  .p-prop{color:var(--muted);border-color:var(--muted)}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+  .graph svg{display:block;min-width:900px}
+  .node rect{fill:#1b1e27;stroke-width:1.6}
+  .node:hover rect{fill:#232733}
+  .node text{fill:var(--ink);font-size:13px}
+  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
+  .node .sub{fill:var(--muted);font-size:11.5px}
+  .focus rect{stroke:var(--green);stroke-width:2.4}
+  .sev-high rect{stroke:var(--red)}.sev-medium rect{stroke:var(--yellow)}
+  .ext rect{stroke:#7f8c8d;stroke-dasharray:4 3}
+  .edge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+  .edge-lbl{fill:var(--muted);font-size:11px}
+  ol.steps{color:#c9cdd8;max-width:82ch}
+  ol.steps li{margin-bottom:6px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · BUG-20260731-K4NR + BUG-20260731-BNO4</h1>
+<p class="meta">Contexto <code>mira-fast</code> · 2026-07-31 · estratégia: correção direta ·
+   <strong>ainda não toquei nenhum arquivo do projeto</strong></p>
+
+<div class="cards">
+  <div class="card red"><div class="n">2 bugs</div><div class="k">nesta correção</div></div>
+  <div class="card"><div class="n">#4 e #9</div><div class="k">display numbers</div></div>
+  <div class="card yellow"><div class="n">high · P1</div><div class="k">os dois</div></div>
+  <div class="card green"><div class="n">baixa</div><div class="k">change risk</div></div>
+  <div class="card blue"><div class="n">4 CHG</div><div class="k">change set proposto</div></div>
+</div>
+
+<h2>1. O defeito</h2>
+<p class="prose">Dois bugs, uma pergunta mal respondida em quatro lugares: <em>existe um
+elemento <code>section</code> aqui?</em> Cada ponto responde aplicando uma regex sobre o texto
+bruto do arquivo. Texto bruto inclui comentário HTML, comentário JavaScript e o conteúdo de
+<code>&lt;script&gt;</code> e <code>&lt;style&gt;</code>. Uma frase de documentação que
+mencione a tag vale tanto quanto a tag.</p>
+
+<table>
+  <tr><th>bug</th><th>onde</th><th>o que acontece</th></tr>
+  <tr><td><a href="../bug.md">K4NR #4</a></td>
+      <td><code>assemble-run.mjs:233</code>, <code>validateSkeleton</code></td>
+      <td>comentário do esqueleto citando a tag reprova o esqueleto inteiro</td></tr>
+  <tr><td><a href="../../BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">BNO4 #9</a></td>
+      <td><code>assemble-run.mjs:339</code>, contagem final</td>
+      <td>comentário no JS da folha infla a contagem e mata a montagem no fim</td></tr>
+</table>
+
+<div class="box warn">
+  <h3>Manifestação nova, encontrada no diagnóstico</h3>
+  <p class="prose">Procurando todos os pontos com o mesmo padrão, achei um terceiro em
+  <code>validate-run.mjs:131-133</code> que nenhum dos dois bugs descrevia. Um comentário HTML
+  dentro do bloco de HTML do fragmento desbalanceia a contagem do próprio fragmento:</p>
+<pre><span class="ctx">sem comentario :</span> []
+<span class="ctx">com &lt;section&gt;  :</span> <span class="del">["section inválida: 2 abertura(s), 1 fechamento(s)"]</span></pre>
+  <p class="prose">Não abri bug novo: o critério de aceite 3 do BNO4 já exige que
+  <code>validate-run</code> e <code>assemble-run</code> usem o mesmo critério num único ponto.
+  Entra nesta correção e fica registrado na Resolution.</p>
+</div>
+
+<h2>2. Causa raiz</h2>
+<div class="box">
+  <p><span class="pill p-conf">confirmed</span> &nbsp;Não existe, em lugar nenhum do pipeline,
+  uma função que separe marcação de prosa. Cada ponto reimplementou a mesma pergunta com a
+  mesma resposta errada.</p>
+  <h3>Caminho causal</h3>
+  <ol class="steps">
+    <li>Um comentário legítimo cita <code>&lt;section&gt;</code> ao explicar a estrutura.</li>
+    <li>O trecho analisado (esqueleto, saída final ou fragmento) contém esse texto.</li>
+    <li><code>/&lt;section\b/i</code> casa com o texto do comentário.</li>
+    <li>A checagem conclui que existe um elemento onde há apenas uma frase.</li>
+    <li>Erro: esqueleto reprovado, contagem inflada, ou fragmento dado como desbalanceado.</li>
+  </ol>
+  <h3>Evidências</h3>
+  <ul class="steps">
+    <li><a href="../evidence/reproduction.md">Cápsula de reprodução</a>: 3/3 nos dois casos,
+        determinístico, com caso de controle que monta com sucesso trocando
+        <code>&lt;section&gt;</code> por <code>secoes</code> no mesmo comentário.</li>
+    <li><a href="../evidence/reproduce.mjs">reproduce.mjs</a>: harness hermético, exit 0 hoje,
+        exit 1 depois da correção.</li>
+    <li><a href="../evidence/codigo-observado.md">codigo-observado.md</a>: os quatro pontos com
+        arquivo e linha, e as 12 menções documentais do template que servem de gatilho.</li>
+  </ul>
+</div>
+
+<div class="box">
+  <h3>Descoberta de escopo</h3>
+  <p class="prose">A cápsula reproduz no formato <strong><code>mira-vertical</code></strong>, não
+  nos Studio. De propósito: o defeito não é dos templates Studio, é do validador e da contagem,
+  que valem para os quatro formatos. O relato original sugeria um problema do
+  <code>mira-studio</code>; ele é do pipeline inteiro.</p>
+</div>
+
+<h2>3. Estratégia</h2>
+<p class="prose"><strong>Correção direta.</strong> Não há hipóteses concorrentes a debater: a
+causa raiz foi reproduzida e o caso de controle isola a variável. O que existe é uma decisão de
+projeto pequena, que já resolvo aqui: em vez de consertar quatro regexes, crio <em>uma</em>
+função que responde a pergunta, e os quatro pontos passam a chamá-la. Sem isso, o quinto ponto
+nasce com o mesmo defeito, como já aconteceu duas vezes.</p>
+
+<h3>A função</h3>
+<pre>export function <span class="add">stripNonMarkup</span>(value) {
+  return value
+    .replace(/&lt;!--[\s\S]*?--&gt;/g, '')                                <span class="ctx">// comentário HTML</span>
+    .replace(/(&lt;script\b[^&gt;]*&gt;)[\s\S]*?(&lt;\/script&gt;)/gi, '$1$2')  <span class="ctx">// conteúdo de script</span>
+    .replace(/(&lt;style\b[^&gt;]*&gt;)[\s\S]*?(&lt;\/style&gt;)/gi, '$1$2');   <span class="ctx">// conteúdo de style</span>
+}
+
+export function <span class="add">countSections</span>(value) {
+  return (stripNonMarkup(value).match(/&lt;section\b/gi) ?? []).length;
+}
+
+export function <span class="add">countClosingSections</span>(value) {
+  return (stripNonMarkup(value).match(/&lt;\/section&gt;/gi) ?? []).length;
+}</pre>
+<p class="prose">Mora em <code>validate-run.mjs</code>, que o <code>assemble-run.mjs</code> já
+importa. Nenhum arquivo novo, nenhuma mudança no que o instalador copia.</p>
+
+<div class="box warn">
+  <h3>Cuidado que o fix precisa respeitar</h3>
+  <p class="prose">A remoção de comentários vale <strong>só dentro da contagem</strong>, nunca na
+  variável compartilhada. Se <code>htmlBlock</code> fosse limpo de comentários antes das outras
+  checagens, a verificação de <code>&lt;!-- @MIRA:SIZE 3/10 --&gt;</code>
+  (<code>validate-run.mjs:138</code>) passaria a falhar sempre, e os marcadores de envelope
+  <code>@MIRA:FAST</code> sumiriam. Aplicar localizado, em cada ponto de contagem.</p>
+</div>
+
+<h2>4. Correction Change Set proposto</h2>
+<table>
+  <tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr>
+  <tr><td>CHG-001</td><td><code>test</code></td><td><code>test/mira-fast-section-count.test.mjs</code></td>
+      <td>testes de reprodução e regressão. Aplicados e demonstrados <strong>vermelhos</strong> antes de qualquer código.</td></tr>
+  <tr><td>CHG-002</td><td><code>code</code></td><td><code>agents/mira-fast/scripts/validate-run.mjs</code></td>
+      <td>cria <code>stripNonMarkup</code>, <code>countSections</code> e <code>countClosingSections</code>; passa a contagem do fragmento (131-133) a usá-las.</td></tr>
+  <tr><td>CHG-003</td><td><code>code</code></td><td><code>agents/mira-fast/scripts/assemble-run.mjs</code></td>
+      <td>linha 233 e linha 339 passam a usar <code>countSections</code>. Mensagem de erro da contagem passa a dizer qual slide contribuiu com o excesso.</td></tr>
+  <tr><td>CHG-004</td><td><code>specification</code></td><td><code>_reversa_sdd/addenda/bug-BUG-20260731-K4NR-v001.md</code></td>
+      <td>adendo aditivo: especifica pela primeira vez as checagens de esqueleto e de saída, e a regra de que menção em comentário não é elemento.</td></tr>
+</table>
+
+<h3>Fora do change set, por decisão</h3>
+<div class="box">
+  <p class="prose"><code>agents/mira-ultrafast/scripts/build-skeleton.mjs</code> tem o mesmo
+  defeito na linha 24 e o contorna escapando <code>&lt;section&gt;</code> para entidade nas
+  linhas 54 e 69. O critério de aceite 4 do K4NR pede que ele use o mesmo critério e que o
+  escape deixe de ser necessário.</p>
+  <p class="prose"><strong>Não vou tocar nele sem você mandar.</strong> É arquivo novo, ainda
+  não commitado, trabalho em andamento seu. Mexer em código não versionado de outra pessoa é
+  como perder trabalho sem deixar rastro no git. Se você quiser, faço como CHG-005 num gate
+  separado; se não, registro em Agent Notes que o contorno permanece e por quê.</p>
+</div>
+
+<h2>5. Testes planejados</h2>
+<table>
+  <tr><th>teste</th><th>tipo</th><th>o que prova</th></tr>
+  <tr><td><code>esqueleto com &lt;section&gt; citado em comentário monta</code></td><td>reprodução</td>
+      <td>o defeito do K4NR aparece hoje e some depois</td></tr>
+  <tr><td><code>folha com &lt;section&gt; em comentário no JS monta</code></td><td>reprodução</td>
+      <td>o defeito do BNO4 aparece hoje e some depois</td></tr>
+  <tr><td><code>fragmento com &lt;section&gt; em comentário HTML é aceito</code></td><td>reprodução</td>
+      <td>a manifestação nova em <code>validateFragment</code></td></tr>
+  <tr><td><code>&lt;section&gt; real fora do slot continua reprovando</code></td><td>regressão</td>
+      <td>a proteção não foi afrouxada: o motivo da checagem existir continua valendo</td></tr>
+  <tr><td><code>saída com section a mais continua reprovando</code></td><td>regressão</td>
+      <td>a contagem continua pegando slide duplicado de verdade</td></tr>
+  <tr><td><code>fragmento com duas sections reais continua reprovando</code></td><td>regressão</td>
+      <td>o balanceamento do fragmento continua valendo</td></tr>
+</table>
+<p class="prose">Reprodução e regressão são intenções distintas aqui, não só arquivos: os três
+primeiros provam que o defeito existia; os três últimos protegem o que não pode voltar a
+quebrar quando alguém afrouxar a regex no futuro.</p>
+
+<h2>6. Riscos</h2>
+<div class="box ok">
+  <p><strong>change_risk: baixa.</strong></p>
+  <table>
+    <tr><th>eixo</th><th>avaliação</th></tr>
+    <tr><td>blast radius</td><td>4 pontos em 2 arquivos, todos lógica de validação do pipeline de build</td></tr>
+    <tr><td>contrato externo</td><td>nenhum: são scripts internos, sem API pública nem consumidor fora do repo</td></tr>
+    <tr><td>dados</td><td>nenhum estado histórico envolvido; não há reparo de dados</td></tr>
+    <tr><td>concorrência</td><td>funções puras, sem estado compartilhado</td></tr>
+    <tr><td>reversibilidade</td><td>total pelo diff; nada de migração ou efeito colateral</td></tr>
+  </table>
+</div>
+<h3>O risco real do fix, e como o teste cobre</h3>
+<p class="prose">O jeito errado de corrigir isto é afrouxar a checagem até ela parar de
+proteger. Um <code>&lt;section&gt;</code> de verdade fora do slot continua sendo um defeito e
+precisa continuar reprovando. Por isso metade dos testes é de regressão nessa direção, não na
+direção do bug.</p>
+
+<h3>O que fica de fora</h3>
+<ul class="steps">
+  <li><code>build-skeleton.mjs</code>, salvo se você aprovar o CHG-005 (acima).</li>
+  <li>Nenhuma refatoração de passagem. Os outros bugs do contexto não entram nesta correção.</li>
+  <li>Fechamento completo: a closure policy é <code>package</code>, então isto termina em
+      <code>active</code>/<code>delivering</code>. Só vira <code>resolved</code> com merge e
+      versão publicada, e só aí a trava <code>DONE.md</code> é gravada.</li>
+</ul>
+
+<h2>7. Veredito de spec que vou recomendar</h2>
+<table>
+  <tr><th>bug</th><th>recomendação</th><th>porquê</th></tr>
+  <tr><td>K4NR #4</td><td><code>spec-gap</code></td>
+      <td><code>05-fase-3-montagem.md#R1</code> especifica V1 a V8 sobre os fragmentos. As checagens de esqueleto e de saída, e a definição do que conta como <code>section</code>, existem só no código. Adendo aditivo.</td></tr>
+  <tr><td>BNO4 #9</td><td><code>spec-correta</code></td>
+      <td><code>04#R6</code> e <code>04#R9</code> já estabelecem que fragmento aprovado pelo validador é montável. O código divergiu da spec; a spec não muda.</td></tr>
+</table>
+<p class="prose">A decisão é sua, no menu, depois que os testes passarem. Isto é recomendação
+com evidência, não fato consumado.</p>
+
+<h2>8. O bug no grafo</h2>
+<div class="graph">
+  <svg viewBox="0 0 940 320" role="img" aria-label="Relações dos bugs desta correção">
+    <defs><marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3">
+      <circle cx="3" cy="3" r="2.4" fill="#9aa0ae"/></marker></defs>
+
+    <path class="edge" d="M260 85 H320" marker-start="url(#dot)" marker-end="url(#dot)"/>
+    <text class="edge-lbl" x="290" y="76" text-anchor="middle">related-to</text>
+    <path class="edge" d="M570 85 H630" marker-start="url(#dot)" marker-end="url(#dot)"/>
+    <text class="edge-lbl" x="600" y="76" text-anchor="middle">related-to</text>
+    <path class="edge" d="M445 140 V200" marker-start="url(#dot)" marker-end="url(#dot)"/>
+    <text class="edge-lbl" x="455" y="175">related-to</text>
+
+    <a class="node sev-medium" href="../../BUG-20260731-ETPU-falha-tardia-deixa-deck-meio-instalado/bug.md">
+      <rect x="10" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="26" y="53">#10 · ETPU</text>
+      <text x="26" y="76">deck meio instalado</text>
+      <text x="26" y="94">na falha tardia</text>
+      <text class="sub" x="26" y="116">medium · P2 · open</text>
+      <text class="sub" x="26" y="132">não entra nesta correção</text>
+    </a>
+
+    <a class="node focus" href="../../BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">
+      <rect x="320" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="336" y="53">#9 · BNO4 — EM CORREÇÃO</text>
+      <text x="336" y="76">contagem final conta</text>
+      <text x="336" y="94">comentário da folha</text>
+      <text class="sub" x="336" y="116">high · P1 · open</text>
+      <text class="sub" x="336" y="132">CHG-001, 002, 003</text>
+    </a>
+
+    <a class="node focus" href="../bug.md">
+      <rect x="630" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="646" y="53">#4 · K4NR — EM CORREÇÃO</text>
+      <text x="646" y="76">esqueleto: section</text>
+      <text x="646" y="94">em comentário</text>
+      <text class="sub" x="646" y="116">high · P1 · spec-gap</text>
+      <text class="sub" x="646" y="132">CHG-001, 003, 004</text>
+    </a>
+
+    <a class="node ext" href="../../../../templates-studio/bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">
+      <rect x="320" y="200" width="250" height="110" rx="9"/>
+      <text class="num" x="336" y="223">#3 · OI56 — templates-studio</text>
+      <text x="336" y="246">esqueleto sem</text>
+      <text x="336" y="264">marcador @MIRA</text>
+      <text class="sub" x="336" y="286">high · P1 · open</text>
+      <text class="sub" x="336" y="302">próximo da fila</text>
+    </a>
+  </svg>
+</div>
+
+<h3>Matriz de relações</h3>
+<table>
+  <tr><th>origem</th><th>tipo</th><th>destino</th><th>estado hoje</th><th>depois desta correção</th></tr>
+  <tr><td><a href="../../BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">BNO4 #9</a></td>
+      <td>related-to</td>
+      <td><a href="../bug.md">K4NR #4</a></td>
+      <td><span class="pill p-prop">proposed</span></td>
+      <td><span class="pill p-conf">supported</span> — mesma causa raiz, provada pela cápsula</td></tr>
+  <tr><td><a href="../../BUG-20260731-BNO4-contagem-de-section-conta-comentario/bug.md">BNO4 #9</a></td>
+      <td>related-to</td>
+      <td><a href="../../BUG-20260731-ETPU-falha-tardia-deixa-deck-meio-instalado/bug.md">ETPU #10</a></td>
+      <td><span class="pill p-prop">proposed</span></td>
+      <td><span class="pill p-conf">supported</span> — a falha do BNO4 é o que expõe o ETPU</td></tr>
+  <tr><td><a href="../../../../templates-studio/bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/bug.md">OI56 #3</a></td>
+      <td>related-to</td>
+      <td><a href="../bug.md">K4NR #4</a></td>
+      <td><span class="pill p-prop">proposed</span></td>
+      <td><span class="pill p-prop">proposed</span> — coocorrem, sem evidência de vínculo causal</td></tr>
+</table>
+
+<h2>9. Ordem sugerida daqui em diante</h2>
+<ol class="steps">
+  <li><strong>Agora: K4NR + BNO4.</strong> Causa estrutural, sem decisão de projeto pendente, destrava a montagem.</li>
+  <li><strong>OI56 #3</strong>, que precisa antes do veredito sobre quem é dono dos marcadores de esqueleto.</li>
+  <li><strong>VPVV #5, UDTY #6, AMOM #11</strong> juntos: contrato de formato e validador na mesma correção.</li>
+  <li><strong>S3TX #2</strong> e <strong>JZNJ #1</strong>, que dependem do veredito sobre a autoridade do <code>roteiro.md</code>.</li>
+  <li><strong>JJ6X #7</strong> e <strong>RNYU #8</strong>, independentes, podem ir em paralelo a qualquer momento.</li>
+</ol>
+
+<div class="box warn">
+  <p><strong>Nada foi alterado ainda.</strong> Aprovando este plano, o próximo passo é o Gate 1:
+  mostro o diff dos testes, aplico, e demonstro que eles falham. Só depois vem o Gate 2 com o
+  diff do código.</p>
+</div>
+
+</div>
+</body>
+</html>

@@ -1,0 +1,123 @@
+diff --git a/test/mira-fast-esqueleto-real.test.mjs b/test/mira-fast-esqueleto-real.test.mjs
+new file mode 100644
+index 0000000..a2cb43c
+--- /dev/null
++++ b/test/mira-fast-esqueleto-real.test.mjs
+@@ -0,0 +1,117 @@
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { dirname, join } from 'node:path';
++import { fileURLToPath } from 'node:url';
++import { SLOT_MARKERS, validateSkeleton } from '../agents/mira-fast/scripts/assemble-run.mjs';
++import { ensureResponsive } from '../lib/utils/responsive.js';
++import { DECK_PADRAO, THEME_AGNOSTIC } from '../lib/commands/new.js';
++
++/**
++ * BUG-20260731-OI56 e BUG-20260801-VPUH.
++ *
++ * A Fase 1 do /mira-fast monta o esqueleto a partir de um template real. A spec
++ * 01#R7 manda preferir o caminho canônico (`npx mira-animator new`), que injeta o
++ * tema e a camada responsiva; a cópia manual do arquivo é fallback.
++ *
++ * Nenhum teste do repositório alimentava o pipeline com template real: o fixture de
++ * mira-fast-assemble.test.mjs constrói o esqueleto à mão, já com todos os blocos.
++ * Por isso os quatro formatos podiam nascer com esqueleto reprovado sem nenhum
++ * vermelho. Este arquivo fecha essa lacuna.
++ */
++
++const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
++
++const TEMPLATE = {
++  mira: 'templates/decks/mira-default/index.html',
++  'mira-vertical': 'templates/decks/mira-default/index.html',
++  'mira-studio': 'templates/decks/mira-studio-demo/index.html',
++  'mira-studio-full': 'templates/decks/mira-studio-full-demo/index-16x9.html',
++};
++
++const SECTION_RE = /^[ \t]*<section\b[^>]*>[\s\S]*?^[ \t]*<\/section>[ \t]*\n?/gmi;
++
++/**
++ * Reproduz o que a Fase 1 deve fazer pelo caminho canônico: parte do template real,
++ * deixa o CLI injetar a camada responsiva, remove os slides de exemplo e abre os
++ * seis slots. Não duplica nenhuma checagem do validador: quem valida é validateSkeleton.
++ */
++function esqueletoReal(format) {
++  let html = readFileSync(join(ROOT, TEMPLATE[format]), 'utf8').replace(/\r\n?/g, '\n');
++  html = ensureResponsive(html).html;
++
++  // Só as sections do <body> são slides. O mira-default documenta a estrutura
++  // com uma <section> de exemplo no cabeçalho, antes do <body>, e trocá-la pelo
++  // slot colocaria os slides dentro do <head>.
++  const corpo = html.search(/<body\b[^>]*>/i);
++  assert.ok(corpo >= 0, `template de ${format} sem <body>`);
++  const cabeca = html.slice(0, corpo);
++  let resto = html.slice(corpo);
++
++  let posto = false;
++  resto = resto.replace(SECTION_RE, () => {
++    if (posto) return '';
++    posto = true;
++    return `${SLOT_MARKERS.slidesStart}\n${SLOT_MARKERS.slidesEnd}\n`;
++  });
++  assert.ok(posto, `template de ${format} sem slide de exemplo reconhecível`);
++
++  html = cabeca + resto;
++  html = html.replace('</head>', `${SLOT_MARKERS.cssStart}\n${SLOT_MARKERS.cssEnd}\n</head>`);
++  html = html.replace('</body>', `${SLOT_MARKERS.jsStart}\n${SLOT_MARKERS.jsEnd}\n</body>`);
++  return html;
++}
++
++/* ---------- REPRODUÇÃO ---------- */
++
++for (const format of ['mira-studio', 'mira-studio-full']) {
++  test(`OI56/VPUH: esqueleto real de ${format} passa em validateSkeleton`, () => {
++    assert.deepEqual(validateSkeleton(esqueletoReal(format), format), []);
++  });
++}
++
++for (const [format, caminho] of [
++  ['mira-studio', TEMPLATE['mira-studio']],
++  ['mira-studio-full', TEMPLATE['mira-studio-full']],
++]) {
++  test(`VPUH: template de ${format} traz o marcador @MIRA:THEME`, () => {
++    const html = readFileSync(join(ROOT, caminho), 'utf8');
++    assert.ok(
++      html.includes('/* @MIRA:THEME:START */') && html.includes('/* @MIRA:THEME:END */'),
++      `${caminho} sem o par de marcadores; npx mira-animator new --theme não tem onde escrever`,
++    );
++  });
++}
++
++/* ---------- REGRESSÃO ---------- */
++
++for (const format of ['mira', 'mira-vertical']) {
++  test(`regressão: esqueleto real de ${format} continua passando em validateSkeleton`, () => {
++    assert.deepEqual(validateSkeleton(esqueletoReal(format), format), []);
++  });
++}
++
++test('regressão: o bloco @MIRA:RESPONSIVE é do CLI, não do template', () => {
++  for (const [format, caminho] of Object.entries(TEMPLATE)) {
++    const cru = readFileSync(join(ROOT, caminho), 'utf8');
++    assert.ok(
++      !cru.includes('/* @MIRA:RESPONSIVE:START */'),
++      `${format}: template passou a trazer o bloco; a premissa do BUG-20260731-OI56 mudou`,
++    );
++    assert.equal(
++      ensureResponsive(cru).action,
++      'inserted',
++      `${format}: ensureResponsive deixou de inserir o bloco`,
++    );
++  }
++});
++
++test('regressão: mira-default continua temável, com o marcador e fora do conjunto agnóstico', () => {
++  const html = readFileSync(join(ROOT, 'templates/decks/mira-default/index.html'), 'utf8');
++  assert.ok(html.includes('/* @MIRA:THEME:START */'), 'mira-default perdeu o marcador @MIRA:THEME');
++  assert.equal(DECK_PADRAO, 'mira-default', 'mira-default deixou de ser o deck padrão');
++  assert.ok(
++    !THEME_AGNOSTIC.has('mira-default'),
++    'mira-default entrou no conjunto theme-agnóstico; ele aceita tema de propósito',
++  );
++});

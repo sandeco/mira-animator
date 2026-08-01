@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · OI56 + VPUH</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px;letter-spacing:-.01em}
+  h2{font-size:19px;margin:38px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:20px;font-weight:650;line-height:1.2}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.red .n{color:var(--red)}.card.green .n{color:var(--green)}
+  .card.yellow .n{color:var(--yellow)}.card.blue .n{color:var(--blue)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin:14px 0}
+  .box.warn{border-color:var(--yellow)}.box.ok{border-color:var(--green)}.box.bad{border-color:var(--red)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em;font-weight:600}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55}
+  pre .add{color:var(--green)}pre .del{color:var(--red)}pre .ctx{color:var(--muted)}
+  p.prose,ol.steps,ul.steps{color:#c9cdd8;max-width:82ch}
+  ol.steps li,ul.steps li{margin-bottom:6px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .p-conf{color:var(--green);border-color:var(--green)}
+  .p-prop{color:var(--muted);border-color:var(--muted)}
+  .p-high{color:var(--yellow);border-color:var(--yellow)}
+  .ok{color:var(--green);font-weight:600}.no{color:var(--red);font-weight:600}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;overflow-x:auto}
+  .graph svg{display:block;min-width:900px}
+  .node rect{fill:#1b1e27;stroke-width:1.6}.node:hover rect{fill:#232733}
+  .node text{fill:var(--ink);font-size:13px}
+  .node .num{fill:var(--muted);font-size:11px;letter-spacing:.08em}
+  .node .sub{fill:var(--muted);font-size:11.5px}
+  .focus rect{stroke:var(--green);stroke-width:2.4}
+  .ext rect{stroke:#7f8c8d;stroke-dasharray:4 3}
+  .edge{stroke:var(--muted);stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+  .edge.solid{stroke:var(--green);stroke-dasharray:none;stroke-width:2}
+  .edge-lbl{fill:var(--muted);font-size:11px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · BUG-20260731-OI56 + BUG-20260801-VPUH</h1>
+<p class="meta">Contextos <code>templates-studio</code> e <code>cli-mira-animator</code> · 2026-08-01 ·
+   estratégia: correção direta · <strong>nenhum arquivo do projeto tocado ainda</strong></p>
+
+<div class="cards">
+  <div class="card red"><div class="n">2 bugs</div><div class="k">nesta correção</div></div>
+  <div class="card"><div class="n">#3 e #12</div><div class="k">display numbers</div></div>
+  <div class="card yellow"><div class="n">high + medium</div><div class="k">severidade</div></div>
+  <div class="card green"><div class="n">baixa</div><div class="k">change risk</div></div>
+  <div class="card blue"><div class="n">5 CHG</div><div class="k">change set</div></div>
+</div>
+
+<div class="box warn">
+  <h3>O enunciado do OI56 mudou, e isso é metade do trabalho</h3>
+  <p class="prose">Ele foi registrado como "o template <code>mira-studio-demo</code> não tem
+  nenhum marcador <code>@MIRA:</code>". A investigação de hoje desmentiu <strong>dois dos três
+  sintomas</strong> e mostrou que o defeito não é de template nem é dos formatos Studio:</p>
+  <ul class="steps">
+    <li><code>@MIRA:RESPONSIVE</code> <span class="ok">nunca foi contrato de template</span>.
+        <code>ensureResponsive()</code> o <strong>insere</strong> quando falta, e nenhum dos 8
+        templates o traz.</li>
+    <li>Os slots <code>@MIRA:FAST:*</code> <span class="ok">são da Fase 1</span>, que os abre
+        mecanicamente sem problema.</li>
+    <li>O que sobra é o <code>@MIRA:THEME</code> — e virou bug próprio, o VPUH.</li>
+  </ul>
+  <p class="prose">O bug foi reescrito com o escopo real, por decisão sua. ID e pasta
+  inalterados. <a href="../bug.md">Ver o bug.md</a></p>
+</div>
+
+<h2>1. Causa raiz</h2>
+<div class="box">
+  <p><span class="pill p-conf">confirmed</span> A instrução da Fase 1 manda copiar o arquivo do
+  template. A spec <code>01#R7</code> manda <em>preferir</em> o CLI canônico, deixando a cópia
+  como <strong>fallback</strong>. A skill implementou o fallback como padrão, e copiar o arquivo
+  pula o <code>ensureResponsive()</code>.</p>
+  <h3>Os quatro caminhos, medidos</h3>
+  <table>
+    <tr><th>caminho</th><th>@MIRA:THEME</th><th>@MIRA:RESPONSIVE</th><th>validateSkeleton</th></tr>
+    <tr><td><code>mira-studio-demo</code> cru, o que a Fase 1 faz hoje</td><td class="no">ausente</td><td class="no">ausente</td><td class="no">reprova</td></tr>
+    <tr><td><code>mira-studio-demo</code> via CLI canônico</td><td class="no">ausente</td><td class="ok">presente</td><td class="no">reprova (só pelo VPUH)</td></tr>
+    <tr><td><code>mira-default</code> cru, o que a <code>SKILL.md:132</code> manda</td><td class="ok">presente</td><td class="no">ausente</td><td class="no"><strong>reprova</strong></td></tr>
+    <tr><td><code>mira-default</code> via CLI canônico</td><td class="ok">presente</td><td class="ok">presente</td><td class="ok"><strong>passa</strong></td></tr>
+  </table>
+  <p class="prose">A terceira linha é a que amplia tudo: <strong>o formato <code>mira</code>
+  também está quebrado</strong>. Não é problema dos Studio, são os quatro formatos.
+  <a href="../evidence/caminhos-comparados.md">Evidência e script</a></p>
+</div>
+
+<div class="box bad">
+  <h3>Por que ninguém viu</h3>
+  <p class="prose"><code>test/mira-fast-assemble.test.mjs:100-128</code> constrói o esqueleto à
+  mão, já com <code>@MIRA:THEME</code>, <code>@MIRA:RESPONSIVE</code>, os seis slots e o
+  balanceamento da capa. <strong>Nenhum teste alimenta o pipeline com template real.</strong>
+  Os quatro formatos podiam estar quebrados sem um único vermelho. É o achado F-test-01 do
+  pente-fino cobrando, e é o que o CHG-001 fecha.</p>
+</div>
+
+<h2>2. A decisão de produto que você tomou</h2>
+<p class="prose">Pôr o marcador <code>@MIRA:THEME</code> nos Studio não é cosmético: o CLI
+substitui aquele bloco por <code>mira-dark.css</code> <strong>+ <code>base.css</code></strong>,
+e o <code>base.css</code> traz <code>.anim-stage { height: clamp(400px,60vh,620px) }</code> e
+<code>body { background: var(--mira-bg) }</code>, que brigam com o Studio
+(<code>.anim-stage { flex: 1 1 auto }</code> e as barras cinzas <code>#333333</code>). O
+<code>mira-default</code> só sobrevive porque neutraliza isso no próprio CSS.</p>
+<div class="box ok">
+  <p><strong>Escolhido: declarar os Studio theme-agnósticos.</strong> Envolvo o
+  <code>:root</code> que eles já têm nos marcadores e os acrescento à exceção que o
+  <code>sandeco-just-animation-template</code> já tem. <strong>Nenhum CSS novo entra em deck
+  nenhum</strong>, então o risco visual é zero, e eu não teria como verificar o contrário: não
+  há navegador neste ambiente.</p>
+  <p class="prose">Mantém o comportamento de hoje, só que honesto. Tornar os Studio temáveis de
+  verdade continua possível depois, como feature, com verificação visual.</p>
+</div>
+
+<h2>3. Correction Change Set proposto</h2>
+<table>
+  <tr><th>CHG</th><th>tipo</th><th>artefato</th><th>bug</th><th>propósito</th></tr>
+  <tr><td>CHG-001</td><td><code>test</code></td><td><code>test/mira-fast-esqueleto-real.test.mjs</code></td><td>OI56</td>
+      <td>esqueleto derivado de <strong>template real</strong>, nos 4 formatos, tem que passar em <code>validateSkeleton</code>. Aplicado e demonstrado <strong>vermelho</strong> antes de qualquer código.</td></tr>
+  <tr><td>CHG-002</td><td><code>code</code></td><td><code>agents/mira-fast/scripts/assemble-run.mjs</code></td><td>OI56</td>
+      <td>exporta <code>validateSkeleton</code>, hoje privada, para o teste poder chamá-la direto em vez de inferir pelo erro da montagem.</td></tr>
+  <tr><td>CHG-003</td><td><code>code</code></td><td>3 templates de deck</td><td>VPUH</td>
+      <td>envolve as variáveis de tema já existentes em <code>@MIRA:THEME:START/END</code>. As variáveis de formato (<code>--fmt-w</code>, <code>--fmt-h</code>) ficam <strong>fora</strong> do bloco, para não serem destruídas se algum dia o bloco for substituído.</td></tr>
+  <tr><td>CHG-004</td><td><code>code</code></td><td><code>lib/commands/new.js</code></td><td>VPUH</td>
+      <td><code>animationOnly</code> vira um conjunto <code>THEME_AGNOSTIC</code>; e o CLI passa a avisar quando o <code>replace</code> não casar num template que <em>deveria</em> aceitar tema.</td></tr>
+  <tr><td>CHG-005</td><td><code>documentation</code></td><td><code>agents/mira-fast/SKILL.md</code></td><td>OI56</td>
+      <td>Fase 1 passa a usar <code>npx mira-animator new</code> como caminho primário nos quatro formatos, com a cópia manual declarada como fallback, espelhando <code>01#R7</code>.</td></tr>
+</table>
+
+<h3>O CHG-004 é quase de graça</h3>
+<p class="prose">A mensagem final do CLI <strong>já</strong> sabe dizer a verdade:</p>
+<pre><span class="ctx">lib/commands/new.js:159</span>
+console.log(`  Template: ${deck} | Tema: ${animationOnly ? 'próprio do template (theme-agnóstico)' : theme}`);</pre>
+<p class="prose">Ela nunca é acionada porque <code>animationOnly</code> testa um único deck por
+igualdade. Trocar por pertinência a um conjunto faz o CLI parar de mentir sem tocar na mensagem.</p>
+
+<h2>4. Testes planejados</h2>
+<table>
+  <tr><th>teste</th><th>tipo</th><th>o que prova</th></tr>
+  <tr><td>esqueleto real de <code>mira</code> passa</td><td>reprodução</td><td>o formato mais usado estava quebrado e deixa de estar</td></tr>
+  <tr><td>esqueleto real de <code>mira-vertical</code> passa</td><td>reprodução</td><td>idem, mesmo caminho</td></tr>
+  <tr><td>esqueleto real de <code>mira-studio</code> passa</td><td>reprodução</td><td>fecha a metade Studio, que depende do CHG-003</td></tr>
+  <tr><td>esqueleto real de <code>mira-studio-full</code> passa</td><td>reprodução</td><td>idem</td></tr>
+  <tr><td>todo template do pipeline tem <code>@MIRA:THEME</code></td><td>regressão</td><td>template novo sem o marcador não entra em silêncio</td></tr>
+  <tr><td><code>ensureResponsive</code> insere o bloco em template que não o tem</td><td>regressão</td><td>trava a premissa que sustenta o diagnóstico: o bloco é do CLI, não do template</td></tr>
+</table>
+
+<h2>5. Riscos</h2>
+<div class="box ok">
+  <p><strong>change_risk: baixa</strong>, dada a decisão de manter os Studio theme-agnósticos.</p>
+  <table>
+    <tr><th>eixo</th><th>avaliação</th></tr>
+    <tr><td>blast radius</td><td>3 templates (só marcadores de comentário), 2 arquivos de código, 1 de instrução</td></tr>
+    <tr><td>CSS novo em deck</td><td><strong>nenhum</strong>. É o que zera o risco visual</td></tr>
+    <tr><td>contrato externo</td><td>nenhum</td></tr>
+    <tr><td>dados</td><td>nenhum</td></tr>
+    <tr><td>reversibilidade</td><td>total pelo diff</td></tr>
+  </table>
+</div>
+<h3>O que fica de fora</h3>
+<ul class="steps">
+  <li><strong>Tornar os Studio temáveis de verdade.</strong> Decisão sua, adiada. Exige neutralizar
+      o <code>base.css</code> e verificação visual que este ambiente não permite.</li>
+  <li><strong>Verificação visual de qualquer tipo.</strong> Não há navegador aqui. Nenhuma
+      afirmação deste plano depende de renderização.</li>
+  <li><strong>Os outros 9 bugs do registro.</strong> Nada de refatoração de passagem.</li>
+  <li><strong>Fechamento.</strong> Closure policy <code>package</code>: isto termina em
+      <code>active</code>/<code>delivering</code>, sem <code>DONE.md</code>, até merge e versão publicada.</li>
+</ul>
+
+<h2>6. Veredito de spec que vou recomendar</h2>
+<table>
+  <tr><th>bug</th><th>recomendação</th><th>porquê</th></tr>
+  <tr><td>OI56 #3</td><td><code>spec-correta</code></td>
+      <td><code>01#R7</code> já mandava preferir o caminho canônico e já declarava a cópia manual como fallback. Foi a <strong>skill</strong> que divergiu da spec, não a spec que estava errada.</td></tr>
+  <tr><td>VPUH #12</td><td><code>spec-gap</code></td>
+      <td>nenhuma seção diz quais templates aceitam tema nem o que o CLI deve fazer quando o marcador falta. O <code>sandeco-just-animation-template</code> é exceção codificada sem spec. Adendo aditivo.</td></tr>
+</table>
+<p class="prose">Decisão sua, no menu, depois dos testes passarem.</p>
+
+<h2>7. O grafo desta correção</h2>
+<div class="graph">
+  <svg viewBox="0 0 940 180" role="img" aria-label="Relações dos bugs desta correção">
+    <defs><marker id="dot" markerWidth="6" markerHeight="6" refX="3" refY="3">
+      <circle cx="3" cy="3" r="2.4" fill="#9aa0ae"/></marker></defs>
+    <path class="edge solid" d="M260 85 H320" marker-start="url(#dot)" marker-end="url(#dot)"/>
+    <text class="edge-lbl" x="290" y="76" text-anchor="middle">caused-by · supported</text>
+    <path class="edge" d="M570 85 H630" marker-start="url(#dot)" marker-end="url(#dot)"/>
+    <text class="edge-lbl" x="600" y="76" text-anchor="middle">related-to · proposed</text>
+
+    <a class="node focus" href="../../../../cli-mira-animator/bugs/BUG-20260801-VPUH-theme-ignorado-em-silencio/bug.md">
+      <rect x="10" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="26" y="53">#12 · VPUH — EM CORREÇÃO</text>
+      <text x="26" y="76">--theme ignorado</text>
+      <text x="26" y="94">em silêncio</text>
+      <text class="sub" x="26" y="116">medium · P2 · cli-mira-animator</text>
+      <text class="sub" x="26" y="132">CHG-003, 004</text>
+    </a>
+    <a class="node focus" href="../bug.md">
+      <rect x="320" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="336" y="53">#3 · OI56 — EM CORREÇÃO</text>
+      <text x="336" y="76">Fase 1 parte do</text>
+      <text x="336" y="94">template cru</text>
+      <text class="sub" x="336" y="116">high · P1 · 4 formatos</text>
+      <text class="sub" x="336" y="132">CHG-001, 002, 005</text>
+    </a>
+    <a class="node ext" href="../../../../mira-fast/bugs/BUG-20260731-K4NR-validador-section-em-comentario/bug.md">
+      <rect x="630" y="30" width="250" height="110" rx="9"/>
+      <text class="num" x="646" y="53">#4 · K4NR — mira-fast</text>
+      <text x="646" y="76">corrigido ontem</text>
+      <text x="646" y="94">adendo v001 vigente</text>
+      <text class="sub" x="646" y="116">high · P1</text>
+      <text class="sub" x="646" y="132">active · delivering</text>
+    </a>
+  </svg>
+</div>
+<table>
+  <tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th><th>o que afirma</th></tr>
+  <tr><td><a href="../bug.md">OI56 #3</a></td><td>caused-by</td>
+      <td><a href="../../../../cli-mira-animator/bugs/BUG-20260801-VPUH-theme-ignorado-em-silencio/bug.md">VPUH #12</a></td>
+      <td><span class="pill p-conf">supported</span></td>
+      <td>mesmo pelo caminho canônico, o esqueleto Studio reprova por falta do <code>@MIRA:THEME</code>. Por isso os dois vão juntos.</td></tr>
+  <tr><td><a href="../bug.md">OI56 #3</a></td><td>related-to</td>
+      <td><a href="../../../../mira-fast/bugs/BUG-20260731-K4NR-validador-section-em-comentario/bug.md">K4NR #4</a></td>
+      <td><span class="pill p-prop">proposed</span></td>
+      <td>coocorrem na mesma execução falha; sem evidência de vínculo causal. Continua hipótese.</td></tr>
+</table>
+
+<h2>8. Ordem depois desta correção</h2>
+<ol class="steps">
+  <li><strong>VPVV #5, UDTY #6, AMOM #11</strong> juntos: contrato de formato e validador na mesma correção.</li>
+  <li><strong>S3TX #2</strong> e <strong>JZNJ #1</strong>: dependem do veredito sobre a autoridade do <code>roteiro.md</code>.</li>
+  <li><strong>JJ6X #7</strong>, <strong>RNYU #8</strong>, <strong>ETPU #10</strong>: independentes, em qualquer ordem.</li>
+</ol>
+
+<div class="box warn">
+  <p><strong>Nada foi alterado ainda.</strong> Aprovando, o próximo passo é o Gate 1: diff dos
+  testes, aplico, e demonstro que falham.</p>
+</div>
+
+</div>
+</body>
+</html>

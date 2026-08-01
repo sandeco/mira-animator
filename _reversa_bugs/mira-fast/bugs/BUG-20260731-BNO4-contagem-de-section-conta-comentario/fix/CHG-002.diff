@@ -1,0 +1,45 @@
+diff --git a/agents/mira-fast/scripts/validate-run.mjs b/agents/mira-fast/scripts/validate-run.mjs
+index 2a55588..42af7ee 100644
+--- a/agents/mira-fast/scripts/validate-run.mjs
++++ b/agents/mira-fast/scripts/validate-run.mjs
+@@ -21,6 +21,29 @@ function escapeRegExp(value) {
+   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+ }
+ 
++/**
++ * Remove do texto tudo que não é marcação: comentário HTML e o conteúdo de
++ * <script> e <style>. Uma tag citada em documentação não é um elemento, e as
++ * checagens estruturais precisam enxergar essa diferença.
++ * As tags de script e style permanecem; só o conteúdo delas some.
++ */
++export function stripNonMarkup(value) {
++  return String(value)
++    .replace(/<!--[\s\S]*?-->/g, '')
++    .replace(/(<script\b[^>]*>)[\s\S]*?(<\/script>)/gi, '$1$2')
++    .replace(/(<style\b[^>]*>)[\s\S]*?(<\/style>)/gi, '$1$2');
++}
++
++/** Aberturas de `section` que são elemento de verdade. */
++export function countSections(value) {
++  return (stripNonMarkup(value).match(/<section\b/gi) ?? []).length;
++}
++
++/** Fechamentos de `section` que são elemento de verdade. */
++export function countClosingSections(value) {
++  return (stripNonMarkup(value).match(/<\/section>/gi) ?? []).length;
++}
++
+ function markerCount(fragment, marker) {
+   return fragment.split(marker).length - 1;
+ }
+@@ -128,8 +151,8 @@ export function validateFragment(slide, fragment, plan = {}) {
+ 
+   const htmlBlock = cssPos >= 0 ? fragment.slice(0, cssPos) : fragment;
+   const jsBlock = jsPos >= 0 ? fragment.slice(jsPos + jsMarker.length) : '';
+-  const opens = (htmlBlock.match(/<section\b/gi) ?? []).length;
+-  const closes = (htmlBlock.match(/<\/section>/gi) ?? []).length;
++  const opens = countSections(htmlBlock);
++  const closes = countClosingSections(htmlBlock);
+   if (opens !== 1 || closes !== 1) errors.push(`section inválida: ${opens} abertura(s), ${closes} fechamento(s)`);
+   if (htmlBlock.includes('—')) errors.push('travessão presente no HTML');
+ 
