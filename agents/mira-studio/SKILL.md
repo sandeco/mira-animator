@@ -135,7 +135,9 @@ Fala do apresentador neste slide.
 - `layout` (obrigatório): `capa`, `camera`, `split` ou `full`, comparado em minúsculas. Valor desconhecido cai em `camera`, o layout mais simples.
 - `Título`: vale em `capa`, `split` e `full`; ignorado em `camera`. `*entre asteriscos*` vira `<span class="accent">`, montado por fragmento (**nunca `innerHTML`**).
 - **Sem campo de animação.** As animações do mira-studio são AUTORAIS (metáfora escrita à mão por slide, não montada a partir de uma lista de itens). O builder cria só o palco vazio `svg#sv-slide-N`, com **N = posição do slide no arquivo**, e cada animação escrita à mão se prende ao seu palco. Palco sem animação fica vazio em vez de quebrar; avise o usuário quando o roteiro tiver mais slides do que animações autoradas.
-- O número do cabeçalho é **rótulo, não índice**: o mapeamento é sempre pela **ordem de aparição**. Numeração duplicada ou fora de ordem não desloca texto nenhum.
+- O número do cabeçalho é **rótulo, não índice**, e continua sendo. Numeração duplicada ou fora de ordem não desloca texto nenhum.
+- **Quem casa bloco com slide é a identidade, não a ordem.** Cada bloco leva `<!-- mira-slide-id: X -->` na linha abaixo do cabeçalho e a `<section>` correspondente leva `data-mira-slide-id="X"`. Com isso, reordenar os blocos no editor, reordenar os slides no modo E, ou os dois, dá o mesmo resultado: o slide anda inteiro, com palco, título e fala. Faltando id de um dos lados, cai no casamento por ordem de aparição de antes (deck antigo não precisa de migração). Detalhes em `_reversa_sdd/addenda/roteiro-identidade-de-slide-v001.md`.
+- O `mira-slide-id` é **metadado, não fala**: o parser o extrai e o mantém fora do teleprompter e do overlay lido em câmera, e a escrita de volta o reemite verbatim.
 
 **O que sincroniza e o que não:**
 
@@ -268,7 +270,10 @@ Os dois blocos estão no deck de referência; detalhes e regras completas em `ag
 - [ ] Painel `#mira-prompter` e overlay `#tp-ov-wrap` **fora** das `<section>`; overlays que devem entrar no vídeo, **dentro**.
 - [ ] `roteiro.md` na raiz, com intro documentando a gramática e um `## Slide` por `<section>`; os layouts citados na intro batem com os que o deck aceita.
 - [ ] Slides nascem do `.md`; sem o arquivo (ou em `file://`), o deck sobe com os slides padrão embutidos, sem erro no console.
-- [ ] Numeração duplicada ou fora de ordem nos cabeçalhos não desloca os textos (mapeamento por ordem de aparição).
+- [ ] Numeração duplicada ou fora de ordem nos cabeçalhos não desloca os textos.
+- [ ] Cada `<section>` tem `data-mira-slide-id`, pareado com o `<!-- mira-slide-id -->` do bloco correspondente.
+- [ ] Trocar dois blocos de lugar no `roteiro.md` e recarregar leva palco, título e fala juntos; nenhum palco `<slug>-stage` vira `sv-slide-N`.
+- [ ] O `<!-- mira-slide-id -->` não aparece no painel do teleprompter nem no overlay.
 - [ ] Editar o `.md` aparece no deck em ~1,5 s; digitar no painel grava no `.md` com intro e cabeçalhos intactos; digitação contínua não tem o cursor roubado pelo poll.
 - [ ] Durante a gravação o poll fica parado; `.md` apagado com o deck aberto é recriado.
 - [ ] Builder do roteiro ANTES das animações e dos `<script defer>`; animação autoral presa ao palco `sv-slide-N`.

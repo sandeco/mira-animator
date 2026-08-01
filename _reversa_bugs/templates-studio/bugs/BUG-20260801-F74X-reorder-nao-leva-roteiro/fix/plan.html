@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · BUG-20260801-F74X</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;--purple:#a98bdc;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:19px;margin:38px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:20px;font-weight:650}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.green .n{color:var(--green)}.card.red .n{color:var(--red)}
+  .card.yellow .n{color:var(--yellow)}.card.blue .n{color:var(--blue)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .active{color:var(--green);border-color:var(--green)}
+  .conf{color:var(--green);border-color:var(--green)}
+  .prop{color:var(--muted);border-color:var(--muted)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .alert{background:#2a1014;border:1px solid var(--red);border-radius:10px;padding:14px 18px;margin:18px 0}
+  .alert h3{color:var(--red);margin-top:0}
+  .ok{background:#12251c;border:1px solid var(--green);border-radius:10px;padding:14px 18px;margin:18px 0}
+  .ok h3{color:var(--green);margin-top:0}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-top:12px;
+         display:flex;flex-wrap:wrap;gap:14px;align-items:center;justify-content:center}
+  .node{border:1px solid var(--line);border-radius:10px;padding:10px 14px;background:#1b1e27;min-width:180px}
+  .node.self{border-color:var(--yellow);background:#2a2413}
+  .node .id{font-weight:650;font-size:14px}
+  .node .t{color:var(--muted);font-size:12px;margin-top:3px;max-width:230px}
+  .edge{color:var(--muted);font-size:12px;font-style:italic;white-space:nowrap}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · #13 <code>BUG-20260801-F74X</code></h1>
+<p class="meta">contexto <strong>templates-studio</strong> · 2026-08-01 ·
+<span class="pill high">high</span> P1 ·
+<span class="pill active">active</span> diagnosing ·
+closure policy <code>package</code> · control mode <code>gated</code></p>
+
+<p class="prose"><strong>Reordenar slides no <code>mira-studio</code> 9:16 não move o bloco
+correspondente do <code>roteiro.md</code>.</strong> O gesto do usuário (seta ↑ do modo E,
+depois Salvar) grava no arquivo errado, e o teleprompter passa a mostrar a fala da posição em
+vez da fala do slide.</p>
+
+<div class="cards">
+  <div class="card green"><div class="n">3/3</div><div class="k">reprodução determinística</div></div>
+  <div class="card blue"><div class="n">confirmed</div><div class="k">estado da causa raiz</div></div>
+  <div class="card yellow"><div class="n">média</div><div class="k">risco da mudança</div></div>
+  <div class="card red"><div class="n">1</div><div class="k">defeito novo descoberto</div></div>
+</div>
+
+<h2>Causa raiz <span class="pill conf">confirmed</span></h2>
+
+<p class="prose">O contrato <code>window.miraOrderSource</code> nasceu no commit
+<code>5433675</code> com um consumidor único, o deck 16:9, e nunca foi replicado no 9:16.
+Sem o hook, o <code>saveAll</code> do <code>mira-edit.js</code> segue o caminho padrão:
+reordena as <code>&lt;section&gt;</code> dentro do <code>index.html</code> e não toca no
+<code>roteiro.md</code>.</p>
+
+<pre>templates/authoring/mira-edit.js:574
+    var api = orderSource();                              // no 9:16: null
+    var delegated = orderChanged &amp;&amp; api &amp;&amp; api.commit;    // false
+    var reordena = delegated ? false : orderChanged;      // true -> reordena o HTML</pre>
+
+<p class="prose">No reload seguinte o builder casa <code>roteiro.md[i]</code> com a seção da
+posição <code>i</code> (<code>index.html:559</code>, o reaproveitamento por posição que veio
+do BUG-JZNJ) e o teleprompter indexa a fala por posição
+(<code>index.html:936</code>). O roteiro, que não mudou, manda de volta título e fala da
+ordem antiga.</p>
+
+<h3>A prova, lado a lado</h3>
+<table>
+<thead><tr><th>o mesmo gesto</th><th>9:16 <code>mira-studio</code></th><th>16:9 <code>mira-studio-full</code></th></tr></thead>
+<tbody>
+<tr><td><code>window.miraOrderSource</code></td><td><strong>ausente</strong></td><td>presente</td></tr>
+<tr><td>POST <code>/__mira_save</code> vai para</td><td><code>/index.html</code></td><td><code>/roteiro.md</code></td></tr>
+<tr><td>com <code>baseSha</code> (compare-and-set)</td><td><strong>não</strong></td><td>sim</td></tr>
+<tr><td><code>roteiro.md</code> mudou no disco</td><td><strong>não</strong></td><td>sim</td></tr>
+<tr><td>título e fala acompanham o slide</td><td><strong>não</strong></td><td>sim</td></tr>
+</tbody>
+</table>
+<p class="meta">Chromium 150 real, 3 execuções, 3 falhas. Cápsula completa em
+<a href="../evidence/reproduction.md">evidence/reproduction.md</a>.</p>
+
+<h3>Dois sabores do mesmo defeito</h3>
+<table>
+<thead><tr><th>deck</th><th>o que o usuário vê</th></tr></thead>
+<tbody>
+<tr><td>escrito à mão (palcos genéricos <code>sv-slide-N</code>)</td>
+    <td>a reordenação <strong>some</strong>: toast verde "Salvo", e depois do reload o deck
+        volta exatamente para a ordem de antes</td></tr>
+<tr><td>gerado pelo <code>/mira-fast</code> (palcos <code>&lt;slug&gt;-stage</code>)</td>
+    <td>a seção anda mas título e fala ficam presos à posição: <strong>o texto do roteiro não
+        acompanha</strong>, que é exatamente o relato</td></tr>
+</tbody>
+</table>
+
+<div class="alert">
+<h3>Correção deste plano: a referência do 16:9 também está quebrada</h3>
+<p class="prose">A versão anterior deste plano dizia "não há estratégias concorrentes, existe
+uma implementação de referência funcionando no formato irmão". <strong>Isso estava errado.</strong>
+Fui sondar um deck 16:9 <em>gerado pelo pipeline</em> (o de demonstração escondia o problema,
+porque as animações dele são declaradas no próprio <code>roteiro.md</code>):</p>
+<pre>DECK 16:9 GERADO — antes:
+  pos 2 | corrida-svg | Titulo DOIS   | "Fala DOIS."
+  pos 3 | panela-svg  | Titulo TRES   | "Fala TRES."
+  pos 4 | fecho-svg   | Titulo QUATRO | "Fala QUATRO."
+
+CASO A — troquei dois slides de MESMO layout (thirds &lt;-&gt; thirds):
+  pos 2 | corrida-svg | Titulo TRES   | "Fala TRES."     &lt;-- texto subiu, palco NÃO
+  pos 3 | panela-svg  | Titulo DOIS   | "Fala DOIS."     &lt;-- texto desceu, palco NÃO
+
+CASO B — troquei dois slides de layouts DIFERENTES (full &lt;-&gt; thirds):
+  pos 3 | sv-slide-3  | Titulo QUATRO | "Fala QUATRO."   &lt;-- palco DESTRUÍDO
+  pos 4 | sv-slide-4  | Titulo DOIS   | "Fala DOIS."     &lt;-- palco DESTRUÍDO</pre>
+<p class="prose">O 16:9 delega a ordem ao <code>roteiro.md</code> mas <strong>não move a
+<code>&lt;section&gt;</code></strong>. O builder continua casando <code>roteiro.md[i]</code> com a
+seção da posição <code>i</code> (<code>index-16x9.html:888</code>). Então num deck gerado:</p>
+<ul class="prose">
+<li><strong>Caso A</strong>: título e fala andam, o palco fica. A animação passa a tocar debaixo
+do texto errado. É o mesmo desencontro do F74X, só que pelo outro lado.</li>
+<li><strong>Caso B</strong>: layouts diferentes fazem o builder recriar a seção do zero, e os
+palcos <code>&lt;slug&gt;-stage</code> são <strong>destruídos</strong> e viram
+<code>sv-slide-N</code>. As animações geradas ficam mudas para sempre. É uma regressão do
+BUG-JZNJ por outra via.</li>
+</ul>
+<p class="prose">O <code>mira-slide-id</code> do 16:9 dá identidade ao bloco <em>dentro do
+arquivo</em> (para o número e o título poderem ser editados sem confundir o commit). Ele
+<strong>não</strong> é usado para casar bloco com seção. Essa é a lacuna real.</p>
+</div>
+
+<h2>Estratégia: a decisão mudou</h2>
+<p class="prose">Portar fielmente o 16:9 (estratégia A) daria ao 9:16 o mesmo defeito
+meio-corrigido: trocaria um desencontro por outro, e no caso B destruiria palcos gerados. Não
+serve. As opções reais:</p>
+<table>
+<thead><tr><th>estratégia</th><th>o que faz</th><th>custo</th></tr></thead>
+<tbody>
+<tr><td><strong>A</strong> · port fiel</td>
+    <td>copia o comportamento do 16:9: só o <code>roteiro.md</code> muda</td>
+    <td><strong>rejeitada</strong>: reproduz os casos A e B acima em todo deck 9:16 gerado</td></tr>
+<tr><td><strong>B</strong> · mover os dois arquivos</td>
+    <td>o Salvar reordena o <code>roteiro.md</code> <em>e</em> as <code>&lt;section&gt;</code> do
+        <code>index.html</code>, na mesma permutação. As posições continuam alinhadas, então o
+        reaproveitamento por posição do JZNJ segue valendo e palco, título e fala andam
+        juntos.</td>
+    <td>o <code>index.html</code> volta a ser reescrito. Duas gravações precisam ser
+        consistentes entre si.</td></tr>
+<tr><td><strong>C</strong> · casar por identidade</td>
+    <td>carimbar o id também na <code>&lt;section&gt;</code> e o builder casar bloco com seção
+        por id, não por posição</td>
+    <td>resolve a classe inteira do defeito, mas mexe fundo no builder e, para manter paridade,
+        no 16:9 também. Blast radius bem maior.</td></tr>
+</tbody>
+</table>
+
+<p class="prose">Portar não é copiar e colar. Três diferenças reais entre os formatos:</p>
+<table>
+<thead><tr><th>#</th><th>diferença</th><th>decisão</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>o 16:9 usa <code>MD_PATH = '/roteiro.md'</code> fixo na raiz servida; o 9:16
+    usa <code>window.__miraRoteiroPath</code> derivado do <code>location.pathname</code></td>
+    <td>fica com o do 9:16, que é o correto: funciona com o deck em subpasta</td></tr>
+<tr><td>2</td><td>o <code>parse()</code> do 9:16 (<code>index.html:390</code>) trata toda linha
+    não cabeçalho como corpo da fala, então o carimbo
+    <code>&lt;!-- mira-slide-id: … --&gt;</code> vazaria para o teleprompter e para o overlay
+    lido em câmera</td>
+    <td>o <code>parse()</code> passa a extrair e descartar o comentário do corpo, guardando o id
+    à parte, como o 16:9 já faz em <code>:780-786</code></td></tr>
+<tr><td>3</td><td>cabeçalhos diferentes: 16:9 é
+    <code>## Slide N | layout | Título | anim</code>, 9:16 é
+    <code>## Slide N | layout | Título</code></td>
+    <td>irrelevante para o corte, que é por <code>^##\s*Slide</code>; nenhum campo é
+    reinterpretado, os blocos são movidos verbatim</td></tr>
+</tbody>
+</table>
+
+<h2>Correction Change Set proposto</h2>
+<table>
+<thead><tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td><code>code</code></td>
+    <td><code>templates/decks/mira-studio-demo/index.html</code></td>
+    <td>registrar <code>window.miraOrderSource</code> (<code>available</code> +
+        <code>commit</code>), carimbar <code>mira-slide-id</code> por bloco, gravar com
+        <code>baseSha</code>, remapear <code>mira-tp-text</code> e
+        <code>mira-tp-ov-pos</code>, e voltar ao slide atual depois do reload. Ajustar o
+        <code>parse()</code> para não deixar o comentário do id vazar para a fala.</td></tr>
+<tr><td>CHG-002</td><td><code>test</code></td>
+    <td><code>test/mira-studio-builders.test.mjs</code></td>
+    <td>reprodução e regressão em Chromium real, dirigindo o modo E de verdade</td></tr>
+<tr><td>CHG-003</td><td><code>specification</code></td>
+    <td><code>_reversa_sdd/addenda/bug-BUG-20260801-F74X-v001.md</code></td>
+    <td>adendo aditivo do veredito <code>spec-gap</code>: fixa o contrato da fonte externa de
+        ordem para <strong>os dois</strong> formatos Studio (hoje ele só existe em código)</td></tr>
+</tbody>
+</table>
+
+<div class="ok">
+<h3>O que NÃO muda</h3>
+<p class="prose"><code>templates/authoring/mira-edit.js</code> e
+<code>templates/studio/mira-studio-server.cjs</code> ficam intactos. O contrato do editor já é
+genérico e o compare-and-set por <code>baseSha</code> já está implementado no servidor
+(<code>:231-239</code>), usado pelos dois launchers. A lacuna é inteiramente do lado do deck
+9:16. Nenhuma refatoração entra junto da correção.</p>
+</div>
+
+<h2>Testes planejados</h2>
+<table>
+<thead><tr><th>tipo</th><th>caso</th><th>o que prova</th></tr></thead>
+<tbody>
+<tr><td>reprodução</td><td>reordenar no 9:16 grava o <code>roteiro.md</code>, não o <code>index.html</code></td>
+    <td>o defeito relatado: hoje o POST vai para o arquivo errado</td></tr>
+<tr><td>reprodução</td><td>depois do reload, título e fala acompanham o slide movido</td>
+    <td>a consequência visível para quem grava</td></tr>
+<tr><td>regressão</td><td>o <code>mira-slide-id</code> não aparece no teleprompter nem no overlay</td>
+    <td>guarda contra o vazamento do carimbo, que o <code>parse()</code> do 9:16 causaria</td></tr>
+<tr><td>regressão</td><td>os palcos <code>&lt;slug&gt;-stage</code> sobrevivem à reordenação</td>
+    <td>não regredir o BUG-JZNJ, que é o vizinho mais próximo</td></tr>
+<tr><td>regressão</td><td>divergência de contagem entre <code>roteiro.md</code> e tela aborta sem gravar</td>
+    <td>a guarda que impede corromper o roteiro</td></tr>
+<tr><td>regressão</td><td>reordenar durante gravação é recusado</td>
+    <td>não derrubar uma gravação em andamento</td></tr>
+<tr><td>regressão</td><td>o 16:9 continua passando nos casos dele</td>
+    <td>o port não pode mexer no formato que já funciona</td></tr>
+</tbody>
+</table>
+
+<h2>Riscos</h2>
+<p class="prose"><strong><code>change_risk: média.</code></strong> Motivos:</p>
+<table>
+<thead><tr><th>fator</th><th>leitura</th></tr></thead>
+<tbody>
+<tr><td>blast radius</td><td>alto em alcance, baixo em profundidade: o arquivo é o template
+    herdado por <em>todo</em> deck 9:16 novo, mas o bloco adicionado é isolado e só roda sob HTTP</td></tr>
+<tr><td>contrato externo</td><td>nenhum contrato público muda; o hook é opt-in que o
+    <code>mira-edit.js</code> já procura</td></tr>
+<tr><td>dados</td><td>passa a escrever no <code>roteiro.md</code> do usuário. É o ponto
+    sensível, e é por isso que o <code>baseSha</code> e a guarda de contagem entram
+    <strong>junto</strong>, não depois</td></tr>
+<tr><td>reversibilidade</td><td>total: o change set é aditivo e o diff reverte limpo</td></tr>
+<tr><td>decks já existentes</td><td>não recebem a correção sozinhos, porque o template só vale
+    para deck novo. Ver abaixo.</td></tr>
+</tbody>
+</table>
+
+<div class="alert">
+<h3>Defeito novo descoberto na reprodução, e ainda não registrado</h3>
+<p class="prose">Num deck <strong>gerado</strong> 9:16, o Salvar da reordenação não só falha:
+ele <strong>corrompe o <code>index.html</code></strong>.</p>
+<pre>@MIRA:FAST:SLIDES:START      1 -> 1
+@MIRA:FAST:SLIDES:END        1 -> 2      &lt;-- duplicado
+&lt;!-- === SLIDE N · … === --&gt;  4 -> 6</pre>
+<p class="prose">O esqueleto gerado preserva os quatro comentários-banner
+<code>&lt;!-- === SLIDE N · LAYOUT … === --&gt;</code> que o template traz para documentar os
+slides de demonstração. Eles ficam órfãos depois do bloco <code>SLIDES:START/END</code>. O
+<code>MARKER</code> do <code>mira-edit.js</code> (<code>:298</code>) casa com eles, e o
+<code>composeSource</code> fatia o arquivo <strong>pelos banners</strong>, que não têm relação
+com as fronteiras das <code>&lt;section&gt;</code> reais. Os slides não se movem; os banners e o
+<code>SLIDES:END</code> sim.</p>
+<p class="prose">Isso quebra o contrato de marcadores de que a Fase 3 da montagem depende, e é
+mais grave que o F74X: aqui um arquivo do usuário fica corrompido. <strong>É um bug
+separado</strong>, de outro componente (<code>mira-edit.js</code> + esqueleto), e não entra
+neste change set. Precisa de <code>/reversa-debugger</code> próprio.</p>
+</div>
+
+<h3>O que fica de fora desta correção</h3>
+<table>
+<thead><tr><th>item</th><th>por quê</th></tr></thead>
+<tbody>
+<tr><td>a corrupção por banner órfão (acima)</td><td>outro componente, outra causa raiz, mais
+    grave: merece registro e gates próprios</td></tr>
+<tr><td>os traços da caneta (<code>mira-draw.js</code>) não seguem o slide ao reordenar</td>
+    <td>vale nos <strong>dois</strong> formatos, inclusive no 16:9 já corrigido; corrigir aqui
+    seria consertar o 16:9 por dentro de um bug do 9:16</td></tr>
+<tr><td>chaves de <code>localStorage</code> sem escopo por deck</td>
+    <td>pendência aberta desde o BUG-JZNJ, ortogonal a este defeito</td></tr>
+<tr><td>decks 9:16 <strong>já existentes</strong> no disco do usuário</td>
+    <td>o template só vale para deck novo; migrar deck existente é trabalho do
+    <code>npx mira-animator edit</code>, fora do escopo do registro</td></tr>
+<tr><td><code>lib/mira-serve.js</code> não implementa <code>baseSha</code></td>
+    <td>caminho alternativo: os launchers dos dois formatos usam o
+    <code>mira-studio-server.cjs</code>, que implementa</td></tr>
+</tbody>
+</table>
+
+<h2>Relações do bug</h2>
+<div class="graph">
+  <div class="node"><div class="id"><a href="../../BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">#1 JZNJ</a></div>
+    <div class="t">builder descarta o palco do slide<br>critical · P1 · delivering</div></div>
+  <div class="edge">&larr; related-to &nbsp;</div>
+  <div class="node self"><div class="id">#13 F74X (este)</div>
+    <div class="t">reordenar no 9:16 não move o roteiro.md<br>high · P1 · diagnosing</div></div>
+  <div class="edge">&nbsp; related-to &rarr;</div>
+  <div class="node"><div class="id"><a href="../../BUG-20260731-S3TX-studio-full-apaga-slides/bug.md">#2 S3TX</a></div>
+    <div class="t">studio-full apaga os slides gerados<br>critical · P0 · delivering</div></div>
+</div>
+
+<table>
+<thead><tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th><th>leitura</th></tr></thead>
+<tbody>
+<tr><td>F74X</td><td>related-to</td>
+    <td><a href="../../BUG-20260731-JZNJ-builder-roteiro-descarta-palco/bug.md">JZNJ</a></td>
+    <td><span class="pill prop">proposed</span></td>
+    <td>o reaproveitamento por posição que o JZNJ introduziu (corretamente, para preservar o
+        palco) é o mecanismo que prende título e fala à posição</td></tr>
+<tr><td>F74X</td><td>related-to</td>
+    <td><a href="../../BUG-20260731-S3TX-studio-full-apaga-slides/bug.md">S3TX</a></td>
+    <td><span class="pill prop">proposed</span></td>
+    <td>mesmo par de arquivos, mesma assimetria entre os dois builders, invertida: lá o 16:9
+        estava atrás, aqui é o 9:16</td></tr>
+</tbody>
+</table>
+
+<p class="prose">As duas seguem <code>proposed</code>: são leitura de padrão, não evidência
+causal. A reprodução confirmou a causa <em>deste</em> bug sem precisar delas, então promovê-las
+seria inflar o grafo com fato que não foi provado.</p>
+
+<h2>Ordem de execução</h2>
+<ol class="prose">
+  <li><strong>Gate 1</strong> — diff dos testes, aplicar, demonstrar <span style="color:var(--red)">vermelho</span></li>
+  <li><strong>Gate 2</strong> — diff do change set, aplicar, demonstrar <span style="color:var(--green)">verde</span> + suíte completa</li>
+  <li><strong>Veredito de spec</strong> — recomendação <code>spec-gap</code>, decisão sua</li>
+  <li><strong>Fechamento</strong> — <code>package</code> não fecha aqui: para em
+      <code>active</code>/<code>delivering</code> até merge e versão publicada, sem
+      <code>DONE.md</code></li>
+</ol>
+
+</div>
+</body>
+</html>

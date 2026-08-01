@@ -36,11 +36,11 @@
 <body>
 <div class="wrap">
 <h1>Bugs · templates-studio</h1>
-<p class="meta">gerado por <code>/reversa-debugger-graph</code> em 2026-08-01T06:00:00Z · 4 bug(s) · closure policy <code>package</code></p>
+<p class="meta">gerado por <code>/reversa-debugger-graph</code> em 2026-08-01T17:45:00Z · 6 bug(s) · closure policy <code>package</code></p>
 
 <div class="cards">
-  <div class="card"><div class="n">4</div><div class="k">total</div></div>
-  <div class="card green"><div class="n">4</div><div class="k">corrigidos, aguardando entrega</div></div>
+  <div class="card"><div class="n">6</div><div class="k">total</div></div>
+  <div class="card green"><div class="n">6</div><div class="k">corrigidos, aguardando entrega</div></div>
   <div class="card red"><div class="n">0</div><div class="k">abertos</div></div>
   <div class="card yellow"><div class="n">0</div><div class="k">travados com DONE.md</div></div>
 </div>
@@ -80,6 +80,26 @@
   <td>spec-correta</td>
 </tr>
 <tr>
+  <td>13</td>
+  <td><a href="../bugs/BUG-20260801-F74X-reorder-nao-leva-roteiro/bug.md">F74X</a></td>
+  <td><span class="pill high">high</span> P1</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Reordenar slides no mira-studio 9:16 não move o bloco correspondente do roteiro.md e o teleprompter fica com a fala da posição errada</td>
+  <td>confirmed</td>
+  <td>2 repro · 4 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr>
+  <td>14</td>
+  <td><a href="../bugs/BUG-20260801-ADQX-banners-orfaos-corrompem-deck-gerado/bug.md">ADQX</a></td>
+  <td><span class="pill high">high</span> P1</td>
+  <td><span class="pill active">active</span> delivering</td>
+  <td>Comentários-banner órfãos do template fazem o Salvar da reordenação embaralhar comentário em vez de slide</td>
+  <td>confirmed</td>
+  <td>2 repro · 1 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr>
   <td>8</td>
   <td><a href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/bug.md">RNYU</a></td>
   <td><span class="pill medium">medium</span> P2</td>
@@ -104,8 +124,36 @@ até lá, nenhum bug recebe a trava e nenhuma pasta vira somente leitura.</p>
 <tr><td>S3TX</td><td>média</td><td><a href="../bugs/BUG-20260731-S3TX-studio-full-apaga-slides/fix/plan.html">fix/plan.html</a></td></tr>
 <tr><td>OI56</td><td>baixa</td><td><a href="../bugs/BUG-20260731-OI56-esqueleto-sem-marcadores-mira/fix/plan.html">fix/plan.html</a></td></tr>
 <tr><td>RNYU</td><td>baixa</td><td><a href="../bugs/BUG-20260731-RNYU-falas-de-demonstracao-vazam/fix/plan.html">fix/plan.html</a></td></tr>
+<tr><td>F74X</td><td>média</td><td><a href="../bugs/BUG-20260801-F74X-reorder-nao-leva-roteiro/fix/plan.html">fix/plan.html</a></td></tr>
+<tr><td>ADQX</td><td>baixa</td><td>corrigido junto com o F74X, no mesmo ciclo</td></tr>
 </tbody>
 </table>
+
+<h2>Paridade entre os dois formatos Studio</h2>
+<p class="prose">Quatro dos seis bugs deste contexto são a mesma doença: os builders do
+<code>mira-studio</code> (9:16) e do <code>mira-studio-full</code> (16:9) são arquivos
+separados que evoluem em paralelo, e cada correção fica só de um lado.</p>
+<table>
+<thead><tr><th>capacidade</th><th>9:16 <code>index.html</code></th><th>16:9 <code>index-16x9.html</code></th><th>bug</th></tr></thead>
+<tbody>
+<tr><td>preservar o palco do slide no rebuild</td><td>sim</td><td>sim</td><td>JZNJ + S3TX (corrigidos juntos)</td></tr>
+<tr><td>não vazar falas de demonstração</td><td>sim</td><td>sim</td><td>RNYU</td></tr>
+<tr><td><code>window.miraOrderSource</code> (reordenar move o <code>roteiro.md</code>)</td><td>sim, <code>accompany</code></td><td>sim, <code>replace</code></td><td>F74X</td></tr>
+<tr><td><code>&lt;!-- mira-slide-id --&gt;</code> (id estável por bloco)</td><td>sim</td><td>sim</td><td>F74X</td></tr>
+<tr><td>gravação com <code>baseSha</code> (compare-and-set)</td><td>sim</td><td>sim</td><td>F74X</td></tr>
+<tr><td>remap do <code>localStorage</code> ao reordenar</td><td>sim (texto e overlay, não a caneta)</td><td>parcial (texto e overlay, não a caneta)</td><td>F74X</td></tr>
+<tr><td><strong>a <code>&lt;section&gt;</code> acompanha o bloco na reordenação</strong></td><td><strong>sim</strong></td><td><strong>não</strong> (defeito medido, sem bug próprio)</td><td>—</td></tr>
+<tr><td>reordenação não corrompe deck gerado</td><td>sim</td><td>latente: cai no mesmo caminho se perder o hook</td><td>ADQX</td></tr>
+</tbody>
+</table>
+<p class="prose">O servidor (<code>templates/studio/mira-studio-server.cjs</code>) não mudou:
+ele já implementava o <code>baseSha</code>. O <code>mira-edit.js</code> mudou de forma aditiva
+e opt-in (o campo <code>mode</code> e a guarda dos banners órfãos), então o 16:9 segue com o
+comportamento de antes.</p>
+<p class="prose"><strong>A linha destacada é o que sobrou.</strong> O 16:9 delega a ordem ao
+<code>roteiro.md</code> sem mover a <code>&lt;section&gt;</code>: em deck gerado o texto anda e
+o palco fica, e com layouts diferentes os palcos <code>&lt;slug&gt;-stage</code> são destruídos.
+Medido nesta sessão, ainda sem bug próprio.</p>
 
 </div>
 </body>

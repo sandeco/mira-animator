@@ -18,17 +18,21 @@ introdução nem nos cabeçalhos. Layout e título são lidos uma vez, no load: 
 página. Em `file://` não há sincronização, o deck sobe com os slides embutidos.
 
 ## Slide 1 | capa | Um roteiro, *três formatos*
+<!-- mira-slide-id: capa -->
 
 Um roteiro, três formatos. Este é o deck vertical do Mira Studio.
 
 ## Slide 2 | camera
+<!-- mira-slide-id: camera-cheia -->
 
 Aqui a câmera preenche a coluna inteira: só você falando.
 
 ## Slide 3 | split | Três formatos, *um roteiro*
+<!-- mira-slide-id: metafora-quadrada -->
 
 No meio a meio, a metáfora animada fica no quadrado de cima e você embaixo.
 
 ## Slide 4 | full | Do roteiro *ao vídeo*
+<!-- mira-slide-id: tela-cheia -->
 
 E na tela cheia, a animação toma conta: do roteiro ao vídeo pronto.

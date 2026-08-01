@@ -21,21 +21,26 @@ uma vez, no load: mudou, recarregue a página. Em `file://` não há sincroniza�
 com os slides embutidos.
 
 ## Slide 1 | camera
+<!-- mira-slide-id: abertura -->
 
 Abertura direto na câmera: você em tela cheia, falando com a lente.
 
 ## Slide 2 | thirds | Linha de *Produção* | linha: CRIAÇÃO, GRAVAÇÃO, EDIÇÃO, FINALIZAÇÃO
+<!-- mira-slide-id: linha-producao -->
 
 No layout de terços, a animação ocupa os dois terços da esquerda e você aparece ao vivo no terço direito.
 
 ## Slide 3 | thirds | Órbita da *Produção* | orbita: CÂMERA, ÁUDIO, ROTEIRO @ PRODUÇÃO
+<!-- mira-slide-id: orbita-producao -->
 
 Cada satélite é uma etapa orbitando o núcleo. Edite esta fala no painel do roteiro ou direto no roteiro.md.
 
 ## Slide 4 | full | Produção ao *Vivo* | linha: TEMA, ESTRUTURA, CONTEÚDO, VISUAL
+<!-- mira-slide-id: producao-ao-vivo -->
 
 Este é o layout full: só animação, ocupando o quadro inteiro, sem câmera.
 
 ## Slide 5 | camera
+<!-- mira-slide-id: encerramento -->
 
 Encerramento direto na câmera. Tecla R grava e o MP4 sai em 1920x1080.

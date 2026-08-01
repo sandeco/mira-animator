@@ -78,7 +78,9 @@ Todo deck gerado leva um **`roteiro.md` na raiz**: é dele que saem os slides E 
 - `layout` (obrigatório): `camera`, `thirds` ou `full`, comparado em minúsculas. Valor desconhecido cai em `camera`.
 - `Título` (thirds/full): `*entre asteriscos*` vira `<span class="accent">`, montado por fragmento (**nunca `innerHTML`**).
 - `animação` (thirds/full): **`linha: A, B, C, D`** (etapas em diagonal, orbe percorrendo e acendendo cada nó com pulso) ou **`orbita: A, B, C @ NÚCLEO`** (satélites girando em elipse em torno do núcleo). Sem o campo ou valor inválido, cai em `linha` padrão.
-- O número do cabeçalho é **rótulo, não índice**: o mapeamento é sempre pela ordem de aparição.
+- O número do cabeçalho é **rótulo, não índice**, e continua sendo.
+- **Quem casa bloco com slide é a identidade, não a ordem.** Cada bloco leva `<!-- mira-slide-id: X -->` na linha abaixo do cabeçalho e a `<section>` correspondente leva `data-mira-slide-id="X"`. Reordenar os blocos no editor ou os slides no modo E dá o mesmo resultado: o slide anda inteiro, com palco, título e fala. Faltando id de um dos lados, cai no casamento por ordem de aparição de antes (deck antigo não precisa de migração). Detalhes em `_reversa_sdd/addenda/roteiro-identidade-de-slide-v001.md`.
+- O `mira-slide-id` é **metadado, não fala**: fica fora do teleprompter e do overlay lido em câmera.
 - O texto abaixo do cabeçalho é a fala do slide (teleprompter e overlay).
 
 **O que sincroniza e o que não:**
@@ -197,6 +199,9 @@ Setas/espaço navegam · **T** painel do roteiro · **O** overlay de leitura · 
 
 **Roteiro e teleprompter:**
 - [ ] `roteiro.md` na raiz com a gramática de 4 campos (`layout | Título | animação`) documentada na intro.
+- [ ] Cada `<section>` tem `data-mira-slide-id`, pareado com o `<!-- mira-slide-id -->` do bloco correspondente.
+- [ ] Trocar dois blocos de lugar no `roteiro.md` e recarregar leva palco, título e fala juntos; nenhum palco `<slug>-stage` vira `sv-slide-N`.
+- [ ] O `<!-- mira-slide-id -->` não aparece no painel do teleprompter nem no overlay.
 - [ ] Slides nascem do `.md`; sem o arquivo, o deck sobe com os slides embutidos, sem erro no console.
 - [ ] Builder do roteiro ANTES das animações e dos `<script defer>`.
 - [ ] Editar o `.md` aparece em ~1,5 s; digitar no painel grava com intro e cabeçalhos intactos; poll parado durante gravação e digitação; `.md` apagado é recriado.

@@ -1,0 +1,230 @@
+diff --git a/templates/decks/mira-studio-demo/index.html b/templates/decks/mira-studio-demo/index.html
+index 837f96a..1b905f3 100644
+--- a/templates/decks/mira-studio-demo/index.html
++++ b/templates/decks/mira-studio-demo/index.html
+@@ -380,15 +380,19 @@
+             if (!isHttp) return;                    /* R-05: sem servidor, sem roteiro */
+ 
+             var HEAD = /^##[ \t]+/;
++            /* id estável por bloco, gravado pela reordenação (BUG-20260801-F74X).
++               Fica logo abaixo do cabeçalho e nunca entra no texto da fala. */
++            var SLIDEID = /^\s*<!--\s*mira-slide-id:\s*([^\s>]+)\s*-->\s*$/;
+ 
+             /* parse por ORDEM de aparição (R-01). Guarda intro e cabeçalhos crus:
+                a escrita de volta reusa os dois verbatim, nunca os re-deriva (R-04). */
+             function parse(raw) {
+                 var linhas = String(raw).split(/\r?\n/);
+-                var intro = [], headers = [], slides = [], corpo = null;
++                var intro = [], headers = [], ids = [], slides = [], corpo = null;
+                 for (var i = 0; i < linhas.length; i++) {
+                     if (HEAD.test(linhas[i])) {
+                         headers.push(linhas[i]);
++                        ids.push('');
+                         var campos = linhas[i].replace(HEAD, '').split('|');
+                         corpo = [];
+                         slides.push({
+@@ -396,14 +400,21 @@
+                             titulo: (campos[2] || '').trim(),
+                             linhas: corpo
+                         });
+-                    } else if (corpo) corpo.push(linhas[i]);
++                    } else if (corpo) {
++                        /* BUG-20260801-F74X: o id estável do bloco é metadado, não
++                           fala. Sem esta saída ele entraria no texto e o overlay
++                           mostraria "<!-- mira-slide-id: … -->" na frente da câmera. */
++                        var mid = SLIDEID.exec(linhas[i]);
++                        if (mid) ids[ids.length - 1] = mid[1];
++                        else corpo.push(linhas[i]);
++                    }
+                     else intro.push(linhas[i]);
+                 }
+                 slides.forEach(function (s) {
+                     s.texto = s.linhas.join('\n').replace(/^\s+|\s+$/g, '');
+                     delete s.linhas;
+                 });
+-                return { intro: intro.join('\n'), headers: headers, slides: slides };
++                return { intro: intro.join('\n'), headers: headers, ids: ids, slides: slides };
+             }
+ 
+             /* R-04: intro capturada no load + cabeçalhos capturados no load + textos atuais */
+@@ -411,7 +422,10 @@
+                 var out = R.intro ? R.intro.replace(/\s*$/, '') + '\n\n' : '';
+                 for (var i = 0; i < R.headers.length; i++) {
+                     var t = textos[i] == null ? '' : String(textos[i]).replace(/\s+$/, '');
+-                    out += R.headers[i] + '\n\n' + t + '\n\n';
++                    /* o id do bloco volta verbatim: uma edição no painel não pode
++                       apagar a identidade que a reordenação gravou */
++                    var id = (R.ids && R.ids[i]) ? '<!-- mira-slide-id: ' + R.ids[i] + ' -->\n' : '';
++                    out += R.headers[i] + '\n' + id + '\n' + t + '\n\n';
+                 }
+                 return out.replace(/\s*$/, '') + '\n';
+             };
+@@ -933,6 +947,7 @@
+             function saveText() { try { localStorage.setItem(TXTKEY, JSON.stringify(txt)); } catch (e) { } }
+             var R = window.__miraRoteiro || null;
+             var agendarEscrita = null;
++            var aposReordenar = null;
+             function doRoteiro(r) {                 /* textos por ORDEM, nunca pelo número do cabeçalho */
+                 var mudou = false;
+                 r.slides.forEach(function (s, i) { if (txt[i] !== s.texto) { txt[i] = s.texto; mudou = true; } });
+@@ -1022,6 +1037,15 @@
+                     timer = setTimeout(function () { timer = null; escrever(false); }, 800);
+                 };
+ 
++                /* BUG-20260801-F74X: depois que a reordenação grava o roteiro.md,
++                   uma escrita pendente do painel gravaria os textos ANTIGOS sobre
++                   os cabeçalhos NOVOS, e o poll leria o arquivo como se fosse
++                   mudança de fora. Cancela a pendente e reancora o conhecido. */
++                aposReordenar = function (conteudo) {
++                    if (timer) { clearTimeout(timer); timer = null; }
++                    ultimo = conteudo;
++                };
++
+                 setInterval(function () {
+                     if (ocupado() || gravando()) return;
+                     fetch(PATH + '?t=' + Date.now(), { cache: 'no-store' })
+@@ -1040,12 +1064,144 @@
+                                O que eles descrevem só entra no DOM no reload (R-02). */
+                             R.intro = novo.intro;
+                             R.headers = novo.headers;
++                            R.ids = novo.ids;
+                             if (doRoteiro(novo)) pintarAtual();
+                         })
+                         .catch(function () { });
+                 }, 1500);
+             })();
+ 
++            /* ============================================================
++               BUG-20260801-F74X · FONTE EXTERNA DA ORDEM (roteiro.md)
++
++               Reordenar um slide no modo E precisa mover DUAS coisas: a
++               <section> no index.html e o bloco `## Slide` no roteiro.md.
++               Mover só uma desencontra o deck, porque o builder casa
++               roteiro.md[i] com a seção da posição i.
++
++               Por isso o modo é 'accompany', e não 'replace': o mira-edit
++               reordena o HTML como sempre e o commit abaixo grava o roteiro.md
++               na MESMA permutação. Delegar só a ordem ao roteiro deixaria o
++               palco <slug>-stage parado embaixo do texto do vizinho; e quando
++               os layouts dos slides trocados diferem, o builder recriaria a
++               seção do zero e destruiria o palco gerado (o BUG-JZNJ de volta
++               por outra porta).
++
++               O commit roda ANTES da gravação do HTML (contrato do mira-edit):
++               qualquer recusa aqui deixa os dois arquivos intocados.
++               ============================================================ */
++            (function () {
++                if (!R) return;                     /* R-05: file:// ou sem o arquivo */
++                var PATH = window.__miraRoteiroPath;
++
++                /* id estável por bloco: identifica o slide mesmo depois de o
++                   usuário editar número e título à mão no .md. */
++                function novoId() {
++                    var b = new Uint8Array(6);
++                    if (window.crypto && window.crypto.getRandomValues) window.crypto.getRandomValues(b);
++                    else for (var i = 0; i < b.length; i++) b[i] = (Math.random() * 256) | 0;
++                    return Array.prototype.map.call(b, function (x) {
++                        return ('0' + x.toString(16)).slice(-2);
++                    }).join('');
++                }
++
++                /* compare-and-set: sem isso, uma edição feita no editor entre a
++                   leitura e a gravação seria sobrescrita em silêncio. Contexto
++                   sem crypto.subtle (http em IP de rede) grava sem a proteção,
++                   que é degradar de propósito, não fingir que protegeu. */
++                function sha256Hex(bruto) {
++                    if (!(window.crypto && window.crypto.subtle)) return Promise.resolve(null);
++                    return crypto.subtle.digest('SHA-256', new TextEncoder().encode(bruto))
++                        .then(function (buf) {
++                            return Array.prototype.map.call(new Uint8Array(buf), function (b) {
++                                return ('0' + b.toString(16)).slice(-2);
++                            }).join('');
++                        })
++                        .catch(function () { return null; });
++                }
++
++                /* estado guardado por índice de slide segue o slide na ordem nova:
++                   texto do teleprompter e posição/escala do overlay. Reescreve o
++                   objeto EM MEMÓRIA junto com o localStorage, senão o painel
++                   continuaria lendo o mapa antigo até o próximo reload. */
++                function remapar(chave, memoria, perm) {
++                    var novo = {};
++                    perm.forEach(function (orig, posNova) {
++                        if (memoria[orig] != null) novo[posNova] = memoria[orig];
++                    });
++                    Object.keys(memoria).forEach(function (k) { delete memoria[k]; });
++                    Object.keys(novo).forEach(function (k) { memoria[k] = novo[k]; });
++                    try { localStorage.setItem(chave, JSON.stringify(memoria)); } catch (e) { }
++                }
++
++                window.miraOrderSource = {
++                    mode: 'accompany',
++                    available: function () {
++                        if (document.documentElement.hasAttribute('data-mira-recording')) {
++                            return { ok: false, reason: 'Pare a gravação antes de reordenar os slides.' };
++                        }
++                        return { ok: true };
++                    },
++                    commit: function (perm) {
++                        return fetch(PATH + '?t=' + Date.now(), { cache: 'no-store' }).then(function (r) {
++                            if (!r.ok) throw new Error('Não consegui ler o roteiro.md (HTTP ' + r.status + ').');
++                            return r.text();
++                        }).then(function (base) {
++                            var re = /^##[ \t]+[^\n]*$/gm, m, marcas = [];
++                            while ((m = re.exec(base))) marcas.push(m.index);
++                            if (marcas.length !== perm.length) {
++                                throw new Error('O roteiro.md tem ' + marcas.length + ' slides e a tela tem ' +
++                                    perm.length + '. Recarregue a página e refaça a ordem.');
++                            }
++                            var intro = base.slice(0, marcas[0]);
++                            var blocos = marcas.map(function (ini, k) {
++                                var bruto = base.slice(ini, k + 1 < marcas.length ? marcas[k + 1] : base.length);
++                                if (!/\n$/.test(bruto)) bruto += '\n';
++                                if (!/<!--\s*mira-slide-id:/.test(bruto)) {
++                                    bruto = bruto.replace(/^(##[^\n]*\n)/,
++                                        '$1<!-- mira-slide-id: ' + novoId() + ' -->\n');
++                                }
++                                return bruto;
++                            });
++                            /* blocos movidos VERBATIM: nada é re-derivado, então
++                               cabeçalho, fala e id chegam do outro lado intactos */
++                            var conteudo = intro + perm.map(function (k) { return blocos[k]; }).join('');
++                            return sha256Hex(base).then(function (sha) {
++                                var corpo = { path: PATH, content: conteudo };
++                                if (sha) corpo.baseSha = sha;
++                                return fetch('/__mira_save', {
++                                    method: 'POST', headers: { 'Content-Type': 'application/json' },
++                                    body: JSON.stringify(corpo)
++                                });
++                            }).then(function (resp) {
++                                if (resp.status === 409) {
++                                    throw new Error('O roteiro.md mudou por fora durante a edição. Nada foi ' +
++                                        'gravado: recarregue a página e refaça a ordem sobre a versão nova.');
++                                }
++                                if (!resp.ok) {
++                                    throw new Error('O servidor recusou a gravação do roteiro.md (HTTP ' +
++                                        resp.status + ').');
++                                }
++                                /* o arquivo é a verdade: reancora o deck na ordem nova
++                                   sem recarregar. O DOM já está reordenado (o mira-edit
++                                   moveu a seção ao vivo), então repintar basta. */
++                                var novo = window.__miraRoteiroParse(conteudo);
++                                R.intro = novo.intro;
++                                R.headers = novo.headers;
++                                R.ids = novo.ids;
++                                R.slides = novo.slides;
++                                R.raw = conteudo;
++                                remapar(TXTKEY, txt, perm);
++                                remapar(POSKEY, pos, perm);
++                                if (aposReordenar) aposReordenar(conteudo);
++                                cur = -1;                       /* força o repinte */
++                                render();
++                            });
++                        });
++                    }
++                };
++            })();
++
+             /* ----- modo E: arrastar move o overlay, a alça redimensiona ----- */
+             function inEdit() { return document.body.classList.contains('me-on'); }
+             var drag = null;

@@ -293,12 +293,12 @@
 <body>
 
     <!-- SLIDE 1: CAMERA FULL -->
-    <section data-layout="camera">
+    <section data-layout="camera" data-mira-slide-id="abertura">
         <div class="cam-area"></div>
     </section>
 
     <!-- SLIDE 2: TERÇOS (animação 2/3 + câmera 1/3) -->
-    <section data-layout="thirds">
+    <section data-layout="thirds" data-mira-slide-id="linha-producao">
         <div class="thirds-main">
             <h2>Linha de <span class="accent">Produção</span></h2>
             <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -307,7 +307,7 @@
     </section>
 
     <!-- SLIDE 3: TERÇOS (animação 2/3 + câmera 1/3) -->
-    <section data-layout="thirds">
+    <section data-layout="thirds" data-mira-slide-id="orbita-producao">
         <div class="thirds-main">
             <h2>Órbita da <span class="accent">Produção</span></h2>
             <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -316,7 +316,7 @@
     </section>
 
     <!-- SLIDE 4: FULL (animação em tela cheia, sem câmera) -->
-    <section data-layout="full">
+    <section data-layout="full" data-mira-slide-id="producao-ao-vivo">
         <div class="full-main">
             <h2>Produção ao <span class="accent">Vivo</span></h2>
             <div class="anim-stage"><svg preserveAspectRatio="xMidYMid meet"></svg></div>
@@ -324,7 +324,7 @@
     </section>
 
     <!-- SLIDE 5: CAMERA FULL -->
-    <section data-layout="camera">
+    <section data-layout="camera" data-mira-slide-id="encerramento">
         <div class="cam-area"></div>
     </section>
 
@@ -886,9 +886,41 @@
                (palco, ids, chrome), o roteiro.md manda no título e no texto.
                Recriar do zero só quando não há seção nesta posição ou o roteiro
                pede outro layout. */
+            /* ============================================================
+               CASAMENTO BLOCO ↔ SEÇÃO POR IDENTIDADE
+
+               Antes o casamento era posicional: slides[i] com estaticas[i].
+               Isso quebrava em silêncio quando a ordem mudava só de um lado:
+               reordenar os blocos no editor movia título e fala, e deixava o
+               palco <slug>-stage parado embaixo do texto do vizinho. Com os
+               layouts trocados diferentes, a seção era recriada do zero e o
+               palco gerado morria junto.
+
+               Agora o bloco carrega o comentário `mira-slide-id` e a seção
+               carrega o atributo `data-mira-slide-id` com o mesmo valor. Havendo
+               id dos dois lados, a
+               ordem de cada arquivo deixa de importar. Sem id, cai no
+               casamento posicional de antes: deck existente não muda.
+               ============================================================ */
+            var porId = {};
+            estaticas.forEach(function (sec) {
+                var id = sec.getAttribute('data-mira-slide-id');
+                if (id) porId[id] = sec;
+            });
+            var temIdNoHtml = Object.keys(porId).length > 0;
+            var usadas = [];
+
             var adotados = [];
             var novas = slides.map(function (sl, i) {
-                var original = estaticas[i];
+                var id = window.__miraMdIds && window.__miraMdIds[i];
+                var original = (id && porId[id]) ? porId[id] : null;
+                if (!original && !(id && temIdNoHtml)) original = estaticas[i];
+                if (original && usadas.indexOf(original) !== -1) original = null;
+                if (original) usadas.push(original);
+                var marcar = function (sec) {
+                    if (id) sec.setAttribute('data-mira-slide-id', id);
+                    return sec;
+                };
                 if (original && layoutDe(original) === sl.layout) {
                     if (sl.layout !== 'camera') {
                         var h2 = original.querySelector('h2');
@@ -898,10 +930,10 @@
                         }
                         adotados[i] = garantirPalco(original, i + 1);
                     }
-                    return original;
+                    return marcar(original);
                 }
                 adotados[i] = sl.layout !== 'camera';
-                return criarSecao(sl, i + 1);
+                return marcar(criarSecao(sl, i + 1));
             });
 
             estaticas.forEach(function (sec) {

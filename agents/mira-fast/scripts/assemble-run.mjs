@@ -121,6 +121,24 @@ ${entries}
 })();`;
 }
 
+/**
+ * Carimba a identidade do slide na <section>, pareada com o
+ * `<!-- mira-slide-id -->` que o buildRoteiro escreve no bloco correspondente.
+ *
+ * É esse par que permite ao builder do deck casar bloco com seção por
+ * IDENTIDADE em vez de posição. Sem ele, reordenar os blocos no editor movia
+ * título e fala e deixava o palco <slug>-stage parado embaixo do texto do
+ * vizinho: a animação seguia tocando, no slide errado.
+ *
+ * O valor é o `slug_stage`, que o plano já garante único por slide e que é
+ * legível para quem abrir o arquivo. Fragmento que já traga o atributo é
+ * respeitado; a montagem não sobrescreve identidade declarada pela folha.
+ */
+function stampSlideId(html, slide) {
+  if (/\bdata-mira-slide-id\s*=/.test(html)) return html;
+  return html.replace(/<section\b/i, `<section data-mira-slide-id="${slide.slug_stage}"`);
+}
+
 function buildRoteiro(plan) {
   if (!['mira-studio', 'mira-studio-full'].includes(plan.formato)) return null;
   const layouts = plan.formato === 'mira-studio'
@@ -136,7 +154,16 @@ function buildRoteiro(plan) {
     const fields = [`## Slide ${slide.n}`, slide.layout];
     if (slide.titulo && slide.layout !== 'camera') fields.push(slide.titulo);
     if (slide.animacao_declarativa) fields.push(String(slide.animacao_declarativa));
-    lines.push(fields.filter(Boolean).join(' | '), '', slide.fala ?? '', '');
+    /* a identidade do bloco, pareada com o data-mira-slide-id da <section>.
+       É metadado, não fala: o parser do deck a extrai e a mantém fora do
+       teleprompter e do overlay lido em câmera. */
+    lines.push(
+      fields.filter(Boolean).join(' | '),
+      `<!-- mira-slide-id: ${slide.slug_stage} -->`,
+      '',
+      slide.fala ?? '',
+      '',
+    );
   }
   return `${lines.join('\n').trimEnd()}\n`;
 }
@@ -373,7 +400,7 @@ export function assembleRun(deckPath, options = {}) {
     const fallback = applyScriptFallback(skeleton, plan);
     skeleton = fallback.html;
     const slides = parts
-      .map(({ slide, html }) => `<!-- @MIRA:FAST:SLIDE ${String(slide.n).padStart(2, '0')} ${slide.slug_stage} -->\n${html}`)
+      .map(({ slide, html }) => `<!-- @MIRA:FAST:SLIDE ${String(slide.n).padStart(2, '0')} ${slide.slug_stage} -->\n${stampSlideId(html, slide)}`)
       .join('\n\n');
     const css = `<style id="mira-fast-generated">\n${parts
       .map(({ slide, css: value }) => `/* slide ${String(slide.n).padStart(2, '0')}: ${slide.slug_stage} */\n${value}`)

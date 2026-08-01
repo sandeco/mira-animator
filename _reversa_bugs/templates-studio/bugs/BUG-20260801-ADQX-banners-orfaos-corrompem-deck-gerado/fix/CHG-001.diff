@@ -1,0 +1,98 @@
+diff --git a/templates/authoring/mira-edit.js b/templates/authoring/mira-edit.js
+index 05a5adc..11ec350 100644
+--- a/templates/authoring/mira-edit.js
++++ b/templates/authoring/mira-edit.js
+@@ -144,9 +144,20 @@
+         var api = freeEditor();
+         return !!(api && api.hasChanges && api.hasChanges());
+     }
+-    /* decks com fonte externa de ordem (ex.: roteiro.md no mira-studio-full)
+-       registram window.miraOrderSource = { available(), commit(perm) }.
+-       Quando existe, o Salvar delega a ORDEM a ele e não reordena o HTML. */
++    /* decks com fonte externa de ordem (ex.: o roteiro.md dos formatos Studio)
++       registram window.miraOrderSource = { available(), commit(perm), mode }.
++
++         mode 'replace' (padrão, e o que o mira-studio-full usa): o Salvar
++           delega a ORDEM à fonte externa e NÃO reordena o HTML.
++         mode 'accompany': o HTML é reordenado normalmente E o commit grava a
++           fonte externa na MESMA permutação. É o que o deck precisa quando a
++           <section> carrega estrutura própria (palco com id de slug, animação
++           presa a ele): mover só a fonte externa deixaria o palco parado
++           embaixo do texto do vizinho.
++
++       Em 'accompany' o commit roda ANTES da gravação do HTML: se ele recusar
++       (contagem divergente, revisão conflitante), o arquivo não chega a ser
++       reescrito e os dois lados continuam coerentes entre si. */
+     function orderSource() { return window.miraOrderSource || null; }
+     function orderBlocked() {
+         var api = orderSource();
+@@ -362,6 +373,27 @@
+             var e = (i + 1 < marks.length) ? marks[i + 1] : endRegion;
+             blocks.push(src.slice(s, e));
+         }
++        /* BANNERS ÓRFÃOS (BUG-20260801-ADQX). Num deck GERADO, os comentários
++           <!-- === SLIDE N · … === --> que o template traz para documentar os
++           slides de demonstração sobrevivem à montagem e ficam FORA do bloco
++           @MIRA:FAST:SLIDES, sem os slides que descreviam. Fatiar por eles
++           reordena comentário em vez de slide: no melhor caso o Salvar recusa
++           por contagem, no pior (quando os números coincidem por acaso) grava
++           um arquivo com os banners embaralhados e o marcador de fim duplicado.
++
++           O banner só é fronteira de slide legítima se cada bloco fatiado
++           contiver exatamente uma <section>. Não contendo, o arquivo é fatiado
++           pelos próprios <section>, que é o que o deck realmente tem. */
++        if (kind === 'section') {
++            /* conta só <section> DE VERDADE: o texto "<section>" citado dentro de
++               comentário de documentação é frequente nestes templates e contá-lo
++               desviaria o deck escrito à mão (BUG-20260731-K4NR, mesma armadilha). */
++            var coerente = blocks.length === perm.length && blocks.every(function (b) {
++                var semComentario = b.replace(/<!--[\s\S]*?-->/g, '');
++                return (semComentario.match(/<section\b[^>]*>/gi) || []).length === 1;
++            });
++            if (!coerente) return reorderBySections(src, perm);
++        }
+         if (blocks.length !== perm.length) {
+             return { err: 'Nº de blocos no arquivo (' + blocks.length + ') ≠ nº de slides na tela (' + perm.length + ').' };
+         }
+@@ -573,18 +605,25 @@
+             if (location.protocol === 'http:' || location.protocol === 'https:') {
+                 var api = orderSource();
+                 var delegated = orderChanged && api && api.commit;
++                var acompanha = delegated && api.mode === 'accompany';
+                 if (delegated) {
+                     var blocked = orderBlocked();
+                     if (blocked) throw new Error(blocked);
+                 }
+-                if (!delegated || freeChanged) {
++                if (!delegated || acompanha || freeChanged) {
+                     var target = normalizedServerPath();
+                     var resp = await fetch(target, { cache: 'no-store' });
+                     if (!resp.ok) throw new Error('Não consegui ler ' + target + ' (HTTP ' + resp.status + ').');
+                     var src = await resp.text();
+                     validateDeckSource(src);
+-                    var reordena = delegated ? false : orderChanged;
++                    var reordena = (delegated && !acompanha) ? false : orderChanged;
+                     var out = composeSource(src, perm, reordena, freeChanged);
++                    /* 'accompany': só agora alguém grava. O HTML já foi montado
++                       em memória (composeSource lança se a permutação não casar
++                       com o arquivo) e o commit valida e grava a fonte externa.
++                       Se qualquer um dos dois recusar, nada foi escrito ainda e
++                       os dois lados continuam coerentes. */
++                    if (acompanha) await api.commit(perm);
+                     var saved = await fetch('/__mira_save', {
+                         method: 'POST', headers: { 'Content-Type': 'application/json' },
+                         body: JSON.stringify({ path: target, content: out })
+@@ -596,9 +635,10 @@
+                     /* mesma permutação que o composeSource usou para renumerar os ops */
+                     if (freeChanged) capturePrefs(src, out, reordena ? perm : null, info && info.path);
+                 }
+-                /* a ordem vai para a fonte externa (ex.: roteiro.md); o commit
+-                   grava com verificação de revisão e recarrega a página */
+-                if (delegated) await api.commit(perm);
++                /* 'replace': a ordem vai só para a fonte externa (ex.: roteiro.md);
++                   o commit grava com verificação de revisão e recarrega a página.
++                   Em 'accompany' ele já rodou lá em cima, antes do HTML. */
++                if (delegated && !acompanha) await api.commit(perm);
+             } else {
+                 if (!('showOpenFilePicker' in window)) throw new Error('Use o Chrome ou sirva o deck com node lib/mira-serve.js.');
+                 var handle = await getHandle();
