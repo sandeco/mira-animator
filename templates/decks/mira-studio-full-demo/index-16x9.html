@@ -14,6 +14,15 @@
                em janela menor encolhe mantendo a proporção (letterbox #333) */
             --fmt-w: min(100vw, calc(100vh * 16 / 9));
             --fmt-h: min(100vh, calc(100vw * 9 / 16));
+        }
+        /* @MIRA:THEME:START */
+        /* Tema próprio deste formato. O template é THEME-AGNÓSTICO: o
+           "npx mira-animator new --theme=..." NÃO substitui este bloco (ver
+           THEME_AGNOSTIC em lib/commands/new.js). Os marcadores existem para o
+           contrato de esqueleto do /mira-fast, que exige o bloco @MIRA:THEME.
+           As variáveis de FORMATO (--fmt-*) ficam de fora de propósito: se um
+           dia este template passar a aceitar tema, elas não podem ser perdidas. */
+        :root {
             /* tema mira-dark (mira-templates/themes/mira-dark.css), embutido
                para o deck seguir self-contained */
             --mira-primary: #FF904D;
@@ -32,7 +41,13 @@
             --mira-pill-border: rgba(255, 255, 255, 0.08);
             --mira-stage-glow: rgba(255, 144, 77, 0.06);
             --mira-accent-2: #FFC766;
-            /* apelidos locais: sempre derivados das variáveis do tema */
+        }
+        /* @MIRA:THEME:END */
+
+        :root {
+            /* apelidos locais: sempre derivados das variáveis do tema. Ficam
+               FORA do bloco do tema de propósito, para continuarem valendo por
+               cima do que um tema futuro trouxer. */
             --accent: var(--mira-primary);
             --bg: var(--mira-bg);
             --ink: var(--mira-text);

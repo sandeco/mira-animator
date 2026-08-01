@@ -14,6 +14,8 @@ Um tema entra; um deck Mira completo sai. A qualidade deve ser equivalente à ca
 
 ## Motor obrigatório
 
+**ORDEM ABSOLUTA:** a primeira ação do `/mira-fast` é criar, de uma vez, a pasta do deck e toda a árvore interna. Antes de mensagem intermediária, validação de fonte, leitura, memória, planejamento, pergunta ou workflow, resolva `deck_id = YYYY-MM-DD <slug>` e crie `decks/<deck_id>/`, `references/`, `assets/`, `assets/vendor/`, `mira/` e `mira/fast/`. Nenhuma pasta fica para depois.
+
 No Claude Code 2.1.154 ou superior, esta skill é a interface. O motor é o workflow de projeto `.claude/workflows/mira-fast-engine.js`; Dynamic workflows deve estar habilitado em `/config`.
 
 1. Ao receber `/mira-fast ...`, execute a **Fase 0** na sessão principal (resolver o slug e criar a estrutura do deck) e em seguida invoque `mira-fast-engine` pela ferramenta `Workflow`, passando os argumentos originais **mais o `slug` e o `deck_dir` já resolvidos**. O plano tem que usar esse slug, senão a Fase 1 abre uma segunda pasta e deixa órfão o material colocado em `references/`.
@@ -43,13 +45,13 @@ Se o primeiro token começar por `/mira-` e não for um desses formatos, falhe s
 | `mira-studio-full` | `index-16x9.html` | `camera`, `thirds`, `full`; gera `roteiro.md` |
 | `mira-vertical` | `index-9x16.html` | palco com eixo vertical dominante |
 
-Consulte a skill do formato apenas na Fase 1, para criar o esqueleto completo. No formato `mira`, use sempre `mira-templates/decks/mira-default/index.html` como fonte canônica; não pergunte por template. Cada folha lê somente `contrato-base.md`, o contrato do seu modo e o contrato do seu formato; a montagem Node não consulta skills.
+Consulte a skill do formato apenas na Fase 1, para criar o esqueleto completo. O esqueleto nasce pelo **caminho canônico** `npx mira-animator new <slug> --deck=<template> --theme=<tema>`, nos quatro formatos: é ele que injeta o bloco `@MIRA:THEME` e, via `ensureResponsive`, o `@MIRA:RESPONSIVE`, os dois exigidos pelo validador da Fase 3. No formato `mira` o template é sempre `mira-default`; não pergunte por template. Cada folha lê somente `contrato-base.md`, o contrato do seu modo e o contrato do seu formato; a montagem Node não consulta skills.
 
 Entrada existente no disco é fonte; pasta agrega os textos legíveis; tema descrito em linguagem natural é tema livre e segue direto.
 
-**Fonte apontada e não encontrada é falha, nunca tema livre.** Se a invocação aponta um arquivo ou pasta (extensão, separador de caminho, ou frase do tipo "a partir de", "use o documento", "com base no livro") e esse caminho não existe no disco, encerre com `MIRA_FAST_FONTE_NAO_ENCONTRADA`, informe o caminho absoluto de `decks/<slug>/references/` criado na Fase 0 e diga que basta colocar o material lá e chamar de novo. O mesmo vale para `/mira-fast` **sem argumento nenhum**. Caminho digitado errado não pode virar um deck inventado do começo ao fim.
+**Fonte apontada e não encontrada é falha, nunca tema livre.** Se a invocação aponta um arquivo ou pasta (extensão, separador de caminho, ou frase do tipo "a partir de", "use o documento", "com base no livro") e esse caminho não existe no disco, encerre com `MIRA_FAST_FONTE_NAO_ENCONTRADA`, informe o caminho absoluto de `decks/<deck_id>/references/` criado na Fase 0 e diga que basta colocar o material lá e chamar de novo. O mesmo vale para `/mira-fast` **sem argumento nenhum**. Caminho digitado errado não pode virar um deck inventado do começo ao fim.
 
-O slug é kebab-case. Deck **já construído** é o que tem `index*.html` ou `mira/fast/plano.json`; nesse caso use `-2`, `-3` etc., sem perguntar. Pasta que só tem o esqueleto da Fase 0, com ou sem arquivos em `references/`, **não** é colisão: é o deck desta execução, reaproveite. Bumpar para `-2` ali abandonaria o material que o usuário acabou de colocar.
+O slug é kebab-case e o nome da pasta é sempre `YYYY-MM-DD <slug>`. Deck **já construído** é o que tem `index*.html` ou `mira/fast/plano.json`; nesse caso use `-2`, `-3` etc. no slug, sem perguntar. Pasta que só tem o esqueleto da Fase 0, com ou sem arquivos em `references/`, **não** é colisão: é o deck desta execução, reaproveite. Bumpar para `-2` ali abandonaria o material que o usuário acabou de colocar.
 
 ## Invariantes
 
@@ -67,7 +69,7 @@ O slug é kebab-case. Deck **já construído** é o que tem `index*.html` ou `mi
 ## Estado no deck
 
 ```text
-decks/<slug>/
+decks/<deck_id>/
 ├── index*.html
 ├── roteiro.md                 # Studio e Studio Full
 ├── mira/
@@ -94,13 +96,15 @@ As pastas `references/`, `assets/` e `mira/` existem desde a Fase 0. Nunca apagu
 Resolvido o slug e antes de invocar o workflow, a sessão principal cria a estrutura no disco:
 
 ```text
-decks/<slug>/
-decks/<slug>/references/
-decks/<slug>/assets/
-decks/<slug>/mira/
+decks/<deck_id>/
+decks/<deck_id>/references/
+decks/<deck_id>/assets/
+decks/<deck_id>/assets/vendor/
+decks/<deck_id>/mira/
+decks/<deck_id>/mira/fast/
 ```
 
-Depois informe em uma linha o **caminho absoluto** de `decks/<slug>/references/` e que material colocado lá é lido pelo plano. Caminho relativo não serve: quem vai arrastar um PDF precisa do caminho que abre no explorador.
+Depois informe em uma linha o **caminho absoluto** de `decks/<deck_id>/references/` e que material colocado lá é lido pelo plano. Caminho relativo não serve: quem vai arrastar um PDF precisa do caminho que abre no explorador.
 
 Isso não é uma parada. A Fase 0 não pergunta nada e o workflow começa em seguida, no mesmo turno. Ela existe porque a pasta precisa estar no disco desde o primeiro segundo: sem ela, quem tem o material na mão não tem onde colocar, e é justamente esse o caso em que o `/mira-fast` mais rende.
 
@@ -125,7 +129,7 @@ npx mira-animator memoria lembrancas --papel conteudo --formato <formato>
 3. Para cada slide animado, define frase causal, família, metáfora e seis eixos.
 4. Elimina colisões pelo ledger descrito em `references/quadro-metaforas.md`.
 5. Atribui `slug_stage` único a todos e `js_id` seguro somente aos animados.
-6. Cria `mira/fast/esqueleto.html` e os artefatos de referência, dentro da estrutura que a Fase 0 já deixou pronta. **Não recria as pastas do deck e não toca no que houver em `references/`**, além de gravar seus próprios artefatos. Para `mira`, parte obrigatoriamente de `mira-templates/decks/mira-default/index.html`, preserva o marcador `MIRA-DEFAULT`, o runtime e o CSS `.slide-main`/`.slide-centro`, remove os slides de exemplo e abre os seis slots.
+6. Cria `mira/fast/esqueleto.html` e os artefatos de referência, dentro da estrutura que a Fase 0 já deixou pronta. **Não recria as pastas do deck e não toca no que houver em `references/`**, além de gravar seus próprios artefatos. O esqueleto vem do caminho canônico `npx mira-animator new <slug> --deck=<template> --theme=<tema>`. **Copiar o arquivo do template direto pula a injeção do `@MIRA:RESPONSIVE` e produz esqueleto que a Fase 3 reprova**; a cópia manual é fallback de `01#R7`, e nela os dois blocos ficam por sua conta. Para `mira` o template é `mira-default`: preserva o marcador `MIRA-DEFAULT`, o runtime e o CSS `.slide-main`/`.slide-centro`. Em todos os formatos, remove os slides de exemplo e abre os seis slots.
 7. Grava `mira/fast/plano.json` conforme `references/plano-schema.md` e `references/quadro-metaforas.md`.
 
 O esqueleto preserva o runtime completo do formato, mas não contém nenhuma `<section>`. Ele inclui exatamente uma vez:
