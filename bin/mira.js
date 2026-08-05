@@ -20,6 +20,7 @@ const commands = {
   plugin:    () => import('../lib/commands/plugin.js'),
   status:    () => import('../lib/commands/status.js'),
   update:    () => import('../lib/commands/update.js'),
+  global:    () => import('../lib/commands/global.js'),
   uninstall: () => import('../lib/commands/uninstall.js'),
 };
 
@@ -49,6 +50,7 @@ if (!command || command === '--help' || command === '-h') {
                          Instalar é colocar a pasta; desinstalar é apagar
     status               Mostra o estado da instalação e dos decks
     update               Atualiza agents e templates para a última versão
+    global <sub>         Mantém o cache global opcional (install | update | status)
     uninstall            Remove o Mira da pasta atual
 
   Documentação: https://github.com/sandeco/mira-animator
