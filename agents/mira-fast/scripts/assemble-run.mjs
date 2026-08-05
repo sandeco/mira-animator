@@ -346,14 +346,33 @@ function publishOutput(outputPath, content) {
     }
   }
 
-  rmSync(backupPath, { force: true });
-  renameSync(outputPath, backupPath);
+  let backupCreated = false;
+  let outputPublished = false;
   try {
+    renameSync(outputPath, backupPath);
+    backupCreated = true;
     renameSync(tempPath, outputPath);
+    outputPublished = true;
     rmSync(backupPath, { force: true });
   } catch (error) {
-    if (existsSync(backupPath) && !existsSync(outputPath)) renameSync(backupPath, outputPath);
-    rmSync(tempPath, { force: true });
+    const rollbackErrors = [];
+    try {
+      if (outputPublished) rmSync(outputPath, { recursive: true, force: true });
+      if (backupCreated) renameSync(backupPath, outputPath);
+    } catch (rollbackError) {
+      rollbackErrors.push(rollbackError);
+    }
+    try {
+      rmSync(tempPath, { force: true });
+    } catch (cleanupError) {
+      rollbackErrors.push(cleanupError);
+    }
+    if (rollbackErrors.length) {
+      throw new AggregateError(
+        [error, ...rollbackErrors],
+        `publicação falhou: ${error.message}; rollback falhou: ${rollbackErrors.map((rollbackError) => rollbackError.message).join(' | ')}`,
+      );
+    }
     throw error;
   }
 }
