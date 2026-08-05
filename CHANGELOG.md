@@ -4,6 +4,38 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.53
+
+### Adicionado
+
+**Plugins: agora você pode escrever os seus próprios agentes do Mira.** Até aqui, criar um agente
+novo exigia mexer em seis lugares dentro do pacote publicado, ou seja, só quem tem acesso ao
+repositório conseguia. Agora não.
+
+Um plugin é uma pasta em `mira-plugins/`, na sua instalação, com um `SKILL.md` e um
+`mira-plugin.json`. **Instalar é colocar a pasta lá. Desinstalar é apagar a pasta.** Não tem
+comando obrigatório em nenhum dos dois casos: no início da sessão o Mira olha a pasta e acerta o
+que mudou, ativando o que apareceu e removendo o que sumiu.
+
+Para compartilhar, `npx mira-animator plugin pack <id>` gera um arquivo `.mplug` que você manda
+por onde quiser. Quem recebe roda `npx mira-animator plugin add <arquivo>`, ou simplesmente
+coloca a pasta em `mira-plugins/`. Instalar plugin de outra pessoa não exige nada além do Mira.
+
+Para criar, use **`/mira-new-plugin`**. Ele confere se o Reversa está instalado na sua pasta,
+instala com a sua confirmação se faltar, e conduz a especificação e a implementação escrevendo
+direto dentro de `mira-plugins/<id>/`. Duas coisas para saber antes: as specs ficam na sua
+máquina e não viajam dentro do pacote, e criar plugin exige Reversa, mas usar não exige.
+
+Comandos novos: `plugin list`, `plugin sync`, `plugin validate`, `plugin pack` e `plugin add`.
+
+Três regras que o Mira aplica sozinho: o identificador não pode começar com `mira-`, que fica
+reservado aos agentes nativos; a pasta não pode conter arquivo executável, porque plugin é
+ativado sem passo intermediário e código de terceiro entrando assim é risco que não se conserta
+depois; e tudo que o plugin usa mora dentro da própria pasta, para que apagar a pasta desinstale
+de verdade.
+
+Nada da instalação atual muda. Seus decks, agentes e templates continuam iguais.
+
 ## 0.1.52
 
 ### Corrigido
