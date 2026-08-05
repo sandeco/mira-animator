@@ -150,10 +150,64 @@ test('o palco ocupa o slide, mesmo com o base.css do tema injetado', () => {
         const desktop = regras.filter((m) => m.index < fim);
         const vence = desktop[desktop.length - 1][1];
         assert.ok(desktop.length >= 2, 'a regra do template vem depois da do tema');
-        assert.match(vence, /flex:\s*1 1 auto/, 'o palco cresce com o slide');
+        /* o palco ocupa o QUADRO INTEIRO: absoluto, colado nas quatro bordas
+           da <section>, por baixo do título. Antes ele era um item flex que
+           crescia com o que sobrava depois do título; agora cobre tudo. */
+        assert.match(vence, /position:\s*absolute/, 'o palco sai do fluxo para cobrir o quadro');
+        assert.match(vence, /inset:\s*0/, 'colado nas quatro bordas da seção');
         assert.match(vence, /height:\s*auto/, 'anula a altura fixa do card');
         assert.match(vence, /background:\s*none/, 'anula o glow do card');
         assert.match(vence, /border-radius:\s*0/, 'anula os cantos do card');
+    } finally { p.limpar(); }
+});
+
+test('o título fica por cima do palco, e a animação evita a faixa dele', () => {
+    const p = projeto();
+    try {
+        const html = p.novo('titulo');
+
+        /* 1. o título sobe acima do palco, mas NÃO acima dos módulos de
+              autoria: mira-draw ocupa 99998 e mira-edit 100000, e o título
+              acima deles impediria desenhar e editar sobre ele. */
+        const regraH2 = html.match(/\.slide-main h2\s*\{([^}]*)\}/);
+        assert.ok(regraH2, 'existe regra para o título do slide de conteúdo');
+        const z = Number((regraH2[1].match(/z-index:\s*(\d+)/) || [])[1]);
+        assert.ok(z > 0, 'o título tem z-index próprio');
+        assert.ok(z < 99998, 'o título fica ABAIXO da faixa de mira-draw e mira-edit');
+        assert.match(regraH2[1], /position:\s*relative/, 'z-index só vale com position');
+
+        /* 2. o palco entrega a faixa livre para a animação */
+        assert.match(html, /F\.topo/, 'o palco expõe onde a área livre começa');
+        assert.match(html, /F\.alturaUtil/, 'o palco expõe a altura da área livre');
+        assert.match(html, /F\.vy\s*=\s*function/, 'o palco expõe o mapeador F.vy');
+
+        /* 3. as animações de exemplo são o contrato que os agentes copiam:
+              se elas usarem F.H para coordenada vertical, todo deck gerado
+              vai desenhar por trás do título. */
+        const corpo = html.slice(html.indexOf('function animTempoVoa'));
+        const usosCrus = corpo.match(/y:\s*F\.H\s*\*|var y = F\.H\s*\*/g) || [];
+        assert.deepEqual(usosCrus, [],
+            'nenhuma animação de exemplo posiciona em Y por F.H direto; use F.vy(k)');
+        assert.ok((corpo.match(/F\.vy\(/g) || []).length >= 4,
+            'as animações de exemplo usam F.vy de verdade');
+    } finally { p.limpar(); }
+});
+
+test('o palco não quebra sem <section> nem sem título', () => {
+    const p = projeto();
+    try {
+        const html = p.novo('sem-titulo');
+        const fonte = html.slice(html.indexOf('function palco('));
+        /* um palco avulso (template de card, teste, palco fora de section)
+           não pode derrubar a animação inteira */
+        assert.match(fonte, /caixa && caixa\.closest \? caixa\.closest/,
+            'o closest é opcional');
+        assert.match(fonte, /secao && secao\.querySelector/,
+            'a busca do título é opcional');
+        assert.match(fonte, /titulo && titulo\.getBoundingClientRect/,
+            'a medição do título é opcional');
+        assert.match(fonte, /caixa\.style && caixa\.style\.setProperty/,
+            'a publicação da variável CSS é opcional');
     } finally { p.limpar(); }
 });
 

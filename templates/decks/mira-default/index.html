@@ -31,8 +31,27 @@
          </div>
        </section>
 
-     Os 50px de padding do .slide-main são área segura: título e
-     animação vivem dentro dela, nada encosta na borda do quadro.
+     O PALCO OCUPA O QUADRO INTEIRO, de borda a borda: o .anim-stage
+     é absoluto e cobre a <section> toda, por baixo do título. Não é
+     mais "o que sobra depois do título".
+
+     O TÍTULO FICA POR CIMA de tudo que é do template. A faixa de
+     z-index deste arquivo vai até 10; os módulos de autoria
+     (mira-draw, mira-edit) usam 99998 e acima, e continuam acima do
+     título de propósito, senão não daria para desenhar nem editar
+     por cima dele.
+
+     A ANIMAÇÃO EVITA A FAIXA DO TÍTULO. O palco() mede o título e
+     entrega a faixa livre em unidades do viewBox:
+
+       F.topo         y onde a área livre começa (abaixo do título)
+       F.alturaUtil   altura dessa área
+       F.vy(k)        mapeia 0..1 na faixa livre. Use no lugar de F.H * k
+
+     Regra: nada FOCAL acima de F.topo. Ambiente pode atravessar,
+     porque atrás do título ele lê como profundidade, não como
+     conflito. Os 50px de padding continuam sendo a área segura das
+     bordas.
      ========================================================== -->
 
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -147,21 +166,38 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
     flex-direction: column;
     padding: 50px;              /* área segura */
 }
-.slide-main h2 { flex: 0 0 auto; margin-bottom: 14px; text-align: center; }
+/* o título fica POR CIMA do palco, que agora passa por baixo dele.
+   z-index 10 é o teto deste template; mira-draw e mira-edit vivem em
+   99998 e acima, e continuam por cima do título de propósito, senão
+   não daria para desenhar nem editar sobre ele. */
+.slide-main h2 {
+    flex: 0 0 auto;
+    margin-bottom: 14px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
 
-/* o palco: TODO o espaço que sobra depois do título.
+/* o palco: O QUADRO INTEIRO, de borda a borda.
 
-   Os três resets abaixo não são enfeite. Quando o "new --theme=..."
-   injeta o base.css, ele traz `.anim-stage` com altura fixa
-   (clamp 400-620px), glow radial e cantos arredondados, que é a
-   linguagem de CARD. Aqui o palco É o slide: sem neutralizar isso,
-   o deck gerado sai com uma caixinha arredondada no meio, que é
-   exatamente o que este template existe para não ser. */
+   `inset: 0` resolve contra a <section>, porque o .slide-main é
+   estático e a <section> é `position: relative`. Sair do fluxo é o
+   que faz o palco passar POR BAIXO do título em vez de começar
+   depois dele.
+
+   Os resets de fundo e raio não são enfeite. Quando o
+   "new --theme=..." injeta o base.css, ele traz `.anim-stage` com
+   altura fixa (clamp 400-620px), glow radial e cantos arredondados,
+   que é a linguagem de CARD. Aqui o palco É o slide: sem neutralizar
+   isso, o deck gerado sai com uma caixinha arredondada no meio, que
+   é exatamente o que este template existe para não ser. */
 .anim-stage {
-    flex: 1 1 auto;
-    min-height: 0;
-    width: 100%;
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: auto;
     height: auto;
+    min-height: 0;
     background: none;
     border-radius: 0;
 }
@@ -271,15 +307,53 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
         }, { threshold: 0.6 }).observe(slide);
     }
 
+    /* ---------- palco: o quadro inteiro, menos a faixa do título ----------
+       O .anim-stage cobre a <section> toda, então F.W x F.H é o quadro
+       de borda a borda. Mas o título mora POR CIMA da parte de cima do
+       palco, e ator focal ali vira briga de leitura.
+
+       Por isso o palco mede o título e devolve a faixa livre:
+
+         F.topo         onde a área livre começa, em unidades do viewBox
+         F.alturaUtil   altura dessa área
+         F.vy(k)        mapeia 0..1 na faixa livre, no lugar de F.H * k
+
+       A medida é refeita no resize, porque o título quebra em mais
+       linhas em tela estreita e a faixa livre encolhe junto. */
     function palco(svgId) {
         var svg = d3.select('#' + svgId);
         if (svg.empty()) return null;
         var caixa = svg.node().closest('.anim-stage');
-        var F = { W: 960, H: 460 };
+        /* Tudo aqui é OPCIONAL de propósito. Um palco pode não estar dentro
+           de uma <section>, ou não ter título nenhum (template de card, palco
+           avulso, teste). Nesse caso a faixa livre é o quadro inteiro e a
+           animação se comporta como antes, em vez de quebrar. */
+        var secao = caixa && caixa.closest ? caixa.closest('section') : null;
+        var titulo = secao && secao.querySelector
+            ? secao.querySelector('.slide-main h2, .slide-main h1')
+            : null;
+        var RESPIRO = 18;                 /* folga entre o título e o que se move */
+        var F = { W: 960, H: 460, topo: 0, alturaUtil: 460 };
+        F.vy = function (k) { return F.topo + F.alturaUtil * k; };
+
         function casar() {
             var r = caixa.getBoundingClientRect();
             if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
             svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
+
+            F.topo = 0;
+            if (titulo && titulo.getBoundingClientRect && r.height > 0) {
+                var t = titulo.getBoundingClientRect();
+                var basePx = Math.max(0, (t.bottom || 0) - (r.top || 0));   /* px de tela */
+                F.topo = Math.round(F.H * basePx / r.height) + RESPIRO;
+                /* teto de sanidade: o título nunca come mais de 40% do quadro */
+                F.topo = Math.min(F.topo, Math.round(F.H * 0.40));
+            }
+            F.alturaUtil = F.H - F.topo;
+            /* disponível para quem preferir resolver no CSS */
+            if (caixa.style && caixa.style.setProperty) {
+                caixa.style.setProperty('--mira-titulo-h', F.topo + 'px');
+            }
         }
         casar();
         window.addEventListener('resize', casar);
@@ -338,9 +412,11 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
                 + ' C ' + (-L * .35) + ' ' + (-A - lift) + ' ' + (-L * .78) + ' ' + (-A * .82 - lift) + ' ' + (-L) + ' ' + (-lift * .5)
                 + ' C ' + (-L * .74) + ' ' + (A * .30) + ' ' + (-L * .34) + ' ' + (A * .52) + ' 0 ' + (A * .22) + ' Z';
         }
+        /* a curva de fuga usa F.vy: sobe até o alto da FAIXA LIVRE, não até
+           o alto do quadro, senão o relógio passaria por trás do título */
         function rota(t) {
-            var p0 = { x: F.W * .30, y: F.H * .60 }, p1 = { x: F.W * .55, y: F.H * .24 };
-            var p2 = { x: F.W * .86, y: F.H * .40 }, p3 = { x: F.W * 1.16, y: F.H * .06 };
+            var p0 = { x: F.W * .30, y: F.vy(.62) }, p1 = { x: F.W * .55, y: F.vy(.22) };
+            var p2 = { x: F.W * .86, y: F.vy(.42) }, p3 = { x: F.W * 1.16, y: F.vy(.06) };
             var u = 1 - t;
             return {
                 x: u * u * u * p0.x + 3 * u * u * t * p1.x + 3 * u * t * t * p2.x + t * t * t * p3.x,
@@ -402,9 +478,11 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
 
         function ladeira(t) {
             /* a rampa e a bola leem a MESMA curva: a bola nunca
-               descola do chão quando o palco muda de altura */
+               descola do chão quando o palco muda de altura.
+               F.vy mantém a rampa inteira dentro da faixa livre, então
+               o alto dela não vai parar atrás do título. */
             var x = F.W * (.06 + .95 * t);
-            var y = F.H * (.30 + .52 * t * t);
+            var y = F.vy(.16 + .70 * t * t);
             return { x: x, y: y };
         }
         var pts = [];
