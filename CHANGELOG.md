@@ -4,6 +4,43 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.55
+
+### Corrigido
+
+**O `update` não trazia time novo, e por isso o Story Team não apareceu para quem atualizou.**
+Se você instalou o Mira antes da 0.1.54 e rodou `npx mira-animator update`, os sete agentes de
+narrativa não chegaram. A regra era "só reinstalo o time que você já tinha", o que está certo para
+quem recusou um time, mas deixava um buraco: um time lançado DEPOIS da sua instalação nunca chegava,
+e não existia comando que o trouxesse sem refazer a instalação inteira.
+
+Agora o `update` detecta time opcional disponível e não instalado, e pergunta uma vez. O padrão da
+pergunta é **não**, para continuar respeitando quem recusou de propósito. Em execução não interativa
+ele imprime a instrução em vez de travar.
+
+### Adicionado
+
+**`/mira-cinema-deck`: o orquestrador do deck cinematográfico.** A cadeia narrativa e o modo cinema
+existiam separados e não se encontravam sozinhos. Sem o `mira-cinema.js` dentro do deck, o
+`/mira-direct-cinematic-motion` era obrigado a escrever direção **sem** câmera, grade nem planos, e
+você recebia um deck comum achando que tinha pedido cinema.
+
+O `/mira-cinema-deck` fecha o laço: cria o deck já com o cinema instalado, roda as sete etapas
+narrativas na ordem com pausa entre elas, e entrega o Motion Score ao `/mira-animator`, que agora
+sabe implementá-lo. Instala junto com o Story Team.
+
+**`npx mira-animator new <nome> --cinema`.** Instala `mira/mira-cinema.js` e
+`assets/vendor/gsap.min.js` no deck e injeta as tags na ordem certa. Continua opt-in: deck sem a
+flag não carrega o GSAP nem o módulo.
+
+**O `mira-animator` aprendeu a API do cinema.** Era o elo quebrado: o diretor de movimento já
+conhecia `MiraCinema.palco`, `Cam.*`, `Prof.*` e `Grade.*`, mas quem implementa não. Agora conhece,
+com os tetos (2 cues em `sereno`, 3 a 5 planos, raio máximo 4, tremor de 400 ms, razão obrigatória)
+e a trava de que a nota é avaliada com o cinema desligado.
+
+**GSAP vendorizado no pacote** (`templates/vendor/gsap.min.js`, core sem plugins). O
+`mira-cinema.js` depende dele e nada o copiava, então o modo cinema não abria offline.
+
 ## 0.1.54
 
 ### Mudado

@@ -36,6 +36,7 @@ Instalada com o **Story Team**, roda **antes** da linha principal: decide qual �
 
 | Etapa | Agente | O que faz |
 |---|---|---|
+| 0 | **mira-cinema-deck** | Orquestra a cadeia inteira: cria o deck com `--cinema`, roda as sete etapas na ordem e entrega ao `mira-animator`. Sem ele, a direção de câmera é escrita e nunca implementada. |
 | 1 | **mira-premise-forge** | Pesquisa fatos atuais e transforma o Eureca escondido neles em um **Premise Brief** defensável. |
 | 2 | **mira-concept-storyteller** | Fixa o **Concept Contract**: o que a história precisa ensinar e nunca pode distorcer. |
 | 3 | **mira-story-architect** | Constrói a **Story Bible**: estrutura, personagens, tema, mundo, símbolos, trama e cenas. |

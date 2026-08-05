@@ -18,6 +18,7 @@ para `<deck>/assets/vendor/` e reescreve os HTMLs do deck para caminhos relativo
 | `aos.css` / `aos.js` | 2.3.1 | `https://unpkg.com/aos@2.3.1/dist/` |
 | `lucide.js` | 1.21.0 (UMD) | `https://unpkg.com/lucide@1.21.0/dist/umd/lucide.min.js` |
 | `d3.v7.min.js` | 7.9.0 | `https://d3js.org/d3.v7.min.js` |
+| `gsap.min.js` | 3.13.0 | `https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js` |
 | `inter.css` + `fonts/*.woff2` | Inter v20 (variável) | `https://fonts.googleapis.com/css2?family=Inter` |
 | `three/` (core + OrbitControls + GLTFLoader + BufferGeometryUtils) | three 0.160.0 | `https://unpkg.com/three@0.160.0` |
 | `mp4-muxer.js` | 5.2.2 (UMD, global `Mp4Muxer`) | `https://registry.npmjs.org/mp4-muxer/-/mp4-muxer-5.2.2.tgz` (build/mp4-muxer.js) |
@@ -31,7 +32,14 @@ Notas:
 - **Three.js** (`three/`): só é copiado para o deck quando ele usa 3D (mira-3d).
   Cobre o scaffold canônico (OrbitControls + GLTFLoader). Um addon fora desse par
   precisa ser adicionado aqui (rode o fecho transitivo a partir do novo entry point).
-- **GSAP** NÃO fica aqui: já é vendorado por-deck pelas skills de morph (`assets/gsap/`).
+- **GSAP** (`gsap.min.js`): core, sem plugins. É a única dependência do
+  `mira-cinema.js` (câmera, profundidade, grade), que precisa dele em TODO deck
+  que ligue o cinema, inclusive por `file://` e sem rede. Por isso ele passou a
+  viver aqui, e não só por-deck.
+  As skills de morph continuam vendorando a própria cópia em `assets/gsap/`,
+  porque elas também precisam de `DrawSVGPlugin` e `MotionPathPlugin`, que NÃO
+  ficam aqui. As duas cópias coexistem de propósito: o core para o cinema, o
+  conjunto com plugins para o morph.
 - **mp4-muxer** (MIT): muxer MP4 usado pelo `mira-record.js` no caminho WebCodecs
   (encoder GPU/CPU forçado, estilo OBS). O `mira-record.js` o carrega sob demanda de
   `<deck>/assets/vendor/mp4-muxer.js` — decks `mira-studio` devem receber esta cópia.

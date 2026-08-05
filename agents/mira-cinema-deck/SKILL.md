@@ -1,0 +1,124 @@
+---
+name: mira-cinema-deck
+description: >-
+  Orquestrar o deck cinematográfico de ponta a ponta: a cadeia narrativa do Story Team decide a
+  história, o deck nasce com o modo cinema instalado e o mira-animator implementa a partitura com
+  câmera, profundidade e grade de cor. Usar quando o usuário pedir deck cinematográfico, deck com
+  história, deck com câmera, usar o Story Team, ou a sequência inteira da premissa até o HTML
+  animado. Não usar para slide avulso, que é do mira-animator, nem para deck rápido, que é do
+  mira-fast e não tem cinema.
+---
+
+# MIRA Cinema Deck
+
+Um tema entra; sai um deck com história, encenação e câmera. Esta skill **não escreve HTML nem
+inventa metáfora**: ela conduz a ordem, instala o que precisa existir e passa o bastão. Quem
+escreve a animação continua sendo o `/mira-animator`.
+
+## Por que ela existe
+
+A cadeia narrativa e o modo cinema já existiam separados, e não se encontravam sozinhos:
+
+- o `/mira-direct-cinematic-motion` escreve partitura de câmera, mas se o deck não tiver o
+  `mira-cinema.js` ele é obrigado a produzir direção **sem** câmera, grade nem planos;
+- o `mira-cinema.js` é opt-in e não entra em deck nenhum por padrão;
+- sem alguém instalar o módulo **antes** da direção, a cadeia inteira degrada em silêncio e o
+  usuário recebe um deck comum achando que pediu cinema.
+
+Esta skill é o que fecha esse laço, e a ordem abaixo é o motivo dela.
+
+## Pré-condições, checadas antes de qualquer coisa
+
+1. **Story Team instalado.** Confira se `/mira-premise-forge` existe. Se não existir, pare e diga:
+   > "O Story Team não está instalado. Rode `npx mira-animator install` e marque **Story Team**, ou
+   > `npx mira-animator update`, que agora pergunta se você quer adicioná-lo."
+
+   Não emule os agentes narrativos dentro desta skill. Um orquestrador que finge ser a cadeia
+   entrega texto sem o método dela.
+2. **Fonte ou tema.** Sem material nenhum, pergunte de onde vem a história antes de começar.
+
+## A ordem, e por que é essa
+
+### Fase 0, o deck nasce com cinema
+
+**ANTES da direção, não depois.** É a única ordem que funciona:
+
+```bash
+npx mira-animator new <slug> --cinema
+```
+
+Isso instala `mira/mira-cinema.js` e `assets/vendor/gsap.min.js` e injeta as tags na ordem certa
+(GSAP antes do módulo, os dois antes dos módulos de autoria). A instalação é do CLI, e não sua:
+copiar biblioteca e injetar tag é passo determinístico, e é onde um agente falha em silêncio.
+
+Confira que `decks/<slug>/mira/mira-cinema.js` existe antes de seguir. Se não existir, pare: toda
+a direção de câmera das fases seguintes seria descartada.
+
+Coloque o material-fonte em `decks/<slug>/references/` agora.
+
+### Fase 1, a história (Story Team)
+
+Na ordem, um de cada vez, com o resultado de cada um alimentando o seguinte:
+
+| # | Agente | Entrega |
+|---|---|---|
+| 1 | `/mira-premise-forge` | Premise Brief |
+| 2 | `/mira-concept-storyteller` | Concept Contract |
+| 3 | `/mira-story-architect` | Story Bible |
+| 4 | `/mira-design-audience-journey` | Audience Journey Map |
+| 5 | `/mira-direct-slide-sequence` | MIRA Slide Score, uma cena por slide |
+| 6 | `/mira-direct-scene` | encenação: composição, planos com oclusão, enquadramento, grade do deck |
+| 7 | `/mira-direct-cinematic-motion` | MIRA Motion Score: temperamento, beats, câmera, easing, loop |
+
+**Dá para entrar no meio.** Se a premissa já existe, comece na 2; se a Story Bible está de pé, use
+as três últimas. Diga ao usuário em qual etapa você entrou e por quê.
+
+**Pare entre as etapas** e mostre a entrega. É deck que precisa convencer: vetar uma premissa custa
+uma mensagem, vetar um deck pronto custa a geração inteira.
+
+Grave cada entrega em `decks/<slug>/references/`, senão a etapa seguinte reconstrói de memória.
+
+### Fase 2, o deck
+
+| # | Agente | Papel |
+|---|---|---|
+| 8 | `/mira-builder` | monta o HTML a partir do Slide Score |
+| 9 | `/mira-animator` | **implementa** a partitura: metáfora, câmera, planos e grade |
+| 10 | `/mira-validator` | relatório de conformidade |
+
+O passo 9 é onde o cinema vira código. O `/mira-animator` já conhece a API (`MiraCinema.palco`,
+`Cam.*`, `Prof.*`, `Grade.*`) e os tetos. Entregue a ele o Motion Score inteiro, não um resumo.
+
+## Regras que valem sobre tudo
+
+- **A grade de cor é do DECK, uma só.** Quem decide é o `/mira-direct-scene`, na fase 1, e todos os
+  slides herdam. Grade escolhida slide a slide vira ruído, e é assim que um deck vira dez filmes.
+- **Temperamento `sereno` é o padrão.** `tenso` só quando a cena pede tensão. Pedido implícito não
+  conta.
+- **A nota de corte do `/mira-animator` (85, sem veto) é avaliada com o cinema desligado.** Câmera,
+  grade e profundidade entram depois de a cena passar, nunca para fazê-la passar. Se ao desligar os
+  quatro a animação deixa de contar a história, volte à metáfora.
+- **Nenhum agente da fase 1 escreve HTML.** Se algum entregar código, descarte e peça direção.
+- **`file://`, offline e ausência de build são premissa.** O deck tem que abrir com duplo clique.
+
+## Quando NÃO usar esta skill
+
+| Caso | Use |
+|---|---|
+| Um slide avulso | `/mira-animator` |
+| Deck rápido, sem história | `/mira-fast` ou `/mira-ultrafast`, que não têm cinema de propósito |
+| Deck de gravação com teleprompter | `/mira-studio` ou `/mira-studio-full` |
+| Trocar a animação de um slide existente | `/mira-animator` no modo substituir |
+
+## Entrega
+
+Ao terminar, diga:
+
+1. o caminho do deck e quantos slides tem;
+2. a grade escolhida e o temperamento dominante;
+3. quantos cues de câmera entraram, e em quais slides;
+4. o que o usuário deve **olhar** para aprovar: a história aparece com o título escondido? o corte
+   do loop aparece? o Replay deixa dois atores rodando? a câmera tem razão narrativa em cada cue?
+5. o que ficou de fora, se ficou.
+
+A conferência no navegador é do usuário. Não afirme que assistiu à animação.

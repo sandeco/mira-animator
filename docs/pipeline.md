@@ -36,6 +36,7 @@ Installed with the **Story Team**, it runs **before** the main line: it decides 
 
 | Step | Agent | What it does |
 |---|---|---|
+| 0 | **mira-cinema-deck** | Orchestrates the whole chain: creates the deck with `--cinema`, runs the seven stages in order and hands off to `mira-animator`. Without it the camera direction is written and never implemented. |
 | 1 | **mira-premise-forge** | Researches current facts and turns the Eureka hidden in them into a defensible **Premise Brief**. |
 | 2 | **mira-concept-storyteller** | Sets the **Concept Contract**: what the story must teach and may never distort. |
 | 3 | **mira-story-architect** | Builds the **Story Bible**: structure, characters, theme, world, symbols, plot and scenes. |

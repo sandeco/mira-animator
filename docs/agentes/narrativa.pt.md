@@ -5,12 +5,24 @@ Uma cadeia narrativa de sete etapas que transforma um fato, um conceito ou um te
 Ela fica **antes** do deck. Nenhum desses agentes escreve HTML. Eles entregam o resultado ao `/mira-animator`, que escreve a animação dentro do `index.html` do deck, e ao `/mira-builder`, que monta o resto.
 
 ```text
+cinema-deck (orquestra)
+  |
+  v
 premise-forge -> concept-storyteller -> story-architect -> design-audience-journey
              -> direct-slide-sequence -> direct-scene -> direct-cinematic-motion
              -> mira-animator escreve o deck
 ```
 
 Dá para entrar em qualquer ponto. Se a premissa já existe, comece na etapa 2. Se a Story Bible está sólida, use as três últimas.
+
+## `/mira-cinema-deck`
+
+O orquestrador da cadeia inteira. Cria o deck já com o modo cinema instalado (`new --cinema`), roda
+os sete agentes narrativos na ordem com pausa entre eles, e entrega o Motion Score ao
+`/mira-animator`, que o transforma em código. Ele existe porque a cadeia degrada em silêncio sem
+alguém no comando: sem o `mira-cinema.js` no deck, o `/mira-direct-cinematic-motion` é obrigado a
+produzir direção **sem** câmera, grade nem planos de profundidade, e você recebe um deck comum
+achando que pediu cinema.
 
 ## `/mira-premise-forge`
 

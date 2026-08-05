@@ -201,11 +201,59 @@ Estrutura de um slide de conteúdo (é o contrato, não sugestão):
 
 Capa e encerramento trocam `.slide-main` por `.slide-centro` (texto centrado, sem palco).
 
-- **O palco é o slide inteiro menos o título.** `.anim-stage` é `flex: 1 1 auto`, não uma caixa de altura fixa. Case o `viewBox` com a caixa real (`getBoundingClientRect`) em vez de fixar `0 0 1280 720`, senão o desenho estica quando a altura do slide muda.
-- **Componha no centro do palco**, não abaixo dele: aqui não há header sobreposto para desviar.
-- **Os 50px de padding do `.slide-main` são área segura.** Nada encosta na borda do quadro.
+- **O palco é o QUADRO INTEIRO.** `.anim-stage` é `position: absolute; inset: 0` e cobre a `<section>` de borda a borda, por baixo do título. Não é mais "o que sobra depois do título". Case o `viewBox` com a caixa real (`getBoundingClientRect`) em vez de fixar `0 0 1280 720`, senão o desenho estica quando a altura do slide muda.
+- **O título flutua por cima, e a animação desvia dele.** O `palco()` mede o título e devolve a faixa livre: `F.topo`, `F.alturaUtil` e `F.vy(k)`. **Use `F.vy(k)` no lugar de `F.H * k`** em toda coordenada vertical. Nada FOCAL acima de `F.topo`; ambiente pode atravessar, porque atrás do título lê como profundidade, não como conflito.
+- **Componha para preencher o quadro**, agora que ele é seu por inteiro.
+- **Os 50px de padding do `.slide-main` são área segura das bordas.** Nada essencial encosta na borda.
 - **UMA cor de marca dominante**, lida de `--mira-primary` / `--mira-accent-2`. Sem arco-íris.
-- **Sem camada cinematográfica.** Este template não tem brasas nem vinheta; o fundo é preto limpo. Quem quer o clima de gravação usa `/mira-studio-full`.
+- **Camada cinematográfica: só se o deck pediu.** Ver a seção abaixo.
+
+## Modo cinema: câmera, profundidade e grade
+
+**Só existe se o deck tiver `mira/mira-cinema.js`.** Confira o arquivo antes de escrever uma linha de câmera. Se não estiver lá, escreva a animação sem câmera, sem planos e sem grade, e diga isso na entrega. Nunca chame API que o deck não carrega.
+
+O deck nasce com cinema quando é criado com `npx mira-animator new <nome> --cinema`, que instala o módulo e o GSAP e injeta as tags na ordem certa.
+
+**O princípio:** o GSAP não anima elementos, anima ESTADOS, e os renderizadores derivam. Existem duas fontes únicas de verdade por palco, `cena.camera` e `cena.luz`. Você nunca escreve o `viewBox` na mão.
+
+```js
+const cena = MiraCinema.palco('slug-svg', { grade: 'noite-fria', seed: 41721 });
+
+Prof.plano(cena, '#g-fundo',  { z: 0.85, desfoque: 2.5, escurecer: 0.35 });
+Prof.plano(cena, '#g-meio',   { z: 0.45 });
+Prof.plano(cena, '#g-frente', { z: 0.10 });
+
+cena.tl
+  .add(Cam.estabelecer(cena, { dur: 0.8 }), 'orientacao')
+  .add(Cam.aproximar(cena, { alvo: '#ator', margem: 0.15, dur: 1.2,
+                             ease: 'decisive', razao: 'foco na decisão' }), 'antecipacao')
+  .add(Cam.segurar(cena, { dur: 0.8 }), 'impacto')
+  .add(Cam.recuar(cena, { dur: 1.0, razao: 'acomodação' }), 'saida');
+```
+
+| Peça | O que faz |
+|---|---|
+| `MiraCinema.palco(id, opts)` | cria a cena, casa o `viewBox`, dá uma timeline GSAP por palco, toca ao entrar em tela e congela ao sair. Substitui `palco()` + `reger()` |
+| `Cam.estabelecer`, `aproximar`, `revelar`, `recuar`, `segurar`, `tremor` | os seis cues; cada um devolve uma tween para encaixar na timeline com label |
+| `Prof.plano(cena, seletor, {z, desfoque, escurecer})` | profundidade; `z` de 0 (colado) a 1 (infinito), parallax = `1 - z` |
+| `Prof.foco(cena, {plano, dur})` | foco seletivo; é o ÚNICO lugar onde desfoque anima |
+| `Grade.aplicar(cena, preset)` | `neutra`, `noite-fria`, `brasa`, `clinica`, `penumbra` |
+| `cena.rnd()` | PRNG semeado. **Nunca use `Math.random()`** |
+| `cena.aoAtualizar(fn)` | único canal para derivar câmera ou luz a cada tique |
+
+**Tetos, e são números, não bom senso:**
+
+- **`razao` é obrigatória** em `aproximar`, `revelar`, `recuar` e `tremor`. Cue sem razão é câmera decorativa.
+- **Cues por cena:** no máximo 2 em `sereno`, 3 em `natural`, livre em `tenso`.
+- **Planos:** de 3 a 5, nunca mais. Raio de desfoque no máximo 4.
+- **`tremor`:** no máximo 400 ms. Num slide gravado ele lê como falha de captura, não como intenção.
+- **Filtro de tela cheia animado é proibido.** Vinheta, grão e grade são estáticos.
+
+**Oclusão é doutrina, não API.** Resolva por ordem de empilhamento no SVG e máscara, e planeje pelo menos uma passagem atrás de alguma coisa: parallax sem oclusão continua lendo como recorte deslizante.
+
+**Marque o que não pode engordar no zoom:** `data-mira-traco-fixo` no traço e `data-mira-texto-fixo` no texto. Sem isso, todo push-in engorda a arte, e o sintoma não sugere a causa.
+
+**A trava que vale acima de tudo:** nenhum recurso de cinema pode ser a única mudança de estado da cena. **A nota de corte é avaliada com o cinema desligado.** Ele entra depois de a cena passar, nunca para fazê-la passar.
 
 > **Atenção ao tamanho.** O palco aqui é bem maior que o palco dentro de um card do `aula-capitulo`. Uma composição calibrada em 3/10 para card fica pequena e perdida aqui. Componha para preencher, e trate o `@MIRA:SIZE` deste template como escala própria (ver `/mira-size-animator`).
 
