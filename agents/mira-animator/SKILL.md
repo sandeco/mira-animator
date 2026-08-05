@@ -69,18 +69,44 @@ Repetição só vale como motivo narrativo pedido pelo usuário, e aí varia mec
 
 ## Direção de movimento
 
-Antes de codar, escreva uma **beat sheet de 5 a 7 momentos** com acontecimento, ator focal, duração, easing ou física, estado resultante. O ciclo costuma durar de 4,5 a 8 segundos.
+### Temperamento, escolha antes da beat sheet
+
+O temperamento decide quantos beats cabem e que easing vale, então ele vem primeiro. **`sereno` é o padrão. `tenso` só entra quando o usuário pede tensão na cena** (uma torre desabando, um alarme). Pedido implícito não conta.
+
+| | `sereno` (padrão) | `natural` | `tenso` |
+|---|---|---|---|
+| Ciclo do loop | 9 a 14 s | 7 a 10 s | 4,5 a 7 s |
+| Beats | 4 a 5 | 5 a 6 | 6 a 7 |
+| Janela mínima entre eventos focais | 1200 ms | 800 ms | 500 ms |
+| Repouso antes de reiniciar | 1,2 a 2,0 s | 0,8 a 1,2 s | 0,4 a 0,7 s |
+| Atraso causa e efeito | 250 a 500 ms | 150 a 350 ms | 120 a 250 ms |
+| Famílias de easing | `sine`, `power1`, `power2` | `power2`, `power3` | `power4`, `expo`, `back` |
+| Atores em movimento simultâneo | 1 focal, 1 ambiente | 1 focal, 2 apoios | livre |
+| Duração de cue de câmera | 1,5 a 2,5 s | 1,0 a 1,8 s | 0,3 a 0,8 s |
+| Cues de câmera por cena | no máximo 2 | no máximo 3 | livre |
+
+As duas últimas linhas só valem em cena com câmera. Sem câmera, são inertes, não impedimento.
+
+**Regra do repouso.** Todo ciclo contém pelo menos **um trecho de 1 segundo em que nada focal se move**. Só ambiente. É a respiração da cena, e é o que separa uma animação de um letreiro luminoso. Some as durações mais o repouso: se não sobrar janela contínua de 1000 ms sem evento focal, tire um beat ou estenda o repouso. Nunca encurte a janela.
+
+**O ciclo longo é deliberado.** O slide é visto enquanto alguém fala por cima dele. Ciclo longo não cansa, ciclo curto sim. Se 4 beats parecerem pouco para 9 segundos, aumente a duração de cada beat ou resolva o estado vivo por deriva lenta; não acrescente beat.
+
+Declare o temperamento na primeira linha da beat sheet: `Temperamento: sereno · ciclo 11 s · 4 beats · repouso 1,6 s`.
+
+### Beat sheet
+
+Antes de codar, escreva uma **beat sheet** com acontecimento, ator focal, duração, easing ou física, estado resultante. O número de beats e a duração do ciclo saem da tabela do temperamento escolhido.
 
 1. **Uma ação por vez.** Em qualquer janela de 500 ms, no máximo um acontecimento focal. O resto apoia.
-2. **Causa antes do efeito.** O efeito começa 120 a 400 ms depois da causa. Mesmo frame vira decoração sincronizada.
+2. **Causa antes do efeito.** O efeito começa depois da causa, no atraso da linha "atraso causa e efeito" do temperamento. Mesmo frame vira decoração sincronizada.
 3. **Antecipação.** Preparação curta antes da ação (recuo, compressão, inclinação, pausa), 8% a 15% do tempo dela.
 4. **Peso.** Pesado acelera devagar, arco menor, quase sem overshoot. Leve acelera rápido, admite overshoot e follow-through maior.
-5. **Easing semântico.** Fluxo uniforme linear; queda ease-in; chegada e dissipação ease-out; orgânico sine-in-out; elástico só em objeto leve. Nunca o mesmo easing em tudo.
+5. **Easing semântico.** Fluxo uniforme linear; queda ease-in; chegada e dissipação ease-out; orgânico sine-in-out. Nunca o mesmo easing em tudo, e sempre dentro da família do temperamento. **`back`, `elastic` e `bounce` ficam fora do padrão**, liberados só em `tenso` ou quando a física da metáfora os exigir (uma mola é uma mola, e a beat sheet declara o motivo). São as curvas que produzem overshoot visível, e overshoot repetido faz a cena parecer agitada mesmo quando é lenta.
 6. **Hierarquia.** Um ator primário e no máximo dois movimentos secundários. Durante a ação principal o ambiente perde contraste, amplitude e velocidade.
-7. **Leitura da consequência.** Segure o estado resultante 400 a 900 ms antes de reiniciar.
+7. **Leitura da consequência.** Segure o estado resultante antes de reiniciar, pelo tempo da linha "repouso" do temperamento.
 8. **Follow-through.** Depois de impacto ou parada, partes flexíveis e rastros continuam 150 a 500 ms.
 9. **Arcos.** Objeto transportado, lançado ou articulado não anda em reta sem justificativa mecânica.
-10. **Loop invisível.** Reinicie na saída de quadro, oclusão, retorno natural ou troca de ciclo. Nunca teletransporte o estado inteiro na cara do espectador.
+10. **Loop invisível.** Reinicie na saída de quadro, oclusão, retorno natural ou troca de ciclo. Nunca teletransporte o estado inteiro na cara do espectador. Em `sereno`, a forma preferida do estado vivo é **deriva lenta contínua**: algo que respira, oscila devagar ou avança de forma quase imperceptível, em vez de repetir visivelmente o gesto focal. Ação focal repetindo a cada 5 segundos é o que mais cansa numa apresentação longa.
 
 Movimento ambiente não é narrativa. Se a beat sheet puder ser trocada por "tudo pulsa", volte à metáfora.
 
@@ -98,6 +124,8 @@ Pontue com uma evidência concreta por linha. Polimento não compensa causalidad
 | **Diversidade.** Passa no ledger e contrasta com os vizinhos. | 10 | Repete domínio, silhueta, composição e movimento. |
 
 **Corte: 85 de 100 e nenhum veto.** Abaixo disso, volte ao A/B ou à beat sheet. Não entregue "o que deu para fazer".
+
+**A nota é avaliada com o cinema desligado.** Câmera, luz, grade de cor e atmosfera entram depois de a cena passar, nunca para fazê-la passar. Se ao desligar os quatro a animação deixa de contar a história, a história não existia.
 
 **A nota é sobre o plano**, antes de codar. Não invente que assistiu à animação: a conferência no navegador é do usuário. Ao entregar, diga o que ele deve olhar (a história aparece com o título escondido? o corte do loop aparece? o Replay deixa dois atores correndo juntos?).
 
@@ -144,6 +172,7 @@ O círculo (dot, partícula, satélite, anel, pulso radial) é legítimo só par
 - **No máximo 6 palavras no título**, salvo pedido explícito.
 - **Título colado no topo:** `<section>` com `px-6 pt-3 pb-6`, wrapper sem `pt-10`, bloco do título fechando com `mb-2`.
 - **Capa com quebra equilibrada (diretiva):** segue `agents/_shared/titulo-capa.md`, `text-wrap: balance` escopado só à capa (`body > section:first-of-type h1, body > section:first-of-type h2`). Só a capa, slides de conteúdo não precisam.
+- **O palco ocupa o quadro inteiro e o título flutua por cima dele** (`mira-default`). O `palco()` mede o título e devolve a faixa livre: `F.topo`, `F.alturaUtil` e `F.vy(k)`. **Use `F.vy(k)` no lugar de `F.H * k`** para toda coordenada vertical: `F.H * .24` vira `F.vy(.24)`. Nada FOCAL acima de `F.topo`. Movimento de ambiente pode atravessar, porque atrás do título ele lê como profundidade, não como conflito.
 
 ## Variante: sandeco-just-animation-template (animação pura)
 
@@ -284,7 +313,7 @@ A cena já foi decidida na beat sheet. Aqui você só escolhe com que stack dese
 2. **Entender o conceito** do alvo (título, subtítulo, texto, pílulas, intenção da animação atual). Se o conceito vier no comando, use esse texto. Se útil, consulte `decks/<tema>/references/`.
 3. **Rodar o método:** frase causal, A/B de famílias diferentes, mapeamento, contrafactual, especificidade, distância, história, loop. **Deck inteiro usa a regra de lote.**
 4. **Ledger de diversidade** contra os outros slides animados do deck.
-5. **Beat sheet** de 5 a 7 momentos, antes de qualquer código.
+5. **Temperamento e beat sheet**, antes de qualquer código. `sereno` por padrão.
 6. **Rubrica.** Abaixo de 85 ou com veto, volte ao passo 3.
 7. **Coreografia** derivada da beat sheet, nunca de um formato pronto.
 8. **Esqueleto de `mira-templates/decks/`** como referência estrutural, CSS do stage no `<style>` e HTML do card dentro do `<main>` (modo CRIAR), ou localizar o stage e reescrever só a função (modo SUBSTITUIR).
@@ -314,12 +343,14 @@ Nenhum item é opcional. Item não marcado é trabalho não terminado, não deta
 
 **Movimento**
 
-- [ ] Beat sheet de 5 a 7 momentos escrita antes do código.
+- [ ] Temperamento declarado na primeira linha da beat sheet, `sereno` salvo pedido de tensão.
+- [ ] Beat sheet escrita antes do código, com o número de beats do temperamento.
+- [ ] Pelo menos uma janela contínua de 1 s sem evento focal no ciclo.
 - [ ] Uma ação focal por vez, ambiente recuando durante ela.
-- [ ] Efeito 120 a 400 ms depois da causa, nunca no mesmo frame.
+- [ ] Efeito depois da causa no atraso do temperamento, nunca no mesmo frame.
 - [ ] Antecipação de 8% a 15% na ação principal.
-- [ ] Easing semântico e peso coerente, sem bounce em objeto pesado nem easing único em tudo.
-- [ ] Consequência sustentada 400 a 900 ms antes do reinício.
+- [ ] Easing dentro da família do temperamento, sem `back`, `elastic` nem `bounce` fora de `tenso` ou de física declarada.
+- [ ] Consequência sustentada pelo repouso do temperamento antes do reinício.
 - [ ] Corte do loop escondido, sem teletransporte de estado.
 - [ ] Coreografia derivada da história, não escolhida de um menu.
 - [ ] Referente concreto animado como ícone flat, não bolinha genérica; atribuição no `CREDITS.md` se preciso.
