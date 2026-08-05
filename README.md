@@ -176,6 +176,7 @@ npx mira-animator sources            # list linked sources
 npx mira-animator new <name>         # create a deck from a template
 npx mira-animator edit <deck>        # turn on edit mode (reorder slides) on an existing deck
 npx mira-animator memoria <sub>      # preference memory (lembrancas, nota, consolidar, estado)
+npx mira-animator plugin <sub>       # your own agents (list, sync, validate, pack, add)
 npx mira-animator status             # show install and deck state
 npx mira-animator update             # update agents and templates
 npx mira-animator uninstall          # remove Mira from the current folder
@@ -192,8 +193,63 @@ npx mira-animator uninstall          # remove Mira from the current folder
 | `update` | Updates agents and templates to the latest version |
 | `uninstall` | Removes Mira from the current folder |
 | `memoria <sub>` | Preference memory. `lembrancas` prints what applies to a slide, `nota` records an explicit order, `consolidar` turns repeated corrections into candidate notes, `estado` activates/suspends/revokes one |
+| `plugin <sub>` | Your own agents. `list`, `sync`, `validate [<id>]`, `pack <id>`, `add <file>` (see [Plugins](#plugins-your-own-agents)) |
 
 > You can create a deck directly with `npx mira-animator new <name>` or conversationally with `/mira-new` (see [Creating a deck](#creating-a-deck)).
+
+---
+
+## Plugins: your own agents
+
+Mira ships 40+ agents. A **plugin** is an agent *you* write, living in `mira-plugins/` in your own
+folder. It never touches the Mira package, and you can share it with anyone.
+
+```
+your-folder/
+  mira-plugins/
+    yourname-something/
+      mira-plugin.json     manifest
+      SKILL.md             the agent
+      references/          optional
+      assets/              optional
+```
+
+**Installing is putting the folder in `mira-plugins/`. Uninstalling is deleting it.** Mira
+reconciles on session start: a new folder gets activated, a deleted one gets removed from your
+skills directory. No command required either way. If none of your engines has a session hook,
+run `npx mira-animator plugin sync` yourself.
+
+```bash
+npx mira-animator plugin list              # what you have and its state
+npx mira-animator plugin sync              # reconcile now, without waiting for a session
+npx mira-animator plugin validate          # check every manifest
+npx mira-animator plugin pack <id>         # produce <id>-<version>.mplug to share
+npx mira-animator plugin add <file>        # install someone else's .mplug
+```
+
+### Creating one
+
+Use `/mira-new-plugin`. It checks whether [Reversa](https://github.com/sandeco/reversa) is
+installed, installs it with your confirmation if not, then runs the spec and implementation
+cycle writing straight into `mira-plugins/<id>/`.
+
+Two things worth knowing before you start:
+
+- **Your specs stay on your machine.** They live in `_reversa_sdd/` and `_reversa_forward/` and
+  do not travel inside the `.mplug`. Whoever receives your plugin gets it working, not the specs.
+- **Installing a plugin is not required to have Reversa.** Only creating one is.
+
+### Rules Mira enforces
+
+| Rule | Why |
+|---|---|
+| Id is `<author>-<name>`, lowercase with a hyphen | Readable and collision resistant |
+| Id cannot start with `mira-` | Reserved for native agents, so your plugin never breaks when Mira ships a new one |
+| Folder name, manifest `id` and SKILL.md `name` must match | Otherwise the agent is unreachable |
+| No executable files (`.js`, `.sh`, `.bat`, `.ps1`, `.py`, …) | Plugins activate on their own at session start; third party code entering unattended is not a risk worth taking in v1 |
+| Everything the plugin needs lives inside its own folder | So deleting the folder really uninstalls it |
+
+Start from `mira-templates/authoring/plugin-exemplo/`, which is a valid skeleton.
 
 ---
 

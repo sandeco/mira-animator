@@ -17,6 +17,7 @@ const commands = {
   new:       () => import('../lib/commands/new.js'),
   edit:      () => import('../lib/commands/edit.js'),
   memoria:   () => import('../lib/commands/memoria.js'),
+  plugin:    () => import('../lib/commands/plugin.js'),
   status:    () => import('../lib/commands/status.js'),
   update:    () => import('../lib/commands/update.js'),
   uninstall: () => import('../lib/commands/uninstall.js'),
@@ -43,6 +44,9 @@ if (!command || command === '--help' || command === '-h') {
                          nota "<frase>" --eixo <eixo> [--papel capa]  grava uma ordem
                          consolidar [--simular] | estado <arquivo> <estado>
                          listar | onde
+    plugin <sub>         Plugins do usuário (pasta mira-plugins/)
+                         list | sync | validate [<id>] | pack <id> | add <arquivo>
+                         Instalar é colocar a pasta; desinstalar é apagar
     status               Mostra o estado da instalação e dos decks
     update               Atualiza agents e templates para a última versão
     uninstall            Remove o Mira da pasta atual

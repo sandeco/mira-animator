@@ -1,0 +1,8 @@
+{
+  "id": "autor-exemplo",
+  "name": "Plugin de exemplo",
+  "version": "0.1.0",
+  "author": "seu-nome",
+  "description": "Esqueleto de plugin do Mira. Troque tudo por um agente de verdade.",
+  "tier": "prompt-only"
+}
