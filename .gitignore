@@ -60,3 +60,5 @@ mira.config.json
 
 # Registro de geracao do /mira-fast: fica no disco para inspecao, fora do repo
 decks/**/mira/fast/
+
+tasks/*.diff
