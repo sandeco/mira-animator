@@ -30,6 +30,22 @@ La línea principal no es la única forma de llegar a un deck. **[`/mira-fast`](
 
 No es una etapa de la tabla anterior, la sustituye. Cambias las pausas de aprobación entre agentes por velocidad: `/mira-fast` no pregunta nada, del tema al HTML final. Usa la línea principal cuando quieras aprobar el plan de slides antes de montar; usa `/mira-fast` cuando quieras el deck listo de una vez.
 
+## La cadena narrativa (opcional)
+
+Instalada con el **Story Team**, corre **antes** de la línea principal: decide cuál es la historia, antes de que alguien decida cuáles son los slides. Ninguno de estos agentes escribe HTML, y ninguno crea la metáfora animada, que sigue siendo de `mira-animator`.
+
+| Etapa | Agente | Qué hace |
+|---|---|---|
+| 1 | **mira-premise-forge** | Investiga hechos actuales y convierte el Eureka escondido en ellos en un **Premise Brief** defendible. |
+| 2 | **mira-concept-storyteller** | Fija el **Concept Contract**: lo que la historia tiene que enseñar y nunca puede distorsionar. |
+| 3 | **mira-story-architect** | Construye la **Story Bible**: estructura, personajes, tema, mundo, símbolos, trama y escenas. |
+| 4 | **mira-design-audience-journey** | Diseña el **Audience Journey Map**: atención, curiosidad, emoción y revelación, beat a beat. |
+| 5 | **mira-direct-slide-sequence** | Transforma la historia en un **MIRA Slide Score**, una escena por slide, con transición causal a la siguiente. |
+| 6 | **mira-direct-scene** | Dirige la **puesta en escena**: composición, blocking, planos de profundidad con oclusión, encuadre, legibilidad y la única gradación de color del deck. |
+| 7 | **mira-direct-cinematic-motion** | Escribe el **MIRA Motion Score**: temperamento, beats, cámara, easing, loop interno, y el handoff que `mira-animator` implementa. |
+
+Vale la pena para un deck que necesita convencer, enseñar o ser grabado. Para un deck interno rápido, la línea principal ya resuelve.
+
 ## Agentes de ajuste de movimiento
 
 Estos corren sobre un deck existente.

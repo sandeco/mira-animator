@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Cinematic Motion Director
+  short_description: Coreografe cenas MIRA com linguagem cinematográfica
+  default_prompt: Use $mira-direct-cinematic-motion para transformar este Slide Score
+    em uma partitura cinematográfica pronta para o runtime MIRA.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

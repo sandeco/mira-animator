@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Slide Sequence Director
+  short_description: Converta histórias em sequências de slides irresistíveis
+  default_prompt: Use $mira-direct-slide-sequence para converter esta história e jornada
+    do público em um MIRA Slide Score.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

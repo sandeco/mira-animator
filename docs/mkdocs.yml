@@ -93,6 +93,7 @@ plugins:
             Interactivity agents: Agentes de Interatividade
             Responsive agents: Agentes responsivos
             Transitions: Agentes transições
+            Storytelling agents: Agentes de narrativa
             Specialized agents: Agentes especializados
             Video formats: Formatos de vídeo
             Themes and templates: Temas e templates
@@ -115,6 +116,7 @@ plugins:
             Interactivity agents: Agentes de Interactividad
             Responsive agents: Agentes responsivos
             Transitions: Agentes transiciones
+            Storytelling agents: Agentes de narrativa
             Specialized agents: Agentes especializados
             Video formats: Formatos de vídeo
             Themes and templates: Temas y plantillas
@@ -133,6 +135,7 @@ nav:
   - Interactivity agents: agentes/interatividade.md
   - Responsive agents: agentes/responsivos.md
   - Transitions: agentes/transicoes.md
+  - Storytelling agents: agentes/narrativa.md
   - Specialized agents: agentes/especializados.md
   - Linked sources: fontes.md
   - CLI: cli.md

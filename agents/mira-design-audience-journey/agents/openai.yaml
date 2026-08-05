@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Audience Journey
+  short_description: Projete atenção, emoção, curiosidade e sabedoria
+  default_prompt: Use $mira-design-audience-journey para transformar esta Story Bible
+    em uma jornada inesquecível para o público.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

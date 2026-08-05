@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Premise Forge
+  short_description: Crie premissas arrebatadoras a partir do mundo real
+  default_prompt: 'Use $mira-premise-forge para pesquisar fatos atuais, desenterrar
+    o momento Eureca e criar uma premissa arrebatadora sobre: [tema ou notícia].'
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

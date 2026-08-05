@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Story Architect
+  short_description: Arquitete histórias impactantes para o MIRA
+  default_prompt: 'Use $mira-story-architect para transformar esta premissa em uma
+    arquitetura narrativa completa, surpreendente, educativa e emocional: [premissa].'
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

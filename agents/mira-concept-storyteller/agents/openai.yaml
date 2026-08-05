@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Concept Storyteller
+  short_description: Explique conceitos com histórias fiéis
+  default_prompt: Use $mira-concept-storyteller para explicar [conceito] a [público]
+    por meio de uma história fiel, em [formato e extensão].
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true

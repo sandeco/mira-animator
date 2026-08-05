@@ -1,0 +1,14 @@
+interface:
+  display_name: MIRA Scene Director
+  short_description: Encene o quadro antes de mover qualquer coisa
+  default_prompt: Use $mira-direct-scene para transformar este Slide Score em uma Encenação
+    com composição, planos de profundidade, legibilidade e grade do deck.
+  icon_small: assets/icon.svg
+  icon_large: assets/icon.svg
+policy:
+  products:
+  - chatgpt
+  - codex
+  - api
+  - atlas
+  allow_implicit_invocation: true
