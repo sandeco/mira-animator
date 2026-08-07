@@ -12,6 +12,47 @@ Verificação contra o código: `mira-cinema.js`, agosto de 2026.
 
 ---
 
+## A regra que vale sobre este arquivo inteiro
+
+> **A lista de cues não é a lista de efeitos possíveis. Cue é palavra, efeito é frase.**
+
+O efeito que a cena pede quase nunca tem um cue com o mesmo nome. Ele se **constrói** combinando os
+que existem, em camadas e em sequência. Quem procura o botão "Vertigo" no motor não acha e conclui
+errado que não dá; quem entende que Vertigo é fechar o enquadramento enquanto os planos escalam ao
+contrário, monta.
+
+Três exemplos do que isso significa na prática:
+
+| O que a cena pede | Não existe como cue | Se constrói assim |
+|---|---|---|
+| Punch in | não | `aproximar` de 200 ms, escala 1,08, e volta |
+| Trovão | não | clarão, recuo, tremor com direção, oscilação, estabilização |
+| Vertigo | não | escala do enquadramento fechando contra os planos abrindo |
+
+**Isso não é aspiração, é arquitetura.** O motor tem canais independentes que o tique **soma** ao
+escrever o quadro:
+
+```
+enquadramento   camera.x, camera.y, camera.w, camera.h
+abalo           tremor
+tensão          vibração sustentada
+planos          parallax e profundidade de campo, por camada
+```
+
+Nenhum sabe da existência do outro, e é isso que os deixa coexistir sem briga. Tensão sustentada, com
+um tremor por cima, durante um push-in, com rack focus no meio, são quatro canais escrevendo ao mesmo
+tempo, e o resultado é uma frase de câmera, não um conflito.
+
+**O que de fato conflita** são dois cues do MESMO canal no mesmo intervalo: dois zooms disputando o
+enquadramento, dois tremores disputando o abalo. Só isso é erro, e o painel de câmera marca em
+vermelho.
+
+Consequência para quem dirige: quando o efeito desejado não estiver nas prateleiras abaixo, **não
+pare**. Pergunte de que canais ele é feito e em que ordem no tempo, e descreva a combinação. Só
+declare pendente quando faltar o canal, não quando faltar o nome.
+
+---
+
 ## O teto de tudo: a câmera é um `viewBox`
 
 O motor escreve quatro números por quadro: `x y largura altura`. Daí saem **deslocar** e **escalar**,

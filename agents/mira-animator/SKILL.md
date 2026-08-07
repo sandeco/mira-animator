@@ -250,7 +250,7 @@ cena.tl
 - **Planos:** de 3 a 5, nunca mais. Raio de desfoque no máximo 4.
 - **`tremor`:** 400 ms é conselho, não corte. O motor honra até 1,2 s e avisa no console acima de 400 ms. Num slide gravado, tremor longo lê como falha de captura, não como intenção.
 - **`tremor` contra `tensao`:** mesma vibração, papéis opostos. Tremor é **pontuação**, um instante, amplitude até 0,03. Tensão é **estado**, sustenta o tempo que a cena pedir, amplitude até 0,008. Tensão forte e curta vira tremor mal feito; tremor longo vira motor ligado.
-- **Os cues coexistem.** `camera`, `abalo` e `tensao` são canais separados que o tique soma, então tensão sustentada com um tremor por cima durante um zoom é uma frase legítima, não conflito. O que conflita é dois cues do **mesmo** canal no mesmo intervalo.
+- **Os cues coexistem, e é assim que efeito novo nasce.** `camera`, `abalo`, `tensao` e os planos são canais separados que o tique soma. Tensão sustentada com um tremor por cima durante um zoom é uma frase legítima, não conflito. O que conflita é dois cues do **mesmo** canal no mesmo intervalo. Se a direção pedir um efeito que não tem cue com esse nome (punch in, trovão, Vertigo), monte com os canais em vez de recusar: a lista de cues é o vocabulário, não a lista de efeitos possíveis.
 - **Filtro de tela cheia animado é proibido.** Vinheta, grão e grade são estáticos.
 
 **DOIS RELÓGIOS POR CENA. Partícula não anda no relógio da história.**
