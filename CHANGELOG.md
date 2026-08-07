@@ -4,6 +4,66 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.56
+
+### Novo
+
+**Dois agentes novos no Story Team, que agora tem 10.**
+
+O `/mira-scene-brief` resolve um problema que aparecia como slide genérico. A cadeia narrativa
+produz cerca de 28 mil palavras de direção, e quem desenhava o slide chegava lendo 13 mil palavras
+acumuladas. Ninguém decide bem assim. Ele destila tudo num briefing curto e autossuficiente por
+slide, e o animator passa a receber **um briefing por vez**. A cadeia continua inteira, ela só para
+de ser lida.
+
+O `/mira-cine-animator` é o irmão do `/mira-animator` para o slide em que o cinema **é** a cena, e
+não o tempero. Ele não copia o método, aponta para o outro e inverte duas travas: um recurso de
+cinema pode ser a mudança de estado dominante, e a nota de corte é avaliada com o cinema ligado.
+Como não há cópia, recurso novo que entra num aparece no outro sozinho.
+
+**Tensão de câmera, e o tremor virou impacto de verdade.**
+
+`Cam.tensao` é vibração fraca e sustentada, o quadro que não assenta enquanto a ameaça dura. O
+`Cam.tremor` ganhou envoltória de impacto, com ataque e queda, no lugar da vibração uniforme.
+
+E os dois **convivem com o resto**: enquadramento, tremor e tensão viraram canais separados que o
+motor soma. Tensão sustentada, com um tremor por cima, durante um zoom, é uma frase de câmera
+legítima agora, não um conflito.
+
+**Modo câmera na tecla `C`.**
+
+Quatro pistas, uma por tipo de efeito, para cues sobrepostos no tempo. Agulha que percorre a cena
+quadro a quadro. Intensidade e duração em slider, com prévia ao vivo. Salva tudo como comentário
+dentro da `<section>`, e sobrevive ao F5.
+
+### Corrigido
+
+**O loop dos slides estava desligado, em todo deck com o modo câmera.** Um padrão errado desligava
+o loop de todos os slides na carga, por cima do que o motor já tinha configurado. Nem F5 resolvia,
+porque a coisa se repetia a cada abertura. O sintoma era estranho o bastante para despistar: "as
+partículas param no fim da animação".
+
+**Poeira, fumaça e faísca morriam junto com a história.** Elas rodavam no relógio da cena, então um
+slide que fecha no último quadro virava foto. Agora a atmosfera tem relógio próprio: a história pode
+parar, o ar continua. No modo edição as duas congelam, para você não arrastar um elemento com fumaça
+correndo por cima.
+
+**Um tremor no meio de um zoom desfazia o zoom.** Efeito colateral de os dois disputarem o mesmo
+canal. Com canais separados, não disputam mais.
+
+Mais quatro correções menores no modo câmera: abalos que empilhavam a cada Play, quadro que ficava
+deslocado ao voltar com a agulha, intensidade que voltava zerada do arquivo, e marcadores que
+duplicavam a cada save.
+
+### Documentação
+
+**Catálogo de câmera**, nas referências do `/mira-direct-cinematic-motion`: 30 efeitos de linguagem
+cinematográfica cruzados com o que o motor faz de verdade, em quatro prateleiras, mais um índice por
+intenção ("a cena precisa de choque, com o que eu faço?").
+
+Um fato medido que vale para quem dirige: **zoom quase não produz parallax**. Zoom é lente, não
+passo, e todas as camadas crescem igual. Profundidade se pede com travelling.
+
 ## 0.1.55
 
 ### Corrigido

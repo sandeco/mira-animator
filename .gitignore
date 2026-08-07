@@ -60,3 +60,10 @@ mira.config.json
 
 # Registro de geracao do /mira-fast: fica no disco para inspecao, fora do repo
 decks/**/mira/fast/
+
+# Saida de instalar o Mira dentro do proprio repo fonte.
+# Instalar aqui e o jeito de os agentes virarem /comando durante o
+# desenvolvimento, mas o resultado e copia do que ja esta versionado em
+# agents/ e templates/, entao commitar seria duplicar o repo dentro dele.
+mira-templates/
+.mira/
