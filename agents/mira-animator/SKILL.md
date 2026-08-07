@@ -268,6 +268,10 @@ Acumule o tempo da atmosfera, não leia o relógio de parede: ela pausa em três
 
 **A trava que vale acima de tudo:** nenhum recurso de cinema pode ser a única mudança de estado da cena. **A nota de corte é avaliada com o cinema desligado.** Ele entra depois de a cena passar, nunca para fazê-la passar.
 
+> **Existe um irmão para o caso contrário.** Quando o autor pedir explicitamente uma cena em que o cinema **é** a cena, a skill é a `/mira-cine-animator`. Ela herda este método inteiro por referência e inverte exatamente estas duas travas, e só elas. Aqui, a trava continua valendo sem exceção: não afrouxe por conta própria porque a cena ficaria bonita. Se o caso for esse, diga ao autor que existe o irmão e deixe a escolha com ele.
+
+**Recurso novo que chegar aqui vale no irmão também, quando for viável.** A `/mira-cine-animator` não copia este arquivo, ela aponta para ele, então a herança é automática e não há nada a sincronizar. O que exige decisão humana é só o recurso que colidir com as duas inversões, e a exceção se registra lá.
+
 > **Atenção ao tamanho.** O palco aqui é bem maior que o palco dentro de um card do `aula-capitulo`. Uma composição calibrada em 3/10 para card fica pequena e perdida aqui. Componha para preencher, e trate o `@MIRA:SIZE` deste template como escala própria (ver `/mira-size-animator`).
 
 ## Estrutura obrigatória do card

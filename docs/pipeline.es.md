@@ -46,6 +46,8 @@ Instalada siempre, con el **Story Team**, corre **antes** de la línea principal
 | 7 | **mira-direct-cinematic-motion** | Escribe el **MIRA Motion Score**: temperamento, beats, cámara, easing, loop interno, y el handoff que `mira-animator` implementa. |
 | 8 | **mira-scene-brief** | Destila la cadena en un **briefing de escena corto y autosuficiente por diapositiva**, para que quien dibuja la animación nunca lea la cadena. Lleva el ancla que une una diapositiva con la siguiente. |
 
+Para la diapositiva en la que el cine **es** la escena, y no el condimento, `mira-animator` tiene un hermano: **`mira-cine-animator`**. Hereda todo el método por referencia e invierte dos trabas, así que un movimiento de cámara, un plano de profundidad o la atmósfera pueden ser el cambio de estado dominante, y la nota de corte se evalúa con el cine encendido. Se invoca explícitamente, nunca por defecto.
+
 Vale la pena para un deck que necesita convencer, enseñar o ser grabado. Para un deck interno rápido, la línea principal ya resuelve.
 
 ## Agentes de ajuste de movimiento

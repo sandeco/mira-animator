@@ -46,6 +46,8 @@ Always installed, with the **Story Team**, it runs **before** the main line: it 
 | 7 | **mira-direct-cinematic-motion** | Writes the **MIRA Motion Score**: temperament, beats, camera, easing, internal loop, and the handoff `mira-animator` implements. |
 | 8 | **mira-scene-brief** | Distils the chain into a short, **self-contained scene brief per slide**, so whoever draws the animation never reads the chain. Carries the anchor that links one slide to the next. |
 
+For a slide where the cinema **is** the scene, not the seasoning, `mira-animator` has a sibling: **`mira-cine-animator`**. It inherits the whole method by reference and inverts two locks, so a camera move, a depth plane or the atmosphere may be the dominant state change, and the cut score is judged with the cinema on. Invoked explicitly, never by default.
+
 It is worth it for a deck that has to convince, teach or be recorded. For a quick internal deck, the main line already does the job.
 
 ## Motion-tuning agents
