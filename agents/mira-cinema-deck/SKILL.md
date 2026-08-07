@@ -69,6 +69,7 @@ Na ordem, um de cada vez, com o resultado de cada um alimentando o seguinte:
 | 5 | `/mira-direct-slide-sequence` | MIRA Slide Score, uma cena por slide |
 | 6 | `/mira-direct-scene` | encenação: composição, planos com oclusão, enquadramento, grade do deck |
 | 7 | `/mira-direct-cinematic-motion` | MIRA Motion Score: temperamento, beats, câmera, easing, loop |
+| 7b | `/mira-scene-brief` | destila tudo em um briefing autossuficiente por slide, com a âncora que liga um ao outro |
 
 **Dá para entrar no meio.** Se a premissa já existe, comece na 2; se a Story Bible está de pé, use
 as três últimas. Diga ao usuário em qual etapa você entrou e por quê.
@@ -86,8 +87,27 @@ Grave cada entrega em `decks/<slug>/references/`, senão a etapa seguinte recons
 | 9 | `/mira-animator` | **implementa** a partitura: metáfora, câmera, planos e grade |
 | 10 | `/mira-validator` | relatório de conformidade |
 
-O passo 9 é onde o cinema vira código. O `/mira-animator` já conhece a API (`MiraCinema.palco`,
-`Cam.*`, `Prof.*`, `Grade.*`) e os tetos. Entregue a ele o Motion Score inteiro, não um resumo.
+Entre a fase 1 e o passo 9 entra o **`/mira-scene-brief`**, e ele muda o que o passo 9 recebe.
+
+A cadeia produz cerca de 28 mil palavras antes de existir imagem. Quem desenhava o slide chegava
+lendo 13 mil palavras acumuladas, e o resultado medido não era um slide melhor, era um slide
+genérico: ninguém decide bem com 13 mil palavras na frente. O `/mira-scene-brief` destila tudo em um
+briefing autossuficiente por slide, cerca de 180 palavras.
+
+**A cadeia continua inteira. Ela só para de ser lida.**
+
+Consequência para este orquestrador, e é a regra que mais muda:
+
+- **entregue ao `/mira-animator` um briefing por vez**, o daquele slide, e nada mais. Nem o Motion
+  Score, nem o Slide Score, nem os briefings dos vizinhos;
+- se um slide sair errado, o defeito está **no briefing**, não no implementador. Corrija o briefing e
+  gere de novo, em vez de mandar mais contexto junto. Mandar mais contexto desfaz o método.
+
+O `/mira-animator` já conhece a API (`MiraCinema.palco`, `Cam.*`, `Prof.*`, `Grade.*`) e os tetos, e
+não precisa da cadeia para isso.
+
+**Exceção:** deck de um slide só não tem âncora entre cenas, e aí a destilação não paga o passo.
+Nesse caso o Motion Score vai direto para o passo 9.
 
 ## Depois de pronto: a câmera se ajusta na tela, não no código
 

@@ -30,9 +30,9 @@ The main line is not the only way to get to a deck. **[`/mira-fast`](agentes/cor
 
 It is not a step in the table above, it replaces it. You trade the approval pauses between agents for speed: `/mira-fast` asks nothing, from topic to final HTML. Use the main line when you want to approve the slide plan before anything is built; use `/mira-fast` when you want the deck done in one go.
 
-## The narrative chain (optional)
+## The narrative chain
 
-Installed with the **Story Team**, it runs **before** the main line: it decides what the story is, before anyone decides what the slides are. None of these agents writes HTML, and none of them creates the animated metaphor, which stays with `mira-animator`.
+Always installed, with the **Story Team**, it runs **before** the main line: it decides what the story is, before anyone decides what the slides are. None of these agents writes HTML, and none of them creates the animated metaphor, which stays with `mira-animator`.
 
 | Step | Agent | What it does |
 |---|---|---|
@@ -44,6 +44,7 @@ Installed with the **Story Team**, it runs **before** the main line: it decides 
 | 5 | **mira-direct-slide-sequence** | Turns the story into a **MIRA Slide Score**, one scene per slide, with a causal transition into the next. |
 | 6 | **mira-direct-scene** | Directs the **staging**: composition, blocking, depth planes with occlusion, framing, legibility and the deck's single color grade. |
 | 7 | **mira-direct-cinematic-motion** | Writes the **MIRA Motion Score**: temperament, beats, camera, easing, internal loop, and the handoff `mira-animator` implements. |
+| 8 | **mira-scene-brief** | Distils the chain into a short, **self-contained scene brief per slide**, so whoever draws the animation never reads the chain. Carries the anchor that links one slide to the next. |
 
 It is worth it for a deck that has to convince, teach or be recorded. For a quick internal deck, the main line already does the job.
 

@@ -30,9 +30,9 @@ La línea principal no es la única forma de llegar a un deck. **[`/mira-fast`](
 
 No es una etapa de la tabla anterior, la sustituye. Cambias las pausas de aprobación entre agentes por velocidad: `/mira-fast` no pregunta nada, del tema al HTML final. Usa la línea principal cuando quieras aprobar el plan de slides antes de montar; usa `/mira-fast` cuando quieras el deck listo de una vez.
 
-## La cadena narrativa (opcional)
+## La cadena narrativa
 
-Instalada con el **Story Team**, corre **antes** de la línea principal: decide cuál es la historia, antes de que alguien decida cuáles son los slides. Ninguno de estos agentes escribe HTML, y ninguno crea la metáfora animada, que sigue siendo de `mira-animator`.
+Instalada siempre, con el **Story Team**, corre **antes** de la línea principal: decide cuál es la historia, antes de que alguien decida cuáles son los slides. Ninguno de estos agentes escribe HTML, y ninguno crea la metáfora animada, que sigue siendo de `mira-animator`.
 
 | Etapa | Agente | Qué hace |
 |---|---|---|
@@ -44,6 +44,7 @@ Instalada con el **Story Team**, corre **antes** de la línea principal: decide 
 | 5 | **mira-direct-slide-sequence** | Transforma la historia en un **MIRA Slide Score**, una escena por slide, con transición causal a la siguiente. |
 | 6 | **mira-direct-scene** | Dirige la **puesta en escena**: composición, blocking, planos de profundidad con oclusión, encuadre, legibilidad y la única gradación de color del deck. |
 | 7 | **mira-direct-cinematic-motion** | Escribe el **MIRA Motion Score**: temperamento, beats, cámara, easing, loop interno, y el handoff que `mira-animator` implementa. |
+| 8 | **mira-scene-brief** | Destila la cadena en un **briefing de escena corto y autosuficiente por diapositiva**, para que quien dibuja la animación nunca lea la cadena. Lleva el ancla que une una diapositiva con la siguiente. |
 
 Vale la pena para un deck que necesita convencer, enseñar o ser grabado. Para un deck interno rápido, la línea principal ya resuelve.
 

@@ -1,6 +1,6 @@
 # Agentes de narrativa
 
-Una cadena narrativa de siete etapas que transforma un hecho, un concepto o un tema en historia, y la historia en escenas puestas en cuadro y coreografiadas. Es opcional: instálala con el **Story Team**.
+Una cadena narrativa de siete etapas que transforma un hecho, un concepto o un tema en historia, y la historia en escenas puestas en cuadro y coreografiadas. Viene siempre instalada, con el **Story Team**.
 
 Está **antes** del deck. Ninguno de estos agentes escribe HTML. Entregan el resultado a `/mira-animator`, que escribe la animación dentro del `index.html` del deck, y a `/mira-builder`, que monta el resto.
 
@@ -51,6 +51,12 @@ Dirige la **puesta en escena**, todo lo que existe antes del movimiento: composi
 ## `/mira-direct-cinematic-motion`
 
 Convierte las escenas en un **MIRA Motion Score**: temperamento, beats en una timeline con labels, los seis cues de cámara, easing semántico, loop interno, transición de salida, responsividad, reduced motion y fallbacks. Termina en un handoff que `/mira-animator` implementa.
+
+## `/mira-scene-brief`
+
+Destila toda la cadena en un **briefing de escena corto y autosuficiente por diapositiva**: título en pantalla, función dramática, anclas de entrada y de salida, objetos con su nombre real, historia en tres tiempos, loop, temperamento y prohibiciones. Es el último paso que produce texto, y existe para que quien dibuja la diapositiva nunca lea la cadena: la cadena sigue entera, solo deja de leerse.
+
+El ancla es el campo que sostiene el deck. El ancla de salida de una diapositiva es literalmente la de entrada de la siguiente, con posición declarada, o el deck se lee como escenas bonitas sin historia.
 
 ## Lo que estos agentes no pueden inventar
 

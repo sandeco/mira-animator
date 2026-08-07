@@ -1,6 +1,6 @@
 # Storytelling agents
 
-A seven-step narrative chain that turns a fact, a concept or a theme into a story, and the story into staged, choreographed scenes. It is optional: install it with the **Story Team**.
+A seven-step narrative chain that turns a fact, a concept or a theme into a story, and the story into staged, choreographed scenes. It always comes installed, with the **Story Team**.
 
 It sits **before** the deck. None of these agents writes HTML. They hand the result to `/mira-animator`, which writes the animation inside the deck's `index.html`, and to `/mira-builder`, which assembles the rest.
 
@@ -51,6 +51,12 @@ Directs the **staging**, everything that exists before movement: composition, bl
 ## `/mira-direct-cinematic-motion`
 
 Converts the staged scenes into a **MIRA Motion Score**: temperament, beats on a labeled timeline, the six camera cues, semantic easing, internal loop, exit transition, responsiveness, reduced motion and fallbacks. It ends in a handoff that `/mira-animator` implements.
+
+## `/mira-scene-brief`
+
+Distils the whole chain into a **short, self-contained scene brief per slide**: on-screen title, dramatic function, entry and exit anchors, objects named for what they really are, the story in three beats, loop, temperament and prohibitions. It is the last step that produces text, and it exists so whoever draws the slide never reads the chain: the chain stays whole, it just stops being read.
+
+The anchor is the field that carries the deck. One slide's exit anchor is literally the next one's entry anchor, with a stated position, or the deck reads as pretty scenes with no story.
 
 ## What these agents may not invent
 

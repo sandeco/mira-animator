@@ -1,6 +1,6 @@
 # Agentes de narrativa
 
-Uma cadeia narrativa de sete etapas que transforma um fato, um conceito ou um tema em história, e a história em cenas encenadas e coreografadas. É opcional: instale com o **Story Team**.
+Uma cadeia narrativa de sete etapas que transforma um fato, um conceito ou um tema em história, e a história em cenas encenadas e coreografadas. Vem sempre instalada, com o **Story Team**.
 
 Ela fica **antes** do deck. Nenhum desses agentes escreve HTML. Eles entregam o resultado ao `/mira-animator`, que escreve a animação dentro do `index.html` do deck, e ao `/mira-builder`, que monta o resto.
 
@@ -51,6 +51,12 @@ Dirige a **encenação**, tudo que existe antes do movimento: composição, bloc
 ## `/mira-direct-cinematic-motion`
 
 Converte as cenas encenadas em um **MIRA Motion Score**: temperamento, beats em timeline com labels, os seis cues de câmera, easing semântico, loop interno, transição de saída, responsividade, reduced motion e fallbacks. Termina em um handoff que o `/mira-animator` implementa.
+
+## `/mira-scene-brief`
+
+Destila a cadeia inteira num **briefing de cena curto e autossuficiente por slide**: título de tela, função dramática, âncoras de entrada e de saída, objetos com o nome real, história em três tempos, loop, temperamento e proibições. É a última etapa que produz texto, e existe para quem desenha o slide nunca ler a cadeia: ela continua inteira, só para de ser lida.
+
+A âncora é o campo que sustenta o deck. A âncora de saída de um slide é literalmente a de entrada do seguinte, com posição declarada, senão o deck lê como cenas bonitas sem história.
 
 ## O que esses agentes não podem inventar
 

@@ -68,6 +68,7 @@
     "agents/mira-direct-slide-sequence",
     "agents/mira-direct-scene",
     "agents/mira-direct-cinematic-motion",
+    "agents/mira-scene-brief",
     "bin/",
     "lib/",
     "templates/",
