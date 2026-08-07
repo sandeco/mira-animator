@@ -246,6 +246,10 @@ Regras de dosagem, todas numéricas:
 
 Órbita e corte de câmera não existem: órbita exigiria 3D, e corte é troca de slide. Usar [camera-easing-transitions.md](references/camera-easing-transitions.md) para a função narrativa de cada movimento. Garantir que o público tenha tempo de orientar-se antes de mudança complexa.
 
+**Quando a intenção não couber nos sete cues**, consultar [catalogo-de-camera.md](references/catalogo-de-camera.md) antes de descrever qualquer coisa. É o inventário da linguagem de câmera com o estado de cada peça no motor, em quatro prateleiras: pronto, existe mas falta nomear, precisa de peça nova, e fora do motor. Serve para dois casos opostos e igualmente comuns: descobrir que o efeito desejado já existe com outro nome, e descobrir que ele não existe antes de instruir o implementador a inventá-lo.
+
+Uma advertência dele que vale repetir aqui, porque foi medida e contraria a intuição: **zoom quase não produz parallax.** Zoom é lente, não passo, e todas as camadas crescem igual. Quando a cena pedir profundidade, o cue é `revelar`, não `aproximar`.
+
 ### 5. Dirigir easing e física percebida
 
 Selecionar comportamento:
