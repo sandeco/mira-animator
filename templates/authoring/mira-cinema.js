@@ -186,6 +186,25 @@
 
             /* estado único de enquadramento */
             camera: { x: 0, y: 0, w: 960, h: 460 },
+
+            /* ---- abalos: deslocamento SOMADO ao enquadramento ----------
+               Tremor e tensão não são enquadramento, são o quadro balançando
+               dentro dele. Escrevendo em cena.camera, como a primeira versão
+               do tremor fazia, eles brigavam com o zoom: o cue guardava o
+               x0/y0 do instante em que foi criado (o quadro base) e no fim
+               devolvia a câmera para lá, desfazendo o zoom em curso.
+
+               Canais separados resolvem, e resolvem também entre si: tremor
+               e tensão têm um canal cada, e o tique SOMA os dois. É o que
+               permite os quatro efeitos rodarem ao mesmo tempo, que é o
+               ponto: tensão sustentada, com um tremor por cima, durante um
+               zoom, é uma frase de câmera legítima e comum.
+
+               A unidade é FRAÇÃO da largura do quadro, não pixel do viewBox:
+               convertida no tique, a mesma tensão vale igual num plano
+               aberto e num close, em vez de sumir quando a câmera fecha. */
+            abalo: { x: 0, y: 0 },
+            tensao: { x: 0, y: 0 },
             /* estado único de luz. A onda 1 só o transporta; quem escreve
                nele é o Luz.* da onda 2. Reservado aqui para que o canal e o
                tique já existam quando a luz chegar. */
@@ -314,8 +333,14 @@
        --------------------------------------------------------------------- */
     function escreverViewBox(cena) {
         var c = cena.camera;
+        /* os abalos entram AQUI, no único lugar que escreve o viewBox, e
+           somados: nenhum deles precisa saber que os outros existem. Em
+           fração da largura corrente, então o balanço acompanha o zoom. */
+        var dx = (cena.abalo.x + cena.tensao.x) * c.w;
+        var dy = (cena.abalo.y + cena.tensao.y) * c.w;
         cena.svg.setAttribute('viewBox',
-            c.x.toFixed(2) + ' ' + c.y.toFixed(2) + ' ' + c.w.toFixed(2) + ' ' + c.h.toFixed(2));
+            (c.x + dx).toFixed(2) + ' ' + (c.y + dy).toFixed(2) + ' '
+            + c.w.toFixed(2) + ' ' + c.h.toFixed(2));
     }
 
     /* INVARIANTE: o enquadramento SEMPRE respeita a proporção do palco.
@@ -363,7 +388,21 @@
         /* 4. derivadores registrados, na ordem de registro.
               É a única costura entre o SVG e a camada de atmosfera, e ser
               canal único é proposital: é o que garante que tudo derive do
-              mesmo tique. */
+              mesmo tique.
+
+              EDIÇÃO CONGELA O AR. A atmosfera roda no ticker, não na
+              timeline, então a pausa que o modo edição dá na cena.tl não
+              a alcança: sem este corte o usuário arrastaria um elemento
+              com fumaça correndo por cima dele.
+
+              A marca é `_arCongelado`, e NÃO o `_presaNaBase`, apesar de
+              a edição ligar os dois. O `_presaNaBase` também é ligado pelo
+              modo câmera, que prende o quadro na base para medir os focos.
+              Lá o ar tem que CONTINUAR correndo: quem arrasta a agulha da
+              régua quer ver o quadro como o público vê, e cena com fumaça
+              parada não é esse quadro. Duas marcas porque são dois
+              motivos diferentes de travar. */
+        if (cena._arCongelado) return;
         for (var i = 0; i < cena._derivadores.length; i++) {
             try { cena._derivadores[i](cena); }
             catch (e) { console.warn('[mira-cinema] derivador falhou:', e); }
@@ -459,27 +498,98 @@
             o = o || {};
             return gsap.to({}, { duration: o.dur != null ? o.dur : 0.6 });
         },
-        /* TETO: 400 ms e amplitude contida. Tremor é o efeito mais fácil de
-           estragar, e num slide sendo gravado ele lê como falha de captura,
-           não como intenção. */
+        /* 400 ms é CONSELHO, não teto. Tremor é o efeito mais fácil de
+           estragar, e passando disso ele lê como falha de captura e não como
+           intenção, então o módulo avisa. Mas quem escreve a cena decide: o
+           corte silencioso fazia o painel mentir, mostrando uma duração que
+           o motor não obedecia. Aviso informa, corte engana. */
         tremor: function (cena, o) {
             o = o || {};
             exigirRazao('tremor', o);
-            var dur = Math.min(o.dur != null ? o.dur : 0.25, 0.4);
-            if (o.dur != null && o.dur > 0.4) {
-                console.warn('[mira-cinema] Cam.tremor limitado a 400 ms (pedido: ' + o.dur + 's).');
+            var dur = Math.max(0.05, Math.min(o.dur != null ? o.dur : 0.25, 1.2));
+            if (dur > 0.4) {
+                console.warn('[mira-cinema] Cam.tremor de ' + dur.toFixed(2)
+                    + 's: acima de 400 ms o impacto começa a ler como falha de captura.');
             }
-            var amp = Math.min(o.amplitude != null ? o.amplitude : 0.012, 0.02) * cena.camera.w;
-            var x0 = cena.camera.x, y0 = cena.camera.y;
-            return gsap.to(cena.camera, {
-                duration: dur,
-                ease: 'none',
-                x: x0, y: y0,
+            /* teto 0,03. O de 0,01 foi erro meu de calibragem: somado à
+               envoltória de queda, o MÁXIMO do painel deslocava o quadro em
+               meio por cento da largura e não se via nada. Um teto que não
+               chega a ser visível não é um teto, é um controle quebrado. */
+            var amp = Math.min(o.amplitude != null ? o.amplitude : 0.006, 0.03);
+            /* a tween mira o PRÓPRIO canal, não um objeto solto. Assim ela
+               aparece em tl.getChildren().targets(), que é como quem remonta
+               a câmera (o modo câmera) encontra e mata os cues antigos. Com
+               alvo solto, cada remontagem empilhava mais um tremor sobre o
+               anterior, e a cena ia ficando mais trêmula a cada Play. */
+            cena.abalo.t = 0;
+            var lado = 1;
+            return gsap.to(cena.abalo, {
+                t: 1, duration: dur, ease: 'none',
                 onUpdate: function () {
-                    cena.camera.x = x0 + (cena.rnd() - 0.5) * amp;
-                    cena.camera.y = y0 + (cena.rnd() - 0.5) * amp;
+                    /* IMPACTO: ataque seco, cabeça curta em força cheia, e
+                       só então a queda.
+
+                       A queda quadrática pura, sem cabeça, foi erro medido:
+                       gastava tudo nos três primeiros quadros. Sobreposta a
+                       um zoom, que já move a câmera 3 unidades por quadro,
+                       ela sumia por completo. 15% de cabeça é o que dá corpo
+                       à pancada sem virar vibração de motor. */
+                    var u = cena.abalo.t;
+                    var env = u < 0.15 ? 1 : Math.pow(1 - (u - 0.15) / 0.85, 1.6);
+                    var g = amp * env;
+
+                    /* SINAL ALTERNADO a cada quadro, e não posição sorteada.
+                       Sorteio uniforme passa a maior parte do tempo perto do
+                       centro: o deslocamento médio virava um quarto da
+                       amplitude e o número no painel mentia sobre a força.
+                       Alternar é o que a câmera faz de verdade ao levar uma
+                       pancada, e usa a amplitude inteira. O sorteio fica só
+                       na MAGNITUDE, para não ler como onda regular. */
+                    lado = -lado;
+                    cena.abalo.x = lado * g * (0.55 + 0.45 * cena.rnd());
+                    /* y contra x e um pouco menor: sacudida de camera tem
+                       eixo dominante, e balanço igual nos dois lê como gelatina */
+                    cena.abalo.y = -lado * g * (0.55 + 0.45 * cena.rnd()) * 0.75;
                 },
-                onComplete: function () { cena.camera.x = x0; cena.camera.y = y0; }
+                onComplete: function () { cena.abalo.x = 0; cena.abalo.y = 0; }
+            });
+        },
+
+        /* TENSÃO: é o MESMO tremor, e a diferença é só a envoltória.
+
+           A primeira versão somava senoides, uma deriva suave de câmera na
+           mão. Estava errada: deriva é movimento, e o que sustenta tensão
+           numa cena é vibração contida, o quadro nunca assentando. Mesma
+           mecânica do tremor, então, com três trocas:
+
+             amplitude   muito menor, é para incomodar e não para bater;
+             envoltória   PLANA, sem queda, ela sustenta o tempo todo;
+             duração     sem teto, o bloco cobre a cena inteira se precisar.
+
+           Tremor é pontuação, tensão é estado. Mesma vibração, tempos e
+           forças opostos. */
+        tensao: function (cena, o) {
+            o = o || {};
+            exigirRazao('tensao', o);
+            var dur = o.dur != null ? o.dur : 3;
+            var amp = Math.min(o.amplitude != null ? o.amplitude : 0.003, 0.008);
+            cena.tensao.t = 0;
+            var lado = 1;
+            return gsap.to(cena.tensao, {
+                t: 1, duration: dur, ease: 'none',
+                onUpdate: function () {
+                    /* entra e sai em rampa curta. Vibração sustentada que
+                       começa e para seco denuncia a emenda: o olho lê o
+                       corte, não a tensão. 8% de cada ponta basta, e some
+                       na percepção sem encurtar o efeito. */
+                    var u = cena.tensao.t;
+                    var env = Math.max(0, Math.min(1, u / 0.08, (1 - u) / 0.08));
+                    var g = amp * env;
+                    lado = -lado;
+                    cena.tensao.x = lado * g * (0.55 + 0.45 * cena.rnd());
+                    cena.tensao.y = -lado * g * (0.55 + 0.45 * cena.rnd()) * 0.75;
+                },
+                onComplete: function () { cena.tensao.x = 0; cena.tensao.y = 0; }
             });
         }
     };
@@ -687,6 +797,7 @@
                 c.tl.pause();
                 c._presaNaBase = true;
                 c._congelada = false;
+                c._arCongelado = true;   /* a atmosfera para junto: ver aoTique */
                 aoTique(c);
                 continue;
             }
@@ -698,6 +809,7 @@
                traço (md-has), não só enquanto md-on. */
             c._presaNaBase = false;
             c._congelada = pintando;
+            c._arCongelado = false;
 
             /* ao sair de todos esses estados, a timeline retoma de onde parou */
             if (c._visivel && c.tl.paused()) c.tl.play();
