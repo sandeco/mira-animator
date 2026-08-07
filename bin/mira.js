@@ -35,7 +35,10 @@ if (!command || command === '--help' || command === '-h') {
                          Opções: --name=<apelido>  --type=projeto|pdf|latex|texto
     sources              Lista as fontes vinculadas
     new <nome>           Cria um novo deck a partir de um template
-                         Opções: --deck=<template>  --theme=<tema>
+                         Opções: --deck=<template>  --theme=<tema>  --cinema
+                         --cinema: câmera, profundidade e grade de cor, com o
+                         modo câmera na tecla C e um servidor.bat na raiz do
+                         deck (autorar é por ele, apresentar é por file://).
                          Rode "npx mira-animator new" sem nome para ver os
                          templates e temas disponíveis (lidos de templates/).
     edit <deck>          Liga o modo edição (reordenar slides, tecla E) num deck já existente
