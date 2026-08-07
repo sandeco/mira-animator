@@ -573,17 +573,33 @@
             exigirRazao('tensao', o);
             var dur = o.dur != null ? o.dur : 3;
             var amp = Math.min(o.amplitude != null ? o.amplitude : 0.003, 0.008);
+            /* LOOP: o trecho tenso se repete. `repeticoes` é finito de
+               propósito. repeat:-1 aqui envenenaria a cena inteira, porque
+               tween infinita dentro de uma timeline faz tl.duration() virar
+               Infinity, e é dela que saem o ciclo, a régua e a agulha. */
+            var voltas = Math.max(0, Math.round(o.repeticoes || 0));
+            var jaDeuVolta = 0;
             cena.tensao.t = 0;
             var lado = 1;
             return gsap.to(cena.tensao, {
                 t: 1, duration: dur, ease: 'none',
+                repeat: voltas,
+                onRepeat: function () { jaDeuVolta++; },
                 onUpdate: function () {
                     /* entra e sai em rampa curta. Vibração sustentada que
                        começa e para seco denuncia a emenda: o olho lê o
                        corte, não a tensão. 8% de cada ponta basta, e some
-                       na percepção sem encurtar o efeito. */
+                       na percepção sem encurtar o efeito.
+
+                       EM LOOP as rampas se comportam diferente, e é o que
+                       faz a repetição não pulsar: a de ENTRADA vale só na
+                       primeira volta, e a de SAÍDA não existe. Mantidas em
+                       toda volta, cada emenda viraria um vinco de silêncio
+                       e a tensão contínua leria como batida de motor. */
                     var u = cena.tensao.t;
-                    var env = Math.max(0, Math.min(1, u / 0.08, (1 - u) / 0.08));
+                    var entrada = jaDeuVolta === 0 ? u / 0.08 : 1;
+                    var saida = voltas > 0 ? 1 : (1 - u) / 0.08;
+                    var env = Math.max(0, Math.min(1, entrada, saida));
                     var g = amp * env;
                     lado = -lado;
                     cena.tensao.x = lado * g * (0.55 + 0.45 * cena.rnd());

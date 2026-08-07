@@ -124,6 +124,7 @@
                     cx: num('cx', 480), cy: num('cy', 230), r: num('r', 220),
                     amp: num('amp', id === 'tremor' ? 0.006 : 0.003),
                     beat: num('beat', 0), dur: num('dur', 1),
+                    loop: num('loop', 0) === 1,
                     tipo: id, razao: ''
                 });
             }
@@ -609,6 +610,23 @@
                     return ms < 1 ? (Math.round(ms * 1000) + 'ms') : (ms.toFixed(1) + 's');
                 },
                 function () { previaAbalo(f); }));
+
+            /* LOOP, ao lado do tempo, e so na tensao.
+
+               Sao duas perguntas diferentes e por isso dois controles: o
+               slider diz QUANTO TEMPO fica tenso, o botao diz se aquele
+               trecho se repete ate o fim do ciclo. Uma tentativa anterior
+               usou o fim do curso do slider como infinito, e isso custava a
+               duracao: para ganhar continuidade o autor perdia o controle do
+               trecho. Impacto nao tem loop de proposito, tremor que se
+               repete sozinho vira motor. */
+            if (f.tipo === 'tensao') {
+                painel.appendChild(botao(IC.loop, 'repetir ate o fim do ciclo', function () {
+                    f.loop = !f.loop;
+                    desenhar();
+                    previaAbalo(f);
+                }, !!f.loop));
+            }
         }
 
         painel.appendChild(botao(IC.lixo, '', function () {
@@ -1096,10 +1114,31 @@
                 return;
             }
             if (f.tipo === 'tensao') {
+                var durT = Math.max(0.3, f.dur * spb);
+                var voltas = 0;
+                if (f.loop) {
+                    /* O loop CABE no ciclo, ele nao estica a cena.
+
+                       Numero de voltas finito porque tween infinita dentro
+                       da timeline faz tl.duration() virar Infinity, e e dela
+                       que saem o ciclo, a regua e a agulha.
+
+                       E a duracao do trecho se acomoda para dar um numero
+                       INTEIRO de voltas ate o fim: arredondar para cima sem
+                       acomodar transbordava (5 s num ciclo de 13 viravam 3
+                       voltas, 15 s, e a timeline passava a durar 15 em vez
+                       de 13, com a historia parada nos 2 finais). O trecho
+                       muda no maximo meio trecho, que e textura; o ciclo
+                       nao pode mudar, que e ritmo. */
+                    var sobra = Math.max(durT, est.ciclo - f.beat * spb);
+                    voltas = Math.max(0, Math.round(sobra / durT) - 1);
+                    durT = sobra / (voltas + 1);
+                }
                 cena.tl.add(Cam.tensao(cena, {
                     razao: 'tensao ' + (i + 1) + ' definida no modo camera',
-                    dur: Math.max(0.3, f.dur * spb),
-                    amplitude: f.amp || 0.003
+                    dur: durT,
+                    amplitude: f.amp || 0.003,
+                    repeticoes: voltas
                 }), f.beat * spb);
                 return;
             }
@@ -1152,6 +1191,9 @@
                "0.000": a intensidade voltava ZERADA do arquivo. Precisao de
                gravacao menor que a do controle apaga o ajuste em silencio. */
             s += ' amp=' + (+(f.amp || 0)).toFixed(5);
+            /* campo proprio, e nao `dur=loop`: o leitor le numero por campo,
+               e uma palavra ali derrubaria a duracao para o padrao calada */
+            if (f.loop) s += ' loop=1';
         }
         return s + ' beat=' + f.beat + ' dur=' + f.dur + ' -->';
     }
