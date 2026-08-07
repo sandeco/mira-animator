@@ -16,12 +16,17 @@
 | Pan ou track | acompanhar causalidade ou busca | `Cam.revelar`, que mantém a escala e desloca o centro |
 | Pull-out | revelar escala, isolamento ou consequência | `Cam.recuar` |
 | Quadro fixo | permitir julgamento, tensão ou clareza | `Cam.segurar` |
-| Impacto | sacudir o ponto de vista | `Cam.tremor`, teto de 400 ms |
+| Impacto | pontuar uma pancada, um instante | `Cam.tremor`, 400 ms é conselho, não corte |
+| Inquietação sustentada | o quadro que não assenta, ameaça em curso | `Cam.tensao`, mesma vibração fraca e longa |
 | Parallax | separar camadas de mundo e importância | `Prof.plano`, não é cue de câmera |
 | Tilt e orbit | hierarquia vertical, ambiguidade espacial | não existem. Orbit exigiria 3D |
 | Corte | romper tempo, valor ou ponto de vista | é a troca de slide, não um cue |
 
 Começar pelo quadro mais informativo, não pelo mais espetacular. Todo cue declara a razão narrativa, e o teto por cena vem do temperamento: 2 em `sereno`, 3 em `natural`, livre em `tenso`.
+
+**Cues coexistem.** Enquadramento, tremor e tensão são canais separados no motor, somados na hora de escrever o quadro. Tensão sustentada com um tremor por cima durante um push-in é uma frase de câmera, não um conflito. O que conflita é dois cues do mesmo canal no mesmo intervalo: dois pushes disputando o enquadramento, dois tremores disputando o abalo.
+
+**Tremor e tensão não geram parallax**, de propósito: eles entram depois de os planos serem calculados, então o quadro sacode inteiro e rígido. Parallax num abalo de 250 ms viraria ruído. Para profundidade em movimento contínuo, o cue é `Cam.revelar` lento.
 
 ## 2. Easing
 
@@ -63,4 +68,6 @@ Enquanto a âncora não existir, a continuidade entre slides é obtida por compo
 - aceleração extrema elimina antecipação;
 - cortes frequentes impedem continuidade espacial;
 - dissolve constante achata o ritmo;
-- tremor num slide que vai ser gravado, que lê como falha de captura.
+- tremor longo num slide que vai ser gravado, que lê como falha de captura;
+- tensão forte e curta, que é tremor mal feito, e tremor longo, que é motor ligado;
+- partícula presa ao relógio da história, que morre com ele e transforma o último quadro em foto.

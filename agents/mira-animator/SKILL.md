@@ -234,20 +234,33 @@ cena.tl
 | Peça | O que faz |
 |---|---|
 | `MiraCinema.palco(id, opts)` | cria a cena, casa o `viewBox`, dá uma timeline GSAP por palco, toca ao entrar em tela e congela ao sair. Substitui `palco()` + `reger()` |
-| `Cam.estabelecer`, `aproximar`, `revelar`, `recuar`, `segurar`, `tremor` | os seis cues; cada um devolve uma tween para encaixar na timeline com label |
+| `Cam.estabelecer`, `aproximar`, `revelar`, `recuar`, `segurar`, `tremor`, `tensao` | os sete cues; cada um devolve uma tween para encaixar na timeline com label |
+| `Cam.tremor(cena, {dur, amplitude, razao})` | impacto: ataque seco, cabeça curta em força cheia, queda. Escreve em `cena.abalo` |
+| `Cam.tensao(cena, {dur, amplitude, razao})` | a mesma vibração do tremor, fraca, plana e longa. Escreve em `cena.tensao` |
 | `Prof.plano(cena, seletor, {z, desfoque, escurecer})` | profundidade; `z` de 0 (colado) a 1 (infinito), parallax = `1 - z` |
 | `Prof.foco(cena, {plano, dur})` | foco seletivo; é o ÚNICO lugar onde desfoque anima |
 | `Grade.aplicar(cena, preset)` | `neutra`, `noite-fria`, `brasa`, `clinica`, `penumbra` |
 | `cena.rnd()` | PRNG semeado. **Nunca use `Math.random()`** |
-| `cena.aoAtualizar(fn)` | único canal para derivar câmera ou luz a cada tique |
+| `cena.aoAtualizar(fn)` | o tique livre: roda todo quadro, **independente da timeline**. Único canal para derivar câmera, luz e atmosfera |
 
 **Tetos, e são números, não bom senso:**
 
-- **`razao` é obrigatória** em `aproximar`, `revelar`, `recuar` e `tremor`. Cue sem razão é câmera decorativa.
+- **`razao` é obrigatória** em `aproximar`, `revelar`, `recuar`, `tremor` e `tensao`. Cue sem razão é câmera decorativa.
 - **Cues por cena:** no máximo 2 em `sereno`, 3 em `natural`, livre em `tenso`.
 - **Planos:** de 3 a 5, nunca mais. Raio de desfoque no máximo 4.
-- **`tremor`:** no máximo 400 ms. Num slide gravado ele lê como falha de captura, não como intenção.
+- **`tremor`:** 400 ms é conselho, não corte. O motor honra até 1,2 s e avisa no console acima de 400 ms. Num slide gravado, tremor longo lê como falha de captura, não como intenção.
+- **`tremor` contra `tensao`:** mesma vibração, papéis opostos. Tremor é **pontuação**, um instante, amplitude até 0,03. Tensão é **estado**, sustenta o tempo que a cena pedir, amplitude até 0,008. Tensão forte e curta vira tremor mal feito; tremor longo vira motor ligado.
+- **Os cues coexistem.** `camera`, `abalo` e `tensao` são canais separados que o tique soma, então tensão sustentada com um tremor por cima durante um zoom é uma frase legítima, não conflito. O que conflita é dois cues do **mesmo** canal no mesmo intervalo.
 - **Filtro de tela cheia animado é proibido.** Vinheta, grão e grade são estáticos.
+
+**DOIS RELÓGIOS POR CENA. Partícula não anda no relógio da história.**
+
+A timeline da cena obedece ao `@MIRA:LOOP` e à tecla L, então ela **para** num slide que fecha no último quadro. Poeira, fumaça, brasa e faísca não são a história: são o mundo continuando a existir. Presas à timeline, morrem junto e o último quadro vira foto.
+
+- **História:** o callback de quadro na `cena.tl`. Move os atores, a luz, o texto. E **anota** o estado que a atmosfera precisa ler (onde a luz está, quanta intensidade).
+- **Atmosfera:** `cena.aoAtualizar(fn)`, com relógio próprio acumulado. Move as partículas lendo a última anotação. Nunca para, exceto com o slide fora de tela ou o modo edição ligado.
+
+Acumule o tempo da atmosfera, não leia o relógio de parede: ela pausa em três situações (edição, slide fora de tela, aba em segundo plano) e ler o relógio direto faria o ar saltar o buraco inteiro num quadro só ao voltar. Teto de 0,1 s por quadro resolve.
 
 **Oclusão é doutrina, não API.** Resolva por ordem de empilhamento no SVG e máscara, e planeje pelo menos uma passagem atrás de alguma coisa: parallax sem oclusão continua lendo como recorte deslizante.
 

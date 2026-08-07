@@ -51,7 +51,7 @@ O `mira-cinema.js` é código-fonte versionado, copiado para `mira/` do deck, op
 | Superfície | O que faz |
 |---|---|
 | `MiraCinema.palco(svgId)` | cria a cena, casa o `viewBox` com a caixa real, dá uma timeline GSAP por palco, toca ao entrar em tela e para ao sair |
-| `Cam.estabelecer`, `Cam.aproximar`, `Cam.revelar`, `Cam.recuar`, `Cam.segurar`, `Cam.tremor` | os seis cues de câmera, cada um devolvendo uma tween para encaixar na timeline por label |
+| `Cam.estabelecer`, `Cam.aproximar`, `Cam.revelar`, `Cam.recuar`, `Cam.segurar`, `Cam.tremor`, `Cam.tensao` | os sete cues de câmera, cada um devolvendo uma tween para encaixar na timeline por label |
 | `Prof.plano(cena, seletor, {z, desfoque, escurecer})` e `Prof.foco` | profundidade por planos com parallax e foco seletivo |
 | `Grade.aplicar(cena, preset)` | grade de cor do deck: `neutra`, `noite-fria`, `brasa`, `clinica`, `penumbra` |
 | `Ritmo` | fator de velocidade por slide, tecla `A`, marcador `@MIRA:SPEED` |
@@ -62,9 +62,23 @@ O `mira-cinema.js` é código-fonte versionado, copiado para `mira/` do deck, op
 
 - **Luz como estado de cena** (`Luz.*`, clarão, sombra derivada, reflexo). O estado `cena.luz` existe como canal reservado, sem escritor.
 - **Âncora entre slides e match cut** (`data-mira-ancora`). A transição entre slides continua sendo a atual.
-- **Atmosfera** (chuva, névoa, poeira, brasa, fumaça, fogo).
+- **Biblioteca de atmosfera** (`Atmosfera.*` pronta para chuva, névoa, fogo). Não existe função de prateleira.
 
 Quando a cena pedir um desses, **descrever a intenção na direção e marcar como pendente**, sem escrever chamada de API.
+
+### Atmosfera: não tem biblioteca, mas tem canal
+
+Poeira, brasa, fumaça e faísca **podem** ser dirigidas, e o `/mira-animator` as escreve à mão. O que
+mudou é que elas têm um lugar certo: o **segundo relógio** da cena, `cena.aoAtualizar()`, que roda
+todo quadro independente da timeline.
+
+Isso importa para a direção, não só para o código: a timeline obedece ao loop do slide e **para**
+numa cena que fecha no último quadro. Atmosfera presa a ela morre junto e o último quadro vira foto.
+Dirigida no segundo relógio, ela continua respirando depois de a história terminar, que é o que
+sustenta a Regra Zero num slide de fecho.
+
+Ao pedir atmosfera, diga **o que ela faz na cena** (para onde a fumaça sobe, o que a poeira revela do
+feixe de luz) e que ela é contínua. Não escreva chamada de API: não existe uma.
 
 ## Regra Zero
 
@@ -207,7 +221,7 @@ A cena com nove beats acima é o repertório completo, não a meta: o número de
 
 ### 4. Dirigir a câmera
 
-A câmera existe no MIRA como **enquadramento por `viewBox`**, e só em palco com o `mira-cinema.js` ligado. São seis cues, e nenhum outro:
+A câmera existe no MIRA como **enquadramento por `viewBox`**, e só em palco com o `mira-cinema.js` ligado. São sete cues, e nenhum outro:
 
 | Cue | Função narrativa | Duração padrão |
 |---|---|---|
@@ -216,13 +230,16 @@ A câmera existe no MIRA como **enquadramento por `viewBox`**, e só em palco co
 | `revelar` | travelling, mantém a escala e desloca o centro: acompanha causalidade | 1,4 s |
 | `recuar` | volta ao base: escala, isolamento, consequência | 1,0 s |
 | `segurar` | quadro parado, leitura da consequência. É beat legítimo, não tempo morto | 0,6 s |
-| `tremor` | impacto. **Teto de 400 ms e amplitude contida** | 0,25 s |
+| `tremor` | impacto: ataque seco e queda. **400 ms é conselho, não corte**; o motor honra até 1,2 s e avisa acima disso | 0,25 s |
+| `tensao` | a mesma vibração, fraca e PLANA: o quadro que não assenta enquanto a ameaça dura. Sem teto de duração | 4 s |
 
 Regras de dosagem, todas numéricas:
 
 - **Teto de cues por cena:** 2 em `sereno`, 3 em `natural`, livre em `tenso`.
 - **Todo cue declara a razão narrativa.** Cue sem razão é reprovado, e o próprio módulo avisa no console.
-- **`tremor` num slide que vai ser gravado lê como falha de captura, não como intenção.** Fora de `tenso`, não usar.
+- **`tremor` longo num slide que vai ser gravado lê como falha de captura, não como intenção.** Fora de `tenso`, não usar.
+- **`tremor` é pontuação, `tensao` é estado.** Mesma vibração, papéis opostos: tremor marca um instante, tensão sustenta enquanto a ameaça dura. Tensão forte e curta é tremor mal feito; tremor longo é motor ligado.
+- **Cues coexistem, e isso não é exceção.** Enquadramento, tremor e tensão são canais separados que o motor soma. Tensão sustentada com um tremor por cima durante um push-in é uma frase de câmera. O que conflita é dois cues do mesmo canal no mesmo intervalo, e o teto por cena continua valendo.
 - **A câmera não se move durante leitura de texto indispensável.**
 - **Elemento de legibilidade crítica recebe `data-mira-traco-fixo` ou `data-mira-texto-fixo`**, senão todo push-in engorda traço e tipografia.
 - **A câmera opera dentro do palco.** Nunca sobre o título, a área de câmera do Studio ou o teleprompter.

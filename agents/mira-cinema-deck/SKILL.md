@@ -29,9 +29,9 @@ Esta skill é o que fecha esse laço, e a ordem abaixo é o motivo dela.
 
 ## Pré-condições, checadas antes de qualquer coisa
 
-1. **Story Team instalado.** Confira se `/mira-premise-forge` existe. Se não existir, pare e diga:
-   > "O Story Team não está instalado. Rode `npx mira-animator install` e marque **Story Team**, ou
-   > `npx mira-animator update`, que agora pergunta se você quer adicioná-lo."
+1. **Story Team instalado.** Confira se `/mira-premise-forge` existe. O Story Team é obrigatório e
+   chega em toda instalação; se mesmo assim não existir, pare e diga:
+   > "O Story Team não está instalado. Rode `npx mira-animator update` para trazê-lo."
 
    Não emule os agentes narrativos dentro desta skill. Um orquestrador que finge ser a cadeia
    entrega texto sem o método dela.
@@ -88,6 +88,21 @@ Grave cada entrega em `decks/<slug>/references/`, senão a etapa seguinte recons
 
 O passo 9 é onde o cinema vira código. O `/mira-animator` já conhece a API (`MiraCinema.palco`,
 `Cam.*`, `Prof.*`, `Grade.*`) e os tetos. Entregue a ele o Motion Score inteiro, não um resumo.
+
+## Depois de pronto: a câmera se ajusta na tela, não no código
+
+O deck sai com a câmera que o Motion Score pediu, e ela quase nunca fica certa de primeira, porque
+enquadramento é decisão de olho. O ajuste fino é do autor, no navegador, com a **tecla C**:
+
+- quatro pistas, uma por efeito (zoom, travelling, tremor, tensão), para efeitos **sobrepostos** no
+  tempo, que é o normal e não a exceção;
+- a agulha da régua percorre a cena quadro a quadro, para achar o instante exato de um cue;
+- intensidade e duração dos abalos em slider, com prévia ao vivo;
+- `Ctrl+S` grava tudo como comentários `@MIRA:FOCO`, `@MIRA:CICLO`, `@MIRA:LOOP` e `@MIRA:VOLTA`
+  dentro da `<section>`, no arquivo. Sobrevive ao F5 e ao próximo agente que abrir o deck.
+
+Não reescreva no código cue que o autor ajustou na tela. Os marcadores são a fonte da verdade da
+câmera depois que o deck existe: o código do slide conta a história, os marcadores enquadram.
 
 ## Regras que valem sobre tudo
 
