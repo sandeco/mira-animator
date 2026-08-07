@@ -47,14 +47,38 @@ Esta skill é o que fecha esse laço, e a ordem abaixo é o motivo dela.
 npx mira-animator new <slug> --cinema
 ```
 
-Isso instala `mira/mira-cinema.js` e `assets/vendor/gsap.min.js` e injeta as tags na ordem certa
-(GSAP antes do módulo, os dois antes dos módulos de autoria). A instalação é do CLI, e não sua:
-copiar biblioteca e injetar tag é passo determinístico, e é onde um agente falha em silêncio.
+Isso instala quatro coisas, e as quatro são necessárias:
 
-Confira que `decks/<slug>/mira/mira-cinema.js` existe antes de seguir. Se não existir, pare: toda
-a direção de câmera das fases seguintes seria descartada.
+| Arquivo | Para quê |
+|---|---|
+| `mira/mira-cinema.js` + `assets/vendor/gsap.min.js` | a câmera, os planos, a grade e o ritmo |
+| `mira/mira-foco.js` | o modo câmera da **tecla C**, onde o autor ajusta os cues na tela |
+| `servidor.bat` na raiz do deck | `http://localhost`, sem o qual o `Ctrl+S` do modo câmera não grava direto no arquivo |
+
+As tags entram na ordem certa (GSAP, depois o cinema, depois o foco, e os três antes dos módulos de
+autoria). A instalação é do CLI, e não sua: copiar biblioteca e injetar tag é passo determinístico, e
+é onde um agente falha em silêncio.
+
+Confira que `decks/<slug>/mira/mira-cinema.js`, `decks/<slug>/mira/mira-foco.js` e
+`decks/<slug>/servidor.bat` existem antes de seguir. Faltando o primeiro, pare: toda a direção de
+câmera das fases seguintes seria descartada. Faltando os outros dois, o deck sai certo e o autor não
+consegue ajustar nada nele, que foi o que já aconteceu: a tecla C não fazia nada porque o
+`mira-foco.js` não era instalado por ninguém. Se faltar, rode `npx mira-animator update`.
 
 Coloque o material-fonte em `decks/<slug>/references/` agora.
+
+**Se o autor pediu "só prepare", pare aqui, e pare dizendo como voltar.** Encerre com a frase
+literal:
+
+> Deck preparado em `<caminho absoluto>`. Coloque o material em `references/` e volte com
+> **`/mira-cinema-deck continuar`**. Sem esse comando a cadeia narrativa não roda, e o deck sai
+> sem encenação nem partitura.
+
+É a falha que já aconteceu: o autor preparou o deck, colocou o material e retomou com um comando
+genérico de execução. A fase 1 inteira foi pulada em silêncio, o `/mira-animator` recebeu o
+storyboard cru no lugar de um briefing por cena, e o deck saiu com desenho feito à mão sem
+encenação. **Qualquer retomada tem que voltar por esta skill.** Ao receber `continuar`, leia o que
+já existe em `references/`, diga em que etapa está entrando e por quê, e siga da fase 1.
 
 ### Fase 1, a história (Story Team)
 
@@ -70,6 +94,7 @@ Na ordem, um de cada vez, com o resultado de cada um alimentando o seguinte:
 | 6 | `/mira-direct-scene` | encenação: composição, planos com oclusão, enquadramento, grade do deck |
 | 7 | `/mira-direct-cinematic-motion` | MIRA Motion Score: temperamento, beats, câmera, easing, loop |
 | 7b | `/mira-scene-brief` | destila tudo em um briefing autossuficiente por slide, com a âncora que liga um ao outro |
+| 7c | `/mira-asset-scout` | decide a origem de cada ator: desenhar, buscar SVG de fonte aberta ou pedir ao autor |
 
 **Dá para entrar no meio.** Se a premissa já existe, comece na 2; se a Story Bible está de pé, use
 as três últimas. Diga ao usuário em qual etapa você entrou e por quê.
@@ -99,7 +124,9 @@ briefing autossuficiente por slide, cerca de 180 palavras.
 Consequência para este orquestrador, e é a regra que mais muda:
 
 - **entregue ao `/mira-animator` um briefing por vez**, o daquele slide, e nada mais. Nem o Motion
-  Score, nem o Slide Score, nem os briefings dos vizinhos;
+  Score, nem o Slide Score, nem os briefings dos vizinhos. A única coisa que viaja junto é a tabela
+  de origem do `/mira-asset-scout` daquele slide, que cabe em três linhas e evita que ele desenhe à
+  mão o que não sabe desenhar;
 - se um slide sair errado, o defeito está **no briefing**, não no implementador. Corrija o briefing e
   gere de novo, em vez de mandar mais contexto junto. Mandar mais contexto desfaz o método.
 
@@ -112,7 +139,8 @@ Nesse caso o Motion Score vai direto para o passo 9.
 ## Depois de pronto: a câmera se ajusta na tela, não no código
 
 O deck sai com a câmera que o Motion Score pediu, e ela quase nunca fica certa de primeira, porque
-enquadramento é decisão de olho. O ajuste fino é do autor, no navegador, com a **tecla C**:
+enquadramento é decisão de olho. O ajuste fino é do autor, no navegador, com a **tecla C**, o modo
+câmera do `mira/mira-foco.js` (a **tecla A** é outra coisa, a barra de ritmo do `mira-cinema.js`):
 
 - quatro pistas, uma por efeito (zoom, travelling, tremor, tensão), para efeitos **sobrepostos** no
   tempo, que é o normal e não a exceção;
@@ -120,6 +148,13 @@ enquadramento é decisão de olho. O ajuste fino é do autor, no navegador, com 
 - intensidade e duração dos abalos em slider, com prévia ao vivo;
 - `Ctrl+S` grava tudo como comentários `@MIRA:FOCO`, `@MIRA:CICLO`, `@MIRA:LOOP` e `@MIRA:VOLTA`
   dentro da `<section>`, no arquivo. Sobrevive ao F5 e ao próximo agente que abrir o deck.
+
+**E é por isso que deck cinematográfico se edita pelo `servidor.bat`, não por `file://`.** Em
+`http://localhost` o `Ctrl+S` lê e reescreve o `index.html` direto, sem diálogo. Em `file://` ele
+depende do seletor de arquivo do Chrome, pede permissão a cada sessão e falha em qualquer outro
+navegador. O `npx mira-animator new <slug> --cinema` já deixa o `servidor.bat` na raiz do deck:
+**mande o autor abrir por ele**, e diga isso na entrega. O deck continua abrindo por `file://` para
+apresentar, o servidor é para autorar.
 
 Não reescreva no código cue que o autor ajustou na tela. Os marcadores são a fonte da verdade da
 câmera depois que o deck existe: o código do slide conta a história, os marcadores enquadram.

@@ -164,6 +164,16 @@ O círculo (dot, partícula, satélite, anel, pulso radial) é legítimo só par
 - **Fonte aberta apenas**, licenças MIT, Apache-2.0, CC0 ou CC-BY: Google Material Symbols (eixo *fill*) ou API do Iconify. Prefira path único, viewBox `0 0 24 24`. Embuta inline, o deck roda offline por `file://`. Atribuição no `CREDITS.md` se a licença pedir; recuse IP protegida e sugira arte original.
 - Slide inteiro de morph de ícones já é o `/mira-icon-morph`.
 
+### Proibido desenhar à mão
+
+Ícone flat resolve objeto. Não resolve o que tem anatomia. Estes referentes **nunca** viram `path`
+escrito por você: **figura humana** (inteira ou parte), **mão, braço, perna**, **rosto ou feição**,
+**animal**, **veículo**, **anatomia articulada**, **objeto de uso cheio de detalhe**. Sai trapézio
+com bola em cima, e já saiu.
+
+Caiu na lista, chame o **`/mira-asset-scout`**: ele acha o SVG em fonte aberta e o embute inline, ou
+pede o arquivo ao autor com plano B. Só volte a desenhar quando ele devolver DESENHAR.
+
 ## Texto e título
 
 - **Idioma:** siga `agents/_shared/idioma.md`. Português brasileiro, acentuação correta, UTF-8 direto, `<meta charset="UTF-8">`. Nunca Unicode escapes (`é`) nem entidades (`&eacute;`).
@@ -419,6 +429,7 @@ Nenhum item é opcional. Item não marcado é trabalho não terminado, não deta
 - [ ] Corte do loop escondido, sem teletransporte de estado.
 - [ ] Coreografia derivada da história, não escolhida de um menu.
 - [ ] Referente concreto animado como ícone flat, não bolinha genérica; atribuição no `CREDITS.md` se preciso.
+- [ ] Nenhum referente da lista proibida (pessoa, mão, rosto, animal, veículo, anatomia) desenhado à mão; os que apareceram passaram pelo `/mira-asset-scout`.
 
 **Execução**
 

@@ -36,7 +36,7 @@ Instalada sempre, com o **Story Team**, roda **antes** da linha principal: decid
 
 | Etapa | Agente | O que faz |
 |---|---|---|
-| 0 | **mira-cinema-deck** | Orquestra a cadeia inteira: cria o deck com `--cinema`, roda as sete etapas na ordem e entrega ao `mira-animator`. Sem ele, a direção de câmera é escrita e nunca implementada. |
+| 0 | **mira-cinema-deck** | Orquestra a cadeia inteira: cria o deck com `--cinema`, roda as oito etapas na ordem e entrega ao `mira-animator`. Sem ele, a direção de câmera é escrita e nunca implementada. |
 | 1 | **mira-premise-forge** | Pesquisa fatos atuais e transforma o Eureca escondido neles em um **Premise Brief** defensável. |
 | 2 | **mira-concept-storyteller** | Fixa o **Concept Contract**: o que a história precisa ensinar e nunca pode distorcer. |
 | 3 | **mira-story-architect** | Constrói a **Story Bible**: estrutura, personagens, tema, mundo, símbolos, trama e cenas. |
@@ -45,6 +45,7 @@ Instalada sempre, com o **Story Team**, roda **antes** da linha principal: decid
 | 6 | **mira-direct-scene** | Dirige a **encenação**: composição, blocking, planos de profundidade com oclusão, enquadramento, legibilidade e a grade de cor única do deck. |
 | 7 | **mira-direct-cinematic-motion** | Escreve o **MIRA Motion Score**: temperamento, beats, câmera, easing, loop interno, e o handoff que o `mira-animator` implementa. |
 | 8 | **mira-scene-brief** | Destila a cadeia num **briefing de cena curto e autossuficiente por slide**, para quem desenha a animação nunca ler a cadeia. Carrega a âncora que liga um slide ao seguinte. |
+| 9 | **mira-asset-scout** | Decide a **origem de cada ator** da cena: desenhar (geometria simples), buscar SVG de fonte aberta e embutir inline, ou pedir o arquivo ao autor. Figura humana, mão, rosto, animal e veículo ficam proibidos de ser desenhados à mão. |
 
 Para o slide em que o cinema **é** a cena, e não o tempero, o `mira-animator` tem um irmão: o **`mira-cine-animator`**. Ele herda o método inteiro por referência e inverte duas travas, então um movimento de câmera, um plano de profundidade ou a atmosfera podem ser a mudança de estado dominante, e a nota de corte é avaliada com o cinema ligado. Chamado explicitamente, nunca por padrão.
 

@@ -1,6 +1,6 @@
 # Storytelling agents
 
-A seven-step narrative chain that turns a fact, a concept or a theme into a story, and the story into staged, choreographed scenes. It always comes installed, with the **Story Team**.
+An eight-step narrative chain that turns a fact, a concept or a theme into a story, and the story into staged, choreographed scenes. It always comes installed, with the **Story Team**.
 
 It sits **before** the deck. None of these agents writes HTML. They hand the result to `/mira-animator`, which writes the animation inside the deck's `index.html`, and to `/mira-builder`, which assembles the rest.
 
@@ -10,6 +10,7 @@ cinema-deck (orquestra)
   v
 premise-forge -> concept-storyteller -> story-architect -> design-audience-journey
              -> direct-slide-sequence -> direct-scene -> direct-cinematic-motion
+             -> scene-brief -> asset-scout
              -> mira-animator writes the deck
 ```
 
@@ -18,11 +19,13 @@ You can enter at any point. If the premise already exists, start at step 2. If t
 ## `/mira-cinema-deck`
 
 The orchestrator of the whole chain. It creates the deck with cinema mode already installed
-(`new --cinema`), runs the seven narrative agents in order with a pause between each, and hands the
+(`new --cinema`), runs the eight narrative agents in order with a pause between each, and hands the
 Motion Score to `/mira-animator`, which turns it into code. It exists because the chain degrades
 silently without it: with no `mira-cinema.js` in the deck, `/mira-direct-cinematic-motion` is forced
 to produce direction **without** camera, grade or depth planes, and you get a plain deck thinking
 you asked for cinema.
+
+`--cinema` leaves `mira-cinema.js`, `mira-foco.js` (camera mode on the **C key**, where you tune the cues on screen and save with `Ctrl+S`) and a `servidor.bat` in the deck root. **A cinematic deck is authored through `servidor.bat`**, because `Ctrl+S` only writes straight into the file over `http://localhost`; on `file://` it falls back to the Chrome file picker. For presenting, double clicking `index.html` still works.
 
 ## `/mira-premise-forge`
 
@@ -57,6 +60,12 @@ Converts the staged scenes into a **MIRA Motion Score**: temperament, beats on a
 Distils the whole chain into a **short, self-contained scene brief per slide**: on-screen title, dramatic function, entry and exit anchors, objects named for what they really are, the story in three beats, loop, temperament and prohibitions. It is the last step that produces text, and it exists so whoever draws the slide never reads the chain: the chain stays whole, it just stops being read.
 
 The anchor is the field that carries the deck. One slide's exit anchor is literally the next one's entry anchor, with a stated position, or the deck reads as pretty scenes with no story.
+
+## `/mira-asset-scout`
+
+Decides where every actor in the scene comes from, before anyone draws it. It returns a table with three possible outcomes per object: **draw**, when the geometry is simple and procedural (a skyline, a mesh, a blueprint in lines); **fetch**, when it already exists in an open source library, in which case the SVG is inlined into the deck, recoloured to the theme tokens and credited in `CREDITS.md`; **ask**, when nothing is found, so the author gets a short request with a plan B instead of the deck stalling.
+
+It exists because of a ban list, not a preference. Human figures, hands, faces, animals, vehicles and articulated anatomy may **never** be hand drawn by whoever implements the scene. A cinematic deck once shipped with a flawless city and people shaped like a trapezium with a ball on top, because the previous rule said "prefer an icon" and a preference gets ignored.
 
 ## What these agents may not invent
 

@@ -123,6 +123,10 @@ contínua. Se travar em algum ponto, é ali que o deck vai parecer picotado na t
 Um arquivo em `references/briefings-de-cena.md` do deck, e o aviso ao `/mira-animator` de que ele
 recebe **um briefing por vez**, nunca o arquivo inteiro.
 
+Antes de passar o bastão, mande a lista de objetos ao **`/mira-asset-scout`**. Ele devolve, por
+objeto, desenhar, buscar SVG de fonte aberta ou pedir ao autor, e essa tabela vai colada no briefing
+do slide. Objeto nomeado sem origem declarada é o que produz figura humana desenhada à mão.
+
 ## Regras que valem sobre tudo
 
 - **Nome real, não metáfora, quando a direção pediu a coisa real.** Se o Motion Score diz "mostrar a

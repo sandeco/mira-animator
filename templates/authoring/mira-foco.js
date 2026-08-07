@@ -1,9 +1,13 @@
 /* =====================================================================
-   mira-foco.js — MODO CAMERA, tecla C.  PROTOTIPO PARA TESTE.
+   mira-foco.js — MODO CAMERA, tecla C.
 
-   Ainda NAO e peca do Mira: vive so neste deck, para provar a ideia
-   antes de entrar em templates/authoring/. Nao toca em nenhuma linha
-   do mira-cinema.js, do mira-edit.js nem do mira-draw.js.
+   Entra em todo deck criado com `new --cinema`, junto do mira-cinema.js.
+   Nao toca em nenhuma linha do mira-cinema.js, do mira-edit.js nem do
+   mira-draw.js: se a camera nao existir, ele desiste sozinho.
+
+   O Ctrl+S daqui reescreve o index.html. Por http://localhost (o
+   servidor.bat na raiz do deck) e direto; por file:// depende do
+   seletor de arquivo do Chrome. Autorar e pelo servidor.
 
    O QUE RESOLVE
    Tres bugs de camera apareceram na mesma tarde, todos invisiveis no

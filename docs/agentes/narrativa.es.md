@@ -1,6 +1,6 @@
 # Agentes de narrativa
 
-Una cadena narrativa de siete etapas que transforma un hecho, un concepto o un tema en historia, y la historia en escenas puestas en cuadro y coreografiadas. Viene siempre instalada, con el **Story Team**.
+Una cadena narrativa de ocho etapas que transforma un hecho, un concepto o un tema en historia, y la historia en escenas puestas en cuadro y coreografiadas. Viene siempre instalada, con el **Story Team**.
 
 Está **antes** del deck. Ninguno de estos agentes escribe HTML. Entregan el resultado a `/mira-animator`, que escribe la animación dentro del `index.html` del deck, y a `/mira-builder`, que monta el resto.
 
@@ -10,6 +10,7 @@ cinema-deck (orquestra)
   v
 premise-forge -> concept-storyteller -> story-architect -> design-audience-journey
              -> direct-slide-sequence -> direct-scene -> direct-cinematic-motion
+             -> scene-brief -> asset-scout
              -> mira-animator escribe el deck
 ```
 
@@ -18,11 +19,13 @@ Puedes entrar en cualquier punto. Si la premisa ya existe, empieza en la etapa 2
 ## `/mira-cinema-deck`
 
 El orquestador de toda la cadena. Crea el deck con el modo cine ya instalado (`new --cinema`),
-ejecuta los siete agentes narrativos en orden con una pausa entre cada uno, y entrega el Motion
+ejecuta los ocho agentes narrativos en orden con una pausa entre cada uno, y entrega el Motion
 Score a `/mira-animator`, que lo convierte en código. Existe porque la cadena se degrada en
 silencio sin él: sin `mira-cinema.js` en el deck, `/mira-direct-cinematic-motion` se ve obligado a
 producir dirección **sin** cámara, gradación ni planos de profundidad, y recibes un deck común
 creyendo que pediste cine.
+
+`--cinema` deja en el deck el `mira-cinema.js`, el `mira-foco.js` (modo cámara en la **tecla C**, donde ajustas los cues en pantalla y grabas con `Ctrl+S`) y un `servidor.bat` en la raíz. **Un deck cinematográfico se autora por el `servidor.bat`**, porque el `Ctrl+S` solo escribe directo en el archivo por `http://localhost`; en `file://` depende del selector de archivos de Chrome. Para presentar, el doble clic en `index.html` sigue valiendo.
 
 ## `/mira-premise-forge`
 
@@ -57,6 +60,12 @@ Convierte las escenas en un **MIRA Motion Score**: temperamento, beats en una ti
 Destila toda la cadena en un **briefing de escena corto y autosuficiente por diapositiva**: título en pantalla, función dramática, anclas de entrada y de salida, objetos con su nombre real, historia en tres tiempos, loop, temperamento y prohibiciones. Es el último paso que produce texto, y existe para que quien dibuja la diapositiva nunca lea la cadena: la cadena sigue entera, solo deja de leerse.
 
 El ancla es el campo que sostiene el deck. El ancla de salida de una diapositiva es literalmente la de entrada de la siguiente, con posición declarada, o el deck se lee como escenas bonitas sin historia.
+
+## `/mira-asset-scout`
+
+Decide de dónde viene cada actor de la escena, antes de que alguien lo dibuje. Devuelve una tabla con tres salidas posibles por objeto: **dibujar**, cuando la geometría es simple y procedural (un skyline, una malla, un plano en líneas); **buscar**, cuando ya existe en una fuente abierta, y entonces el SVG se incrusta inline en el deck, se recolorea a los tokens del tema y se acredita en `CREDITS.md`; **pedir**, cuando no se encuentra, y entonces el autor recibe una petición corta con plan B en lugar de que el deck se trabe.
+
+Existe por una lista de prohibiciones, no por una preferencia. Figura humana, mano, rostro, animal, vehículo y anatomía articulada **nunca** pueden ser dibujados a mano por quien implementa la escena. Un deck cinematográfico salió con la ciudad impecable y las personas en forma de trapecio con una bola encima, porque la regla anterior decía "prefiere un icono" y una preferencia se ignora.
 
 ## Lo que estos agentes no pueden inventar
 

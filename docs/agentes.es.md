@@ -10,5 +10,5 @@ Los agentes se organizan en ocho familias — cada una con su propia página:
 - **[Agentes de Interactividad](agentes/interatividade.md)**: slides con los que el público interactúa, como encuestas y quizzes en vivo respondidos por el celular, actualizándose en tiempo real a partir de Google Forms.
 - **[Agentes responsivos](agentes/responsivos.md)** — versiones cuadrada, vertical y en la regla de los tercios de un deck.
 - **[Transiciones](agentes/transicoes.md)** — efectos de transición entre slides.
-- **[Agentes de narrativa](agentes/narrativa.md)**: la cadena narrativa opcional, de la premisa a las escenas puestas en cuadro y coreografiadas, entregadas al animador.
+- **[Agentes de narrativa](agentes/narrativa.md)**: la cadena narrativa, de la premisa a las escenas puestas en cuadro y coreografiadas, entregadas al animador.
 - **[Agentes especializados](agentes/especializados.md)** — prompts de imagen, webviews, mesa táctica, control remoto y modo offline.

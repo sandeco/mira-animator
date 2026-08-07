@@ -108,6 +108,8 @@ Regras de dosagem, todas numéricas:
 
 **Referente concreto vira ícone flat, não bolinha.** Se dá para nomear o objeto, desenhe o objeto. O círculo genérico só é legítimo para o que é genuinamente abstrato: fluxo, sinal, energia, propagação.
 
+**E declare a origem de cada ator nomeado.** Figura humana, mão, rosto, animal, veículo e anatomia articulada não podem ser desenhados à mão por quem implementa: eles precisam de SVG de fonte aberta ou de arquivo do autor. Marque esses atores na encenação e mande o `/mira-asset-scout` resolver antes do animador. Encenação que pede uma pessoa em pé sem dizer de onde ela vem produz boneco de trapézio.
+
 ### 3. Distribuir a profundidade
 
 Atribuir cada ator a um plano, com `z` de 0 (colado na câmera) a 1 (infinito):
