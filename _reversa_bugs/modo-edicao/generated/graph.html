@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bugs · modo-edicao</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;--accent:#ff904d;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:22px;font-weight:650}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.green .n{color:var(--green)}.card.red .n{color:var(--red)}.card.yellow .n{color:var(--yellow)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .critical{color:var(--red);border-color:var(--red)}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .medium{color:var(--blue);border-color:var(--blue)}
+  .active{color:var(--green);border-color:var(--green)}
+  .open{color:var(--muted);border-color:var(--muted)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-top:12px;overflow-x:auto}
+  .node{display:inline-block;border-radius:10px;padding:12px 16px;font-size:13.5px;line-height:1.45}
+  .node.bug{background:#3a2a1a;border:2px solid var(--accent)}
+  .node.hist{background:#1e1e1e;border:1px dashed #555;color:#aaa}
+  .arrow{color:var(--muted);font-size:13px;padding:0 14px}
+  .row{display:flex;align-items:center;flex-wrap:wrap;gap:6px}
+  figure{margin:14px 0 0}
+  figure img{max-width:100%;border-radius:8px;border:1px solid var(--line);display:block}
+  figcaption{color:var(--muted);font-size:12.5px;margin-top:8px}
+  .warn{border-left:3px solid var(--yellow);padding:10px 14px;background:#1b1a15;border-radius:0 8px 8px 0;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Bugs · modo-edicao</h1>
+<p class="meta">gerado por <code>/reversa-debugger-graph</code> em 2026-08-01T21:56:00Z · 1 bug(s) · closure policy <code>package</code></p>
+
+<div class="cards">
+  <div class="card"><div class="n">1</div><div class="k">total</div></div>
+  <div class="card red"><div class="n">1</div><div class="k">abertos</div></div>
+  <div class="card green"><div class="n">0</div><div class="k">corrigidos, aguardando entrega</div></div>
+  <div class="card yellow"><div class="n">0</div><div class="k">travados com DONE.md</div></div>
+</div>
+
+<h2>Bugs</h2>
+<table>
+<thead><tr><th>#</th><th>ID</th><th>sev</th><th>estado</th><th>título</th><th>reprodução</th><th>testes</th><th>veredito</th></tr></thead>
+<tbody>
+<tr>
+  <td>15</td>
+  <td><a href="../bugs/BUG-20260801-6UHJ-overlay-de-selecao-engole-o-clique/bug.md">6UHJ</a></td>
+  <td><span class="pill high">high · P1</span></td>
+  <td><span class="pill open">open · triaging</span></td>
+  <td>O overlay de seleção engole o clique e nunca desseleciona, travando a edição até o F5</td>
+  <td>deterministic · 10/10</td>
+  <td>0 rep · 0 reg</td>
+  <td>pendente</td>
+</tr>
+</tbody>
+</table>
+
+<h2>O que acontece</h2>
+<p class="prose">Com um elemento selecionado no modo E, a moldura de seleção cobre a caixa inteira
+dele com um <code>div</code> que captura ponteiro (<code>#mef-overlay .mef-body</code>,
+<code>pointer-events:auto</code>). O manipulador global <code>onDocDown</code> descarta qualquer
+clique que caia em chrome <em>antes</em> de tocar na seleção, então clicar na moldura nunca troca
+nem limpa a seleção, só inicia um arraste do elemento antigo. Tudo que está debaixo da moldura
+fica inalcançável por clique, e elementos aninhados (um <code>&lt;span&gt;</code> dentro do
+<code>&lt;h1&gt;</code> selecionado) ficam inalcançáveis de forma permanente.</p>
+
+<figure>
+  <img src="../bugs/BUG-20260801-6UHJ-overlay-de-selecao-engole-o-clique/evidence/overlay-engole-clique.png"
+       alt="Moldura de seleção do h1 com a área de arraste pintada de vermelho, cobrindo o span interno">
+  <figcaption>Vermelho translúcido = <code>.mef-body</code>, a zona que captura o clique.
+  Tracejado = o <code>&lt;span class="accent"&gt;</code> que mora dentro do <code>&lt;h1&gt;</code>
+  selecionado e não pode ser clicado.</figcaption>
+</figure>
+
+<div class="warn">
+  <strong>Aberto no registro:</strong> o relator liga o travamento ao ato de salvar. Salvar não foi
+  reproduzido como causa, porque o ciclo <code>mover → salvar → redimensionar → salvar → recortar →
+  salvar</code> completou em 5 decks. O que se reproduz é o estado em que ele fica depois de salvar:
+  elemento ainda selecionado, moldura parada por cima do conteúdo. Confirmar com o relator antes de
+  fechar.
+</div>
+
+<h2>Relações</h2>
+<div class="graph">
+  <div class="row">
+    <span class="node hist">_reversa_sdd/edit-stuck-fix<br>mesmo relato, outra causa · corrigido</span>
+    <span class="arrow">╌╌ relato equivalente, sem bug.md ╌╌▶</span>
+    <span class="node bug">#15 · 6UHJ<br>overlay engole o clique<br>open · P1 · high</span>
+  </div>
+</div>
+<p class="prose">Nenhuma aresta canônica: contexto com um bug só. A seta pontilhada não é relação
+tipada, e sim uma marca de que o mesmo sintoma relatado pelo usuário já foi tratado uma vez, por causa
+diferente (<code>textCtx</code> e <code>body.mef-text-editing</code> presos sem <code>blur</code>),
+antes de existir o registro de bugs. Aquela auto-cura foi verificada nesta sessão em 50/50 cópias
+de <code>mira-edit-free.js</code>, então este bug não é regressão dela.</p>
+
+<h2>Spec</h2>
+<table>
+<thead><tr><th>bug</th><th>seção</th><th>exigência</th><th>veredito</th></tr></thead>
+<tbody>
+<tr><td>6UHJ</td><td><code>mira-edit-livre/sdd/selecao-de-elemento.md#rf-04</code></td>
+    <td>Must: trocar a seleção ao clicar em outro elemento</td><td>pendente</td></tr>
+<tr><td>6UHJ</td><td><code>mira-edit-livre/sdd/selecao-de-elemento.md#rf-05</code></td>
+    <td>Must: limpar a seleção clicando em área vazia ou com Esc</td><td>pendente</td></tr>
+</tbody>
+</table>
+
+<h2>Propagação</h2>
+<p class="prose">A fonte canônica é <code>templates/authoring/mira-edit-free.js</code>, mas o arquivo
+está copiado em cerca de 50 decks sob <code>decks/</code>, <code>examples/</code> e
+<code>tests/</code>. Corrigir o template não conserta deck já instalado: a propagação é
+<code>npx mira-animator edit &lt;deck&gt;</code> mais versão publicada, que é o que a closure policy
+<code>package</code> exige.</p>
+
+</div>
+</body>
+</html>

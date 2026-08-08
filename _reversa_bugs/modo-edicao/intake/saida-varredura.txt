@@ -1,0 +1,29 @@
+Varredura 2026-08-01 21:5x, comando: node repro-varredura.mjs <url>, decks servidos por lib/mira-serve.js
+
+########## templates/decks/demo-tecnica ##########
+alvos: 3 | botao: Salvar [off]
+rodada 1 [z0] selecionou=true  mover={"moveu":true,"dx":35} botao=Salvar (1)  -> Salvo
+rodada 2 [z1] selecionou=FALSE mover=null                   botao=Salvar [off] -> BOTAO OFF
+rodada 3 [z2] selecionou=true  mover={"moveu":true,"dx":35} botao=Salvar (2)  -> Salvo
+
+########## templates/decks/pitch-projeto ##########
+rodada 1 [z0] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+rodada 2 [z1] selecionou=FALSE mover=null                   -> BOTAO OFF
+rodada 3 [z2] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+
+########## templates/decks/mira-studio-demo ##########
+rodada 1 [z0] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+rodada 2 [z1] selecionou=FALSE mover=null                   -> BOTAO OFF
+rodada 3 [z2] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+
+########## templates/decks/mira-studio-full-demo (index-16x9.html) ##########
+rodada 1 [z0] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+rodada 2 [z1] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+rodada 3 [z0] selecionou=true  mover={"moveu":true,"dx":35} -> Salvo
+  (aqui os dois alvos nao se sobrepoem: o overlay nao ficou por cima do segundo)
+
+########## decks/teste-mira-default, teste dirigido do overlay ##########
+1) seleciona o MAIOR elemento (H1 877x66) -> selecionou=true
+2) com ele selecionado:
+   p1 (SPAN 427x79, filho do H1): selecionou=FALSE  quemRecebeuOClique=DIV.mef-body
+   p2 (P 366x23, fora do overlay): selecionou=true

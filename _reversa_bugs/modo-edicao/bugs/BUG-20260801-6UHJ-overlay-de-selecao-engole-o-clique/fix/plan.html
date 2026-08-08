@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano de correção · #15 6UHJ</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;--accent:#ff904d;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:19px;margin:38px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px;color:var(--accent)}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:18px;font-weight:650}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.yellow .n{color:var(--yellow)}.card.green .n{color:var(--green)}.card.red .n{color:var(--red)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:14px 16px;
+      overflow-x:auto;font-size:12.5px;line-height:1.55;margin:10px 0}
+  pre .add{color:var(--green)}pre .del{color:var(--red)}pre .ctx{color:var(--muted)}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .open{color:var(--muted);border-color:var(--muted)}
+  .conf{color:var(--green);border-color:var(--green)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  ul.prose{color:#c9cdd8;max-width:82ch}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px;margin-top:12px;overflow-x:auto}
+  .node{display:inline-block;border-radius:10px;padding:12px 16px;font-size:13.5px;line-height:1.45;text-align:left}
+  .node.bug{background:#3a2a1a;border:2px solid var(--accent);color:var(--ink)}
+  .node.hist{background:#1e1e1e;border:1px dashed #555;color:#aaa}
+  .arrow{color:var(--muted);font-size:12.5px;padding:0 12px}
+  .row{display:flex;align-items:center;flex-wrap:wrap;gap:8px}
+  .warn{border-left:3px solid var(--yellow);padding:10px 14px;background:#1b1a15;border-radius:0 8px 8px 0;margin-top:14px}
+  .no{border-left:3px solid var(--red);padding:10px 14px;background:#1c1517;border-radius:0 8px 8px 0;margin-top:14px}
+  .ok{border-left:3px solid var(--green);padding:10px 14px;background:#141c18;border-radius:0 8px 8px 0;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · #15 <code>BUG-20260801-6UHJ</code></h1>
+<p class="meta">contexto <code>modo-edicao</code> · 2026-08-01 · <span class="pill high">high · P1</span>
+<span class="pill open">open · diagnosing</span> · closure policy <code>package</code> · control mode <code>gated</code></p>
+
+<p class="prose"><strong>Este plano descreve o que ainda NÃO existe.</strong> Nenhum arquivo de código
+ou de teste foi tocado até aqui. Só depois da sua aprovação entram os dois gates
+(Gate 1: testes · Gate 2: change set).</p>
+
+<div class="cards">
+  <div class="card"><div class="n">2</div><div class="k">itens no change set</div></div>
+  <div class="card"><div class="n">1 + 3</div><div class="k">testes: reprodução + regressão</div></div>
+  <div class="card yellow"><div class="n">média</div><div class="k">risco da mudança</div></div>
+  <div class="card green"><div class="n">confirmed</div><div class="k">estado da causa raiz</div></div>
+</div>
+
+<h2>1. O defeito</h2>
+<p class="prose">No modo E, clicar num elemento que esteja <em>debaixo</em> da moldura de seleção não
+troca a seleção. O clique é engolido pela superfície de arraste da moldura e vira um arraste do
+elemento antigo. Elemento aninhado, um <code>&lt;span class="accent"&gt;</code> dentro do
+<code>&lt;h1&gt;</code> selecionado, fica inalcançável de forma permanente. Sem saída óbvia: só
+clicando numa área realmente vazia, ou com Esc, que por sua vez fecha o modo E quando não há nada
+selecionado.</p>
+<p class="prose">Viola <code>selecao-de-elemento.md</code> <strong>RF-04</strong> (Must): "manter no
+máximo um elemento selecionado por vez, trocando a seleção ao clicar em outro elemento".</p>
+
+<h2>2. Causa raiz <span class="pill conf">confirmed</span></h2>
+<p class="prose">Dois elos, ambos necessários, juntos suficientes:</p>
+<ol class="prose">
+  <li><code>#mef-overlay .mef-body{position:absolute;inset:0;pointer-events:auto}</code> cobre a
+    caixa inteira do elemento selecionado e captura o ponteiro. Não sobra pixel do próprio elemento
+    (nem dos filhos) para receber clique.</li>
+  <li><code>onDocDown</code> (capture em <code>document</code>) sai em
+    <code>if (isChrome(e.target)) return;</code> <strong>antes</strong> de qualquer
+    <code>select()</code>. O comentário no código diz "clique no overlay: tratado à parte", mas o
+    tratamento à parte (<code>onOverlayDown</code>) só sabe arrastar, nunca reselecionar.</li>
+</ol>
+
+<h3>Evidência que fecha o caminho causal</h3>
+<p class="prose">Neutralizando <strong>só</strong> o elo 1 em tempo de execução (regra CSS injetada,
+sem tocar no fonte), medido em navegador de verdade:</p>
+<table>
+<thead><tr><th>condição</th><th><code>pointerdown.target</code></th><th><code>closest(EDITABLE)</code></th><th>seleção foi para</th></tr></thead>
+<tbody>
+<tr><td>código como está</td><td><code>DIV.mef-body</code></td><td>nenhum (sai em <code>isChrome</code>)</td><td>continua no <code>&lt;h1&gt;</code></td></tr>
+<tr><td><code>.mef-body</code> sem <code>pointer-events</code></td><td><code>SPAN.accent</code></td><td><code>SPAN.accent</code></td><td><strong><code>SPAN.accent</code></strong></td></tr>
+</tbody>
+</table>
+<p class="prose">Necessário e suficiente → <code>root_cause.state: confirmed</code>.
+Detalhe em <a href="../evidence/experimento-causal.md">evidence/experimento-causal.md</a>,
+reprodução em <a href="../evidence/reproduction.md">evidence/reproduction.md</a> (10/10).</p>
+
+<div class="no">
+  <strong>O experimento não autoriza a correção óbvia.</strong> Tirar <code>pointer-events</code> do
+  <code>.mef-body</code> conserta a seleção e <em>quebra o gesto principal do editor</em>: arrastar
+  o elemento selecionado pelo corpo da moldura. Trocaria um defeito por um pior.
+</div>
+
+<h2>3. Estratégia escolhida: correção direta</h2>
+<p class="prose">Sem debate multiagente. Não há hipóteses concorrentes: o caminho causal está
+fechado por experimento, e a estratégia decorre dele de forma quase mecânica. Debate
+(<code>/reversa-debugger-debate</code>) continua disponível se você preferir, ao custo de ~6
+chamadas + juiz.</p>
+
+<p class="prose"><strong>A ideia:</strong> hoje dois gestos diferentes entram pela mesma porta,
+<em>arrastar</em> (o ponteiro anda) e <em>clicar</em> (o ponteiro não anda), e o código sempre
+assume arrastar. Passa a distinguir os dois no <code>pointerup</code>:</p>
+<ul class="prose">
+  <li>ponteiro andou mais que <strong>4px</strong> → arraste, comportamento atual, intacto</li>
+  <li>ponteiro andou 4px ou menos → clique: desfaz o micro-arraste e olha a pilha de elementos
+    <em>por baixo</em> do overlay; se houver um editável diferente do selecionado, a seleção vai
+    para ele</li>
+</ul>
+<p class="prose">É o comportamento de qualquer editor de canvas (Figma, Canva). Não mexe no CSS, não
+mexe no <code>onDocDown</code>, não muda o formato do bloco <code>mira-free-edits</code>, não muda
+nada da persistência.</p>
+
+<h2>4. Correction Change Set proposto</h2>
+<table>
+<thead><tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td><code>test</code></td><td><code>test/mira-edit-selecao.test.mjs</code> (novo)</td>
+    <td>1 teste de reprodução + 3 de regressão, em navegador de verdade</td></tr>
+<tr><td>CHG-002</td><td><code>code</code></td><td><code>templates/authoring/mira-edit-free.js</code></td>
+    <td>distinguir clique de arraste no corpo da moldura e reselecionar o que está embaixo</td></tr>
+</tbody>
+</table>
+
+<h3>Esboço do CHG-002 (~25 linhas)</h3>
+<pre><span class="ctx">// 1) constante nova, junto das outras do módulo</span>
+<span class="add">+ var CLIQUE_MAX = 4;   // px: abaixo disso o gesto foi clique, não arraste</span>
+
+<span class="ctx">// 2) helper novo, ao lado de isChrome()</span>
+<span class="add">+ /* quem está EMBAIXO do overlay num ponto da tela. A moldura cobre a caixa
++    inteira do selecionado, então sem olhar a pilha por baixo dela um filho
++    (ou um vizinho coberto) fica inalcançável por clique. */
++ function editavelSob(x, y) {
++     if (typeof document.elementsFromPoint !== 'function') return null;
++     var pilha = document.elementsFromPoint(x, y);
++     for (var i = 0; i &lt; pilha.length; i++) {
++         if (isChrome(pilha[i])) continue;            // overlay, mini-barra, barra
++         var el = pilha[i].closest ? pilha[i].closest(EDITABLE) : null;
++         if (!el || isChrome(el)) return null;
++         if (el.classList &amp;&amp; el.classList.contains('me-slide')) return null;
++         if (!el.dataset.meId) el.dataset.meId = 'me-x-' + Math.round(el.getBoundingClientRect().top);
++         return el;
++     }
++     return null;
++ }</span>
+
+<span class="ctx">// 3) onDragUp passa a receber o evento e ganha a porta do clique</span>
+<span class="del">- function onDragUp() {</span>
+<span class="add">+ function onDragUp(e) {</span>
+<span class="ctx">      var d = drag; drag = null;
+      ... remoção dos listeners, igual ...
+      if (d &amp;&amp; sel) {
+          var id = sel.dataset.meId;
+          var op = getOp(id, true);
+          var b = d.op0;</span>
+<span class="add">+         /* Gesto curto no corpo da moldura é CLIQUE, não arraste: o usuário está
++            escolhendo o que está embaixo. Sem esta porta, um filho do selecionado
++            fica inalcançável e o clique vira arraste do elemento antigo. RF-04. */
++         if (d.mode === 'move' &amp;&amp; e &amp;&amp;
++             Math.hypot(e.clientX - d.sx, e.clientY - d.sy) &lt;= CLIQUE_MAX) {
++             op.tx = b.tx; op.ty = b.ty; op.sx = b.sxv; op.sy = b.syv; op.rot = b.rot;
++             applyTransform(sel, op);              // desfaz o micro-arraste do clique
++             var alvo = editavelSob(e.clientX, e.clientY);
++             if (alvo &amp;&amp; alvo !== sel) select(alvo); else positionOverlay();
++             syncCropMode(); refreshBar();
++             return;
++         }</span>
+<span class="ctx">          var moved = ... (resto do corpo inalterado)</span></pre>
+
+<div class="ok">
+  <strong>Fora do change set, de propósito:</strong> as ~50 cópias de
+  <code>mira-edit-free.js</code> em <code>decks/</code>, <code>examples/</code> e
+  <code>tests/</code>. A fonte canônica é <code>templates/authoring/</code> (diretiva do
+  <code>CLAUDE.md</code>) e a propagação para deck instalado é
+  <code>npx mira-animator edit &lt;deck&gt;</code>: verificado: <code>lib/commands/edit.js:64</code>
+  copia justamente de <code>templates/authoring/</code>. Sincronizar as 50 cópias no mesmo commit
+  seria refatoração ampla junto da correção, contra os Agent Notes do bug. Se você quiser, vira um
+  CHG-003 separado, com decisão sua.
+</div>
+
+<h2>5. Testes planejados</h2>
+<p class="prose">Arquivo novo <code>test/mira-edit-selecao.test.mjs</code>, no molde do
+<code>test/mira-studio-builders.test.mjs</code> que já existe: servidor HTTP local + Chromium do
+puppeteer, e <em>skip</em> com a razão à vista se o navegador não subir (nunca verde falso).</p>
+<table>
+<thead><tr><th>tipo</th><th>o que faz</th><th>o que prova</th></tr></thead>
+<tbody>
+<tr><td><strong>reprodução</strong></td>
+    <td>seleciona o <code>&lt;h1&gt;</code>, clica no <code>&lt;span&gt;</code> filho</td>
+    <td>o defeito relatado aparece: hoje falha, depois passa (RF-04)</td></tr>
+<tr><td>regressão 1</td>
+    <td>arrasta o elemento já selecionado 40px pelo corpo da moldura</td>
+    <td>o gesto principal continua funcionando, protege contra o "conserto" ingênuo</td></tr>
+<tr><td>regressão 2</td>
+    <td>clique curto no corpo da moldura, sem mover</td>
+    <td>não suja o deck: o botão Salvar continua apagado (o micro-arraste é desfeito)</td></tr>
+<tr><td>regressão 3</td>
+    <td>clica numa área vazia do slide</td>
+    <td>a seleção continua sendo limpa (RF-05)</td></tr>
+</tbody>
+</table>
+<p class="prose">Gate 1 exige que os testes sejam aplicados e <strong>falhem</strong> antes do
+CHG-002, com a saída colada. Gate 2 exige que passem depois, com a saída colada.</p>
+
+<h2>6. Riscos</h2>
+<p class="prose"><strong><code>change_risk: média</code></strong></p>
+<table>
+<thead><tr><th>eixo</th><th>avaliação</th></tr></thead>
+<tbody>
+<tr><td>blast radius</td><td><strong>amplo em alcance, estreito em código</strong>: todo deck do Mira usa o modo E, mas a mudança vive dentro de um handler</td></tr>
+<tr><td>contrato externo</td><td>nenhum: não é API pública, é gesto de UI</td></tr>
+<tr><td>dados</td><td>nenhum: o bloco <code>mira-free-edits</code> e a persistência não mudam de forma</td></tr>
+<tr><td>concorrência</td><td>nenhuma</td></tr>
+<tr><td>reversibilidade</td><td>alta: diff pequeno, sem migração, sem estado novo</td></tr>
+<tr><td>risco real</td><td>o limiar de 4px. Alto demais transforma arraste curto e intencional em clique; baixo demais deixa o clique com tremor de mão virar arraste. 4px é o valor usado por editores de canvas e será coberto pela regressão 1</td></tr>
+</tbody>
+</table>
+
+<div class="warn">
+  <strong>O que esta correção NÃO resolve, e está declarado:</strong>
+  <ul>
+    <li><strong>A pergunta aberta do relato.</strong> O usuário associa o travamento ao ato de
+      salvar. Salvar não foi reproduzido como causa (ciclo completo passou em 5 decks). Se depois
+      da correção o F5 continuar necessário no deck real dele, existe um segundo mecanismo e ele
+      vira um bug novo. <strong>Fechar este bug exige confirmação dele.</strong></li>
+    <li><strong>Vizinho coberto por área vazia.</strong> Se a caixa do elemento selecionado for
+      maior que a tinta visível, clicar nessa área vazia continua resolvendo para o próprio
+      selecionado, porque ali o elemento realmente está por cima. Semântica normal de z-order, não
+      mais uma superfície invisível. O caso reproduzido (filho aninhado) é resolvido.</li>
+    <li><strong>A armadilha do Esc.</strong> Com nada selecionado, Esc fecha o modo E inteiro. É
+      comportamento intencional do <code>mira-edit.js</code>, fora do escopo deste change set. Se
+      for mexer nisso depois, precisa de veredito de spec próprio.</li>
+  </ul>
+</div>
+
+<h2>7. Veredito de spec (previsto, decisão sua no fim)</h2>
+<p class="prose">Recomendação antecipada: <strong><code>spec-correta</code></strong>. RF-04 e RF-05 já
+diziam o certo, com critério de aceite explícito ("clicar num segundo elemento remove o contorno do
+primeiro e o aplica ao segundo"). Foi o código que divergiu. Se for isso, <strong>não</strong> se
+gera adendo e a spec original não é tocada. A decisão é sua, no menu do passo 7 do ciclo.</p>
+
+<h2>8. Grafo do bug</h2>
+<div class="graph">
+  <div class="row">
+    <span class="node hist"><a href="../../../../../_reversa_sdd/edit-stuck-fix/MENSAGEM-PARA-CODEX.md">_reversa_sdd/edit-stuck-fix</a><br>mesmo relato, outra causa · corrigido</span>
+    <span class="arrow">╌╌ relato equivalente, sem <code>bug.md</code> ╌╌▶</span>
+    <span class="node bug"><a href="../bug.md">#15 · 6UHJ</a><br>overlay engole o clique<br>open · P1 · high</span>
+  </div>
+</div>
+
+<h3>Matriz de relações</h3>
+<table>
+<thead><tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr></thead>
+<tbody>
+<tr><td colspan="4" style="color:var(--muted)">Nenhuma aresta canônica. Contexto com um bug só, sem relação proposta com outros contextos.</td></tr>
+</tbody>
+</table>
+<p class="prose">A seta pontilhada acima não é relação tipada: marca que o mesmo sintoma já foi
+tratado uma vez, por causa diferente (<code>textCtx</code> e <code>body.mef-text-editing</code>
+presos sem <code>blur</code>), antes de existir o registro de bugs. Aquela auto-cura foi verificada
+em 50/50 cópias do arquivo, então este bug não é regressão dela: os dois mecanismos são
+independentes e a correção de agora não desfaz a de antes.</p>
+
+<h2>9. Ordem de execução</h2>
+<ol class="prose">
+  <li>Você aprova este plano</li>
+  <li><strong>Gate 1</strong>: diff do <code>test/mira-edit-selecao.test.mjs</code> → sua aprovação → aplicar → provar que <strong>falha</strong></li>
+  <li><strong>Gate 2</strong>: diff do <code>templates/authoring/mira-edit-free.js</code> → sua aprovação → aplicar → provar que <strong>passa</strong></li>
+  <li>Veredito de spec (menu, decisão sua)</li>
+  <li>Fechamento pela closure policy <code>package</code>: o bug fica <code>active/delivering</code> até merge e versão publicada. <strong>Não</strong> recebe <code>DONE.md</code> antes disso</li>
+</ol>
+
+</div>
+</body>
+</html>
