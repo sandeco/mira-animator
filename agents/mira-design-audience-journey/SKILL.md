@@ -13,7 +13,7 @@ description: >-
 
 ## Onde isto entra no Mira
 
-Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`. No fim, o `/mira-animator` escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
+Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`, `/mira-scene-brief`. No fim, o `/mira-animator` (ou o `/mira-cine-animator`, no deck cinematográfico) escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
 
 **Etapa 4.** Recebe a Story Bible. Entrega o Audience Journey Map, que diz o que muda na cabeça do público a cada beat.
 

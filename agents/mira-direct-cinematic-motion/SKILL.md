@@ -16,9 +16,9 @@ description: >-
 
 ## Onde isto entra no Mira
 
-Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`. No fim, o `/mira-animator` escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
+Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`, `/mira-scene-brief`. No fim, o `/mira-animator` (ou o `/mira-cine-animator`, no deck cinematográfico) escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
 
-**Etapa 7.** Recebe Slide Score e Encenação. Entrega o MIRA Motion Score e o handoff para o `/mira-animator`.
+**Etapa 7.** Recebe Slide Score e Encenação. Entrega o MIRA Motion Score e o handoff: para o `/mira-scene-brief` em deck de dois ou mais slides, direto ao implementador em deck de um slide só.
 
 Nenhuma skill desta cadeia escreve HTML, e nenhuma delas cria a metáfora animada: o método de metáfora, a rubrica de 85 e o código do slide são do `/mira-animator`.
 
@@ -240,6 +240,11 @@ Regras de dosagem, todas numéricas:
 - **`tremor` longo num slide que vai ser gravado lê como falha de captura, não como intenção.** Fora de `tenso`, não usar.
 - **`tremor` é pontuação, `tensao` é estado.** Mesma vibração, papéis opostos: tremor marca um instante, tensão sustenta enquanto a ameaça dura. Tensão forte e curta é tremor mal feito; tremor longo é motor ligado.
 - **Cues coexistem, e isso não é exceção.** Enquadramento, tremor e tensão são canais separados que o motor soma. Tensão sustentada com um tremor por cima durante um push-in é uma frase de câmera. O que conflita é dois cues do mesmo canal no mesmo intervalo, e o teto por cena continua valendo.
+- **Todo cue nasce pronto para virar marcador `@MIRA:FOCO`.** No deck, câmera se escreve como
+  marcador dentro da `<section>`, nunca como `Cam.*` inline na timeline, senão a tecla C não a
+  enxerga e o autor não consegue ajustar. Consequência para a direção: cada cue declara tipo, alvo
+  com posição fixa no quadro (coordenada, não elemento sorteado), beat, duração e razão. Cue descrito
+  sem posição do alvo obriga o implementador a inventá-la.
 - **A câmera não se move durante leitura de texto indispensável.**
 - **Elemento de legibilidade crítica recebe `data-mira-traco-fixo` ou `data-mira-texto-fixo`**, senão todo push-in engorda traço e tipografia.
 - **A câmera opera dentro do palco.** Nunca sobre o título, a área de câmera do Studio ou o teleprompter.
@@ -399,7 +404,12 @@ Mapear a direção para o formato de [handoff-mira-animator.md](references/hando
 - reduced motion e fallback;
 - testes de aceitação.
 
-**Não escrever o HTML do deck aqui.** Quem escreve é o `/mira-animator`, e ele espera direção, não código pronto.
+**Não escrever o HTML do deck aqui.** Quem escreve é o `/mira-animator` (ou o `/mira-cine-animator`, no deck cinematográfico), e ele espera direção, não código pronto.
+
+**Em deck de dois ou mais slides, o Motion Score não vai direto ao implementador:** ele segue para o
+`/mira-scene-brief`, que destila um briefing autossuficiente por slide. Escreva a partitura sabendo
+que ela será destilada: câmera com alvo, beat, duração e razão explícitos por slide é o que
+sobrevive à destilação; direção difusa espalhada pelo texto é o que morre nela.
 
 ### 14. Aplicar o Gate UAU cinematográfico
 
@@ -424,6 +434,15 @@ Exigir média mínima 4, nota 5 em fidelidade e robustez e nenhum slide decisivo
 
 1. **Nenhum recurso de cinema pode ser a única mudança de estado da cena.** Se ao desligar câmera, profundidade, grade e atmosfera a animação deixa de contar a história, a história não existia.
 2. **A nota é dada com o cinema desligado.** Verificação prática: descrever a cena sem nenhum cue de câmera, sem planos e com a grade `neutra`. Se ela ainda encena o acontecimento, o cinema pode entrar. Ele entra depois de a cena passar, nunca para fazê-la passar.
+
+**Em deck cinematográfico as duas travas invertem, e são as únicas coisas que invertem.** Quando o
+deck carrega o `mira-cinema.js` e quem implementa é o `/mira-cine-animator`, o cinema pode ser a
+mudança de estado dominante e a nota é dada com o cinema LIGADO, porque é assim que o implementador
+vai avaliá-la. O teste que continua valendo nos dois fluxos: tirando o cinema, sobrar **menos
+história** é legítimo ali; sobrar **história nenhuma** reprova sempre, porque aí não havia cena,
+havia efeito. Dirigir um deck cinematográfico com as travas do deck comum sanitiza a partitura e
+entrega um deck comum, que é o defeito que o fluxo `/mira-cinema-deck` existe para impedir. Todos os
+tetos numéricos (cues por temperamento, planos, desfoque, grão estático) continuam valendo.
 
 A rubrica de 85 sem veto do `/mira-animator` continua valendo no momento da implementação, e é avaliada da mesma forma. As duas escalas convivem: esta pontua a direção, aquela pontua a metáfora.
 

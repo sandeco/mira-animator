@@ -232,19 +232,50 @@ const cena = MiraCinema.palco('slug-svg', { grade: 'noite-fria', seed: 41721 });
 Prof.plano(cena, '#g-fundo',  { z: 0.85, desfoque: 2.5, escurecer: 0.35 });
 Prof.plano(cena, '#g-meio',   { z: 0.45 });
 Prof.plano(cena, '#g-frente', { z: 0.10 });
-
-cena.tl
-  .add(Cam.estabelecer(cena, { dur: 0.8 }), 'orientacao')
-  .add(Cam.aproximar(cena, { alvo: '#ator', margem: 0.15, dur: 1.2,
-                             ease: 'decisive', razao: 'foco na decisão' }), 'antecipacao')
-  .add(Cam.segurar(cena, { dur: 0.8 }), 'impacto')
-  .add(Cam.recuar(cena, { dur: 1.0, razao: 'acomodação' }), 'saida');
 ```
+
+**A câmera NÃO se escreve em JS. Ela se escreve como marcador, dentro da `<section>`:**
+
+```html
+<section>
+  <!-- razões: 1 foco na decisão do ator; 2 o impacto é o acontecimento da cena -->
+  <!-- @MIRA:CICLO 12.0 BEATS 12 -->
+  <!-- @MIRA:LOOP on -->
+  <!-- @MIRA:VOLTA on -->
+  <!-- @MIRA:FOCO 1 tipo=aproximar cx=480 cy=300 r=180 beat=2.0 dur=2.2 -->
+  <!-- @MIRA:FOCO 2 tipo=tremor amp=0.01000 beat=8.8 dur=0.3 -->
+  ...
+</section>
+```
+
+O `mira/mira-foco.js` lê esses marcadores no load e monta a câmera dentro da `cena.tl`, chamando os
+`Cam.*` por você. É o mesmo motor, com uma diferença que decide tudo: **a tecla C só enxerga
+marcador**. Cue chamado inline via `cena.tl.add(Cam.aproximar(...))` roda, mas não aparece na
+timeline do modo câmera, e o autor não consegue ajustar o que não vê. Foi o defeito medido no deck
+de 2026-08-07: 27 cues em JS, 1 marcador, câmera ineditável. Por isso o contrato:
+
+- **Todo cue de câmera nasce como `@MIRA:FOCO`.** Zoom é `tipo=aproximar cx= cy= r=`; travelling é
+  `tipo=revelar cx= cy= r=`; pontuação é `tipo=tremor amp=`; estado é `tipo=tensao amp=`, com
+  `loop=1` quando sustenta o ciclo. `beat` e `dur` aceitam fração.
+- **Declare `@MIRA:CICLO <segundos> BEATS <n>` com `n` = segundos arredondado**, para 1 beat valer
+  cerca de 1 segundo e o marcador ser legível por gente.
+- **`@MIRA:VOLTA on` cobre o estabelecer no beat 0 e o recuar no fim.** Não escreva esses dois como
+  foco. `Cam.segurar` é ausência de cue. Estabelecer no meio da cena é um foco de quadro cheio:
+  `cx=W/2 cy=H/2 r=H/2`.
+- **O elemento que a câmera enquadra tem posição FIXA no código, não sorteada.** Marcador guarda
+  coordenada absoluta; coordenada que vem da semente não cabe num comentário. Visualmente dá no
+  mesmo: o que importa é enquadrar UM prédio, não o prédio sorteado.
+- **A razão de cada cue vai num comentário comum ao lado dos marcadores** (e no Motion Score, se
+  houver). O campo do marcador só carrega número, e razão continua obrigatória: cue sem razão é
+  câmera decorativa.
+- **`Cam.*` inline só quando o efeito não existe no vocabulário do marcador** (um punch-in composto,
+  um Vertigo), e aí com comentário no código dizendo por que não pôde ser marcador. É exceção
+  justificada, não caminho paralelo.
 
 | Peça | O que faz |
 |---|---|
 | `MiraCinema.palco(id, opts)` | cria a cena, casa o `viewBox`, dá uma timeline GSAP por palco, toca ao entrar em tela e congela ao sair. Substitui `palco()` + `reger()` |
-| `Cam.estabelecer`, `aproximar`, `revelar`, `recuar`, `segurar`, `tremor`, `tensao` | os sete cues; cada um devolve uma tween para encaixar na timeline com label |
+| `Cam.estabelecer`, `aproximar`, `revelar`, `recuar`, `segurar`, `tremor`, `tensao` | os sete cues do motor. Quem os chama é o `mira-foco.js`, a partir dos marcadores; chamada direta na timeline é só a exceção justificada acima |
 | `Cam.tremor(cena, {dur, amplitude, razao})` | impacto: ataque seco, cabeça curta em força cheia, queda. Escreve em `cena.abalo` |
 | `Cam.tensao(cena, {dur, amplitude, razao})` | a mesma vibração do tremor, fraca, plana e longa. Escreve em `cena.tensao` |
 | `Prof.plano(cena, seletor, {z, desfoque, escurecer})` | profundidade; `z` de 0 (colado) a 1 (infinito), parallax = `1 - z` |

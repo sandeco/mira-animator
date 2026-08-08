@@ -4,7 +4,8 @@ description: >-
   Destilar a cadeia narrativa do MIRA em um briefing de cena curto e autossuficiente por slide, para
   que quem desenha a animação nunca precise ler a cadeia inteira. Cada briefing traz título de tela,
   função dramática, âncoras de entrada e de saída, objetos com o nome real, história em três tempos,
-  loop, temperamento e proibições. Usar depois do Motion Score, como última etapa antes do
+  loop, temperamento, proibições e, no deck cinematográfico, a direção de cinema do slide (câmera,
+  planos, atmosfera). Usar depois do Motion Score, como última etapa antes do
   /mira-animator, quando o deck tiver dois ou mais slides. Não usar para criar a premissa, estruturar
   a história, encenar o quadro nem coreografar o movimento, que são das skills anteriores da cadeia.
   NÃO usar para animar: escrever o código do slide é do /mira-animator. NÃO usar em deck de um slide
@@ -18,7 +19,8 @@ description: >-
 Cadeia narrativa, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`,
 `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`,
 `/mira-direct-scene`, `/mira-direct-cinematic-motion`, **`/mira-scene-brief`**. Depois o
-`/mira-animator` escreve a animação, um slide por vez.
+`/mira-animator` (ou o `/mira-cine-animator`, no deck cinematográfico) escreve a animação, um slide
+por vez.
 
 **Etapa 8, e é a última que produz texto.** Recebe Slide Score, Encenação e Motion Score. Entrega um
 briefing por slide.
@@ -51,7 +53,7 @@ cadeia, faltou no briefing. É verificável e não depende de contar palavra.
 Como referência prática, e não como teto: os briefings validados têm cerca de 180 palavras, contra
 320 do slide equivalente no Slide Score. O ganho não veio de encurtar, veio de escolher.
 
-## Formato do briefing, nove campos
+## Formato do briefing, nove campos, mais um décimo só de deck cinematográfico
 
 Todos obrigatórios. Campo vazio é decisão não tomada, e ela vai reaparecer como invenção do
 implementador.
@@ -67,6 +69,15 @@ implementador.
 | **Loop** | o que repete, e o repouso antes de reiniciar | esquecer o repouso, e o loop vira nervoso |
 | **Temperamento** | `sereno`, `natural` ou `tenso` | `tenso` por padrão, que é o vício |
 | **Proibições** | o que não pode aparecer nesta cena | deixar vazio quando a cadeia proibiu algo |
+| **Cinema** (só deck cinematográfico) | a direção de cinema DESTE slide, destilada do Motion Score e da Encenação | omitir o campo e a câmera do deck inteiro morrer no caminho |
+
+**O campo Cinema** só existe quando o deck tem o `mira-cinema.js` e o implementador é o
+`/mira-cine-animator`. Ele traz, em até 6 linhas: os cues de câmera do slide (tipo, alvo com posição
+no quadro, beat, duração e razão narrativa de cada um, prontos para virarem marcadores
+`@MIRA:FOCO`), os planos de profundidade com a oclusão declarada, e a intenção de atmosfera se
+houver. Sem chamada de API e sem código: é direção em texto, como o resto do briefing. Este campo é
+o único caminho pelo qual a câmera do Motion Score chega em quem escreve o código; sem ele o deck
+cinematográfico sai sem câmera, que foi o defeito medido.
 
 E um cabeçalho para o CONJUNTO, uma vez só, não por slide:
 
@@ -135,8 +146,10 @@ do slide. Objeto nomeado sem origem declarada é o que produz figura humana dese
 - **Proibição herdada é obrigatória.** Se a cadeia proibiu métrica de produtividade, número de tempo
   economizado ou a expressão "agente de IA", isso desce para o campo de proibições de cada slide que
   poderia cair nessa tentação. O implementador não leu a cadeia e não tem como saber.
-- **Nada de câmera, easing, cue nem API.** O briefing diz o que acontece e o que se sente. Como
-  filmar é do Motion Score, e escrever o código é do `/mira-animator`.
+- **Nada de câmera, easing, cue nem API em deck comum.** O briefing diz o que acontece e o que se
+  sente. Como filmar é do Motion Score, e escrever o código é do `/mira-animator`. **Em deck
+  cinematográfico a câmera viaja no campo Cinema**, porque o implementador não recebe o Motion
+  Score: descartá-la ali é descartá-la do deck. Continua sem API e sem código nos dois casos.
 - **Um briefing não menciona outro.** "Como no slide anterior" quebra a autossuficiência, que é a
   única coisa que esta skill entrega. A continuidade viaja pela âncora, que é autocontida.
 - **Esta skill não escreve HTML.** Se entregar código, descarte e peça o briefing.

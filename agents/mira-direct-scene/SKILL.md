@@ -15,7 +15,7 @@ description: >-
 
 ## Onde isto entra no Mira
 
-Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`. No fim, o `/mira-animator` escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
+Cadeia narrativa do Mira, em ordem: `/mira-premise-forge`, `/mira-concept-storyteller`, `/mira-story-architect`, `/mira-design-audience-journey`, `/mira-direct-slide-sequence`, `/mira-direct-scene`, `/mira-direct-cinematic-motion`, `/mira-scene-brief`. No fim, o `/mira-animator` (ou o `/mira-cine-animator`, no deck cinematográfico) escreve a animação dentro do `index.html` do deck, e o `/mira-builder` monta o resto.
 
 **Etapa 6.** Recebe o Slide Score. Entrega a Encenação, que é o quadro montado antes de qualquer movimento.
 
@@ -48,6 +48,8 @@ Escolher o clima de cor uma vez, para o deck inteiro. Grade por cena é como se 
 ### Encenação não substitui história
 
 Nenhum recurso de cinema pode ser a única mudança de estado da cena. Se ao desligar profundidade, grade e enquadramento a cena deixa de contar a história, a história não existia.
+
+**Exceção, e é uma só: o deck cinematográfico.** Quando o deck carrega o `mira-cinema.js` e quem implementa é o `/mira-cine-animator`, o cinema pode ser a mudança de estado dominante, e a encenação tem o dever de dirigi-lo assim quando a cena pedir. O teste vira o do irmão: tirando o cinema, sobrar menos história é legítimo; sobrar história nenhuma reprova nos dois casos. Encenar um deck cinematográfico com a trava do deck comum entrega um deck comum.
 
 ### O ator tem nome
 
@@ -186,14 +188,20 @@ Pontuar de 0 a 5:
 | Hierarquia | O olho encontra o ator focal sem procurar? |
 | Profundidade | Existe oclusão real, e não só camadas em velocidades diferentes? |
 | Chão | A cena tem apoio, ou flutua no vazio? |
-
-Em deck sem o `mira-cinema.js`, a linha **Profundidade** é avaliada só pela oclusão, e a de **Chão** vale só quando a cena pede sombra ou reflexo. Critério indisponível é inerte, não reprovação: cena não perde nota por não ter recurso que o deck não carrega.
 | Legibilidade | Título, texto e traço sobrevivem à aproximação e à projeção? |
 | Coerência de deck | Slides adjacentes parecem do mesmo filme? |
 | Especificidade | Esta encenação pertence a esta história? |
 | Robustez | Sem grade, sem planos e sem câmera, a cena ainda conta a história? |
 
+Em deck sem o `mira-cinema.js`, a linha **Profundidade** é avaliada só pela oclusão, e a de **Chão** vale só quando a cena pede sombra ou reflexo. Critério indisponível é inerte, não reprovação: cena não perde nota por não ter recurso que o deck não carrega.
+
 Exigir média mínima 4, nota 5 em robustez e nenhuma cena decisiva abaixo de 4 em orientação ou legibilidade.
+
+**Em deck cinematográfico** (o `mira-cinema.js` instalado e o implementador sendo o
+`/mira-cine-animator`), a linha **Robustez** troca de teste, e é a única que troca: tirando grade,
+planos e câmera, sobrar **menos história** vale 5, porque ali o cinema pode carregar peso dramático
+real; sobrar **história nenhuma** continua valendo 0, porque aí não havia cena, havia efeito. Exigir
+robustez 5 sobre esse teste, com o resto do gate intacto.
 
 ## Contrato de saída: Encenação
 
@@ -220,5 +228,5 @@ Bloquear e refazer se:
 - a grade for escolhida slide a slide, ou apagar a cor da marca;
 - algo focal ocupar a faixa do título ou a área segura;
 - dois slides vizinhos repetirem silhueta, espaço e escala juntos;
-- a encenação depender de luz de cena, âncora ou atmosfera, que ainda não existem;
-- a cena, descrita sem grade, sem planos e sem câmera, deixar de contar a história.
+- a encenação depender de luz de cena ou de âncora entre slides, que ainda não existem; atmosfera em SVG (poeira, brasa, névoa por formas e gradientes) existe e pode ser dirigida, o que não existe é biblioteca de prateleira;
+- a cena, descrita sem grade, sem planos e sem câmera, deixar de contar a história (em deck cinematográfico, o teste da Robustez acima: reprovar só quando não sobra história nenhuma).

@@ -13,7 +13,9 @@ description: >-
 
 Um tema entra; sai um deck com história, encenação e câmera. Esta skill **não escreve HTML nem
 inventa metáfora**: ela conduz a ordem, instala o que precisa existir e passa o bastão. Quem
-escreve a animação continua sendo o `/mira-animator`.
+escreve a animação é o **`/mira-cine-animator`**, o irmão cinematográfico que herda o método
+inteiro do `/mira-animator` por referência. Num deck que existe para ser cinema, rotear para o
+irmão comum entrega um deck comum, e foi exatamente o defeito do deck de 2026-08-07.
 
 ## Por que ela existe
 
@@ -93,7 +95,7 @@ Na ordem, um de cada vez, com o resultado de cada um alimentando o seguinte:
 | 5 | `/mira-direct-slide-sequence` | MIRA Slide Score, uma cena por slide |
 | 6 | `/mira-direct-scene` | encenação: composição, planos com oclusão, enquadramento, grade do deck |
 | 7 | `/mira-direct-cinematic-motion` | MIRA Motion Score: temperamento, beats, câmera, easing, loop |
-| 7b | `/mira-scene-brief` | destila tudo em um briefing autossuficiente por slide, com a âncora que liga um ao outro |
+| 7b | `/mira-scene-brief` | destila tudo em um briefing autossuficiente por slide, com a âncora que liga um ao outro e o campo **Cinema**, que carrega a câmera, os planos e a atmosfera daquele slide |
 | 7c | `/mira-asset-scout` | decide a origem de cada ator: desenhar, buscar SVG de fonte aberta ou pedir ao autor |
 
 **Dá para entrar no meio.** Se a premissa já existe, comece na 2; se a Story Bible está de pé, use
@@ -109,8 +111,14 @@ Grave cada entrega em `decks/<slug>/references/`, senão a etapa seguinte recons
 | # | Agente | Papel |
 |---|---|---|
 | 8 | `/mira-builder` | monta o HTML a partir do Slide Score |
-| 9 | `/mira-animator` | **implementa** a partitura: metáfora, câmera, planos e grade |
+| 9 | `/mira-cine-animator` | **implementa** a partitura: metáfora, câmera, planos e grade, com a nota avaliada com o cinema ligado |
 | 10 | `/mira-validator` | relatório de conformidade |
+
+**O passo 8 monta DENTRO do deck que a fase 0 criou**, nunca num arquivo novo: o `index.html` de lá
+já carrega as tags do GSAP, do `mira-cinema.js`, do `mira-foco.js` e dos módulos de autoria, na
+ordem certa. Remover ou reordenar essas tags ao montar os slides desfaz a fase 0 em silêncio, e o
+sintoma só aparece no passo 9, quando a câmera não tem motor. Depois do builder, confira que as tags
+continuam lá.
 
 Entre a fase 1 e o passo 9 entra o **`/mira-scene-brief`**, e ele muda o que o passo 9 recebe.
 
@@ -123,15 +131,19 @@ briefing autossuficiente por slide, cerca de 180 palavras.
 
 Consequência para este orquestrador, e é a regra que mais muda:
 
-- **entregue ao `/mira-animator` um briefing por vez**, o daquele slide, e nada mais. Nem o Motion
+- **entregue ao `/mira-cine-animator` um briefing por vez**, o daquele slide, e nada mais. Nem o Motion
   Score, nem o Slide Score, nem os briefings dos vizinhos. A única coisa que viaja junto é a tabela
   de origem do `/mira-asset-scout` daquele slide, que cabe em três linhas e evita que ele desenhe à
   mão o que não sabe desenhar;
+- **confira que cada briefing tem o campo Cinema preenchido** (cues com alvo, beat, duração e razão,
+  planos com oclusão). É por ele, e só por ele, que a câmera do Motion Score chega no implementador:
+  briefing de deck cinematográfico sem esse campo volta para o `/mira-scene-brief` antes de qualquer
+  código;
 - se um slide sair errado, o defeito está **no briefing**, não no implementador. Corrija o briefing e
   gere de novo, em vez de mandar mais contexto junto. Mandar mais contexto desfaz o método.
 
-O `/mira-animator` já conhece a API (`MiraCinema.palco`, `Cam.*`, `Prof.*`, `Grade.*`) e os tetos, e
-não precisa da cadeia para isso.
+O `/mira-cine-animator` já conhece a API (`MiraCinema.palco`, `Cam.*`, `Prof.*`, `Grade.*`) e os
+tetos, herdados do método do `/mira-animator`, e não precisa da cadeia para isso.
 
 **Exceção:** deck de um slide só não tem âncora entre cenas, e aí a destilação não paga o passo.
 Nesse caso o Motion Score vai direto para o passo 9.
@@ -157,7 +169,11 @@ navegador. O `npx mira-animator new <slug> --cinema` já deixa o `servidor.bat` 
 apresentar, o servidor é para autorar.
 
 Não reescreva no código cue que o autor ajustou na tela. Os marcadores são a fonte da verdade da
-câmera depois que o deck existe: o código do slide conta a história, os marcadores enquadram.
+câmera **desde o nascimento**: o implementador escreve a direção de câmera como `@MIRA:FOCO` dentro
+da `<section>`, nunca como `Cam.*` inline na timeline (contrato no `/mira-animator`, seção do modo
+cinema). Cue inline é invisível para a tecla C, e um deck com câmera que o autor não consegue
+ajustar é um deck com câmera errada para sempre. O código do slide conta a história, os marcadores
+enquadram.
 
 ## Regras que valem sobre tudo
 
@@ -165,9 +181,10 @@ câmera depois que o deck existe: o código do slide conta a história, os marca
   slides herdam. Grade escolhida slide a slide vira ruído, e é assim que um deck vira dez filmes.
 - **Temperamento `sereno` é o padrão.** `tenso` só quando a cena pede tensão. Pedido implícito não
   conta.
-- **A nota de corte do `/mira-animator` (85, sem veto) é avaliada com o cinema desligado.** Câmera,
-  grade e profundidade entram depois de a cena passar, nunca para fazê-la passar. Se ao desligar os
-  quatro a animação deixa de contar a história, volte à metáfora.
+- **A nota de corte (85, sem veto) é avaliada com o cinema LIGADO**, porque quem implementa aqui é
+  o `/mira-cine-animator` e essa é a inversão que o define. O teste que continua valendo: tirando o
+  cinema, sobrar **menos história** é legítimo; sobrar **história nenhuma** reprova nos dois irmãos,
+  porque aí não havia cena, havia efeito.
 - **Nenhum agente da fase 1 escreve HTML.** Se algum entregar código, descarte e peça direção.
 - **`file://`, offline e ausência de build são premissa.** O deck tem que abrir com duplo clique.
 
