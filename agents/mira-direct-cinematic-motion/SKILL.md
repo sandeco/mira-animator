@@ -239,6 +239,7 @@ Regras de dosagem, todas numéricas:
 - **Todo cue declara a razão narrativa.** Cue sem razão é reprovado, e o próprio módulo avisa no console.
 - **`tremor` longo num slide que vai ser gravado lê como falha de captura, não como intenção.** Fora de `tenso`, não usar.
 - **`tremor` é pontuação, `tensao` é estado.** Mesma vibração, papéis opostos: tremor marca um instante, tensão sustenta enquanto a ameaça dura. Tensão forte e curta é tremor mal feito; tremor longo é motor ligado.
+- **`tensao` começa num acontecimento visível que a justifique** (o prazo cruzado, o alarme aceso), nunca no meio de um quadro parado, e com amplitude discreta (até ~0.003). Sem causa na tela, o espectador lê "um tremor sem contexto", não tensão: foi defeito apontado pelo autor num deck real.
 - **Cues coexistem, e isso não é exceção.** Enquadramento, tremor e tensão são canais separados que o motor soma. Tensão sustentada com um tremor por cima durante um push-in é uma frase de câmera. O que conflita é dois cues do mesmo canal no mesmo intervalo, e o teto por cena continua valendo.
 - **Todo cue nasce pronto para virar marcador `@MIRA:FOCO`.** No deck, câmera se escreve como
   marcador dentro da `<section>`, nunca como `Cam.*` inline na timeline, senão a tecla C não a
