@@ -6,6 +6,11 @@ agents/mira-builder/videos_header/
 templates/videos_header/
 decks/**/assets/*.glb
 
+# Chaves de API locais (ex.: GEMINI_API_KEY). Nunca vao para o repo.
+.env
+.env.*
+!.env.example
+
 # MkDocs build output
 .site/
 
@@ -38,6 +43,7 @@ decks/*
 !decks/mira-launch/
 !decks/mira-edit-livre-demo/
 !decks/site-mira-responsivo/
+!decks/you-shall-not-pass/
 
 # Videos de teste pesados nos decks
 decks/**/*.mp4
