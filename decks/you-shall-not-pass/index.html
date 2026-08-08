@@ -267,8 +267,12 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
     /* ajuste fino do autor: 15 px de tela para baixo e para a esquerda. O
        encaixe do Balrog escala o asset em ~0,44, então 15 px de tela valem
        cerca de 23 unidades no espaço local do SVG. */
-    var BOCA_REF = { x: 630, y: 391 };
-    var BOCA_ANG = 12;   /* a mandíbula aponta para baixo e para frente */
+    /* Calibrado contra os OLHOS, que são a única régua confiável aqui: o
+       ponto marcado pelo autor fica ~14 unidades de palco abaixo do centro
+       dos olhos e praticamente na mesma vertical, o que dá este valor no
+       espaço local. Valores anteriores erravam por medir pixel a olho. */
+    var BOCA_REF = { x: 626, y: 370 };
+    var BOCA_ANG = 8;    /* a mandíbula aponta para frente, quase reta */
 
     /* articulação do braço do cajado (técnica do mira-svg-animator:
        path fundido separado por clipPath e rotacionado no ombro) */

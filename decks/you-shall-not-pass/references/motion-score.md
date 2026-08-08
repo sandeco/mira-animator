@@ -147,10 +147,18 @@ escorrega para fora dele.
   intensidade (`boost.jato`) e a silhueta nasce por quadro em `pathJato`, com dois senos
   de frequências diferentes fervendo a borda; três camadas (externa, média, núcleo) dão o
   gradiente térmico, e 22 gotas de cuspe se soltam à frente.
-- **Origem da boca:** `BOCA_REF` local (623, 390), com o grupo girado 12 graus porque a
-  mandíbula aponta para baixo e para frente. O valor anterior (654, 356) era a altura do
-  FOCINHO, e o fogo saía do nariz. Lembrete de conversão: o encaixe do Balrog escala o
-  asset em ~0,44, então 15 px de tela valem cerca de 23 unidades no espaço local.
+- **Origem da boca:** `BOCA_REF` local (626, 370), grupo girado 8 graus. Chegou aqui
+  depois de quatro tentativas erradas (focinho, lábio inferior, peito), e a lição é o
+  método: **calibre contra os OLHOS, nunca estimando pixel a olho na imagem**. Os olhos
+  têm coordenada conhecida e exata (vêm das bolinhas do asset), então servem de régua:
+  meça a distância entre eles na captura, converta para unidades de palco e posicione o
+  alvo por diferença. O ponto pedido pelo autor ficava ~14 unidades de palco abaixo do
+  centro dos olhos.
+- **Cuidado ao desenhar grade de calibração:** ela precisa ser filha do `balrogGesto`,
+  senão não herda o gesto (o bicho está erguido em `y -16`) e as leituras saem ~36
+  unidades locais deslocadas. Foi o que produziu o erro do "fogo no peito".
+- Conversão útil: o encaixe escala o asset em ~0,44, então 15 px de tela valem cerca de
+  23 unidades no espaço local.
 - **Asa direita articulada:** recorte POLIGONAL, não retângulo, porque um retângulo que
   cubra a asa pega a cabeça junto e ela passaria a balançar também. O polígono
   (`ASA_PTS`) desce pela borda da asa e passa por cima do crânio; o corpo usa o
