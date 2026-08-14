@@ -79,6 +79,36 @@ houver. Sem chamada de API e sem código: é direção em texto, como o resto do
 o único caminho pelo qual a câmera do Motion Score chega em quem escreve o código; sem ele o deck
 cinematográfico sai sem câmera, que foi o defeito medido.
 
+## Quando existir conceito alinhado, ele entra como referência
+
+Alguns decks têm `storyboard/concept-brief.md` e quadros em `storyboard/approved/`. Isso nasce
+quando o autor **pede explicitamente** o `/mira-concept-align` e o `/mira-storyboard`, porque a ideia
+estava confusa. É fluxo alternativo, não o caminho normal, e **a maioria dos decks não tem**.
+
+Não existindo, ignore esta seção: nada muda.
+
+Existindo, acrescente a cada briefing uma seção curta, com o que vale **naquele slide**:
+
+```markdown
+## Conceito aprovado
+
+- **Quadro:** `storyboard/approved/slide-03.svg`
+- **Intenção:** mostrar que a distância para a fonte original está aumentando
+- **Elementos obrigatórios:** a fonte original permanece visível em quadro
+- **Interpretações proibidas:** não sugerir que o modelo foi corrompido de fora
+```
+
+`Quadro` sai de `approved/`; `Intenção` é o `visual_intent` daquele quadro; os outros dois saem do
+`concept-brief.md`. Slide sem quadro correspondente recebe `Quadro: sem quadro correspondente`, e os
+outros campos trazem o que vale para o deck inteiro.
+
+**Teto de 150 palavras**, senão o briefing volta a ser grande demais e o defeito que esta skill veio
+consertar volta junto.
+
+Isto é **referência para quem desenha**, não portão: briefing sem a seção não é inválido, e nada
+trava por causa dela. Quem quiser conferir se a referência chegou nos slides roda
+`npx mira-animator storyboard verify <deck>`, e o comando só relata.
+
 E um cabeçalho para o CONJUNTO, uma vez só, não por slide:
 
 - tema do deck;

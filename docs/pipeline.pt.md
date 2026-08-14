@@ -36,6 +36,7 @@ Instalada sempre, com o **Story Team**, roda **antes** da linha principal: decid
 
 | Etapa | Agente | O que faz |
 |---|---|---|
+| -1 | **mira-concept-align** + **mira-storyboard** | Opcional, e oferecido antes de tudo: clareia a ideia e depois a desenha como rascunho barato em `storyboard/`, para você rejeitar um mal-entendido antes de ele virar animação. Fechando essa etapa o deck vira **vinculado**, e a partir daí o conceito aprovado é leitura obrigatória para os agentes seguintes. |
 | 0 | **mira-cinema-deck** | Orquestra a cadeia inteira: cria o deck com `--cinema`, roda as oito etapas na ordem e entrega ao `mira-animator`. Sem ele, a direção de câmera é escrita e nunca implementada. |
 | 1 | **mira-premise-forge** | Pesquisa fatos atuais e transforma o Eureca escondido neles em um **Premise Brief** defensável. |
 | 2 | **mira-concept-storyteller** | Fixa o **Concept Contract**: o que a história precisa ensinar e nunca pode distorcer. |

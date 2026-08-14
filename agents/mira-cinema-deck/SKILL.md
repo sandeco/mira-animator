@@ -41,6 +41,11 @@ Esta skill é o que fecha esse laço, e a ordem abaixo é o motivo dela.
 
 ## A ordem, e por que é essa
 
+> **Alinhamento conceitual não entra aqui.** O `/mira-concept-align` e o `/mira-storyboard` são
+> **fluxo alternativo, acionado só quando o autor pede**, para quando a ideia não está clara. Você
+> não oferece, não sugere e não roda. Se o deck já tiver `storyboard/concept-brief.md`, os agentes da
+> cadeia leem como referência, do mesmo jeito que leem `references/`.
+
 ### Fase 0, o deck nasce com cinema
 
 **ANTES da direção, não depois.** É a única ordem que funciona:

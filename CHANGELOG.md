@@ -4,6 +4,51 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.58
+
+### Novo
+
+**Dois agentes de brainstorming, para quando a ideia ainda não está clara.**
+
+São **fluxo alternativo**: você chama quando quer, e nada no caminho normal muda por causa deles.
+O que produzem é insumo, referência para quem for desenhar depois ou material para melhorar um deck
+que saiu confuso.
+
+O `/mira-concept-align` conversa antes de qualquer produção. Ele pergunta, detecta ambiguidade com
+perguntas que já trazem as leituras concorrentes em vez do genérico "pode explicar melhor?", propõe
+hipóteses rotuladas como hipóteses, e faz **teach-back**: explica a sua ideia com as palavras dele
+para você corrigir o que ele entendeu errado. **Só você fecha o brainstorming.** Ele pode dizer que
+acha que há alinhamento suficiente, e nunca encerra sozinho.
+
+O `/mira-storyboard` é o Diretor Criativo. Ele transforma as metáforas candidatas em **quadros de
+verdade**, SVG e PNG dentro de `storyboard/` na raiz do deck, em opções concorrentes lado a lado.
+Você corrige em linguagem natural ("no slide 3 a fotografia original deve desaparecer"), sem tocar
+em SVG nem em coordenada, e cada correção gera uma versão nova sem apagar a anterior.
+
+A ideia é trocar o custo do erro: é muito melhor rejeitar um esboço de caixas e setas do que
+rejeitar uma animação pronta.
+
+**`npx mira-animator storyboard`**, com dois subcomandos:
+
+- `render <pasta>` transforma as cenas em `.svg` e `.png` e monta uma folha de contato que abre em
+  `file://`, com as opções concorrentes separadas por um "OU" e um texto ao lado de cada quadro
+  explicando a cena;
+- `verify <deck>` confere se o conceito chegou nos slides. **Só relata, nunca corrige**, e um deck
+  sem conceito não é defeito nenhum.
+
+O desenho é determinístico e roda offline, sem chamada de API e sem custo por quadro. O traço de
+rascunho vem do Rough.js, embutido no pacote como o GSAP e o D3 já são.
+
+### Corrigido
+
+**`mira-fast`: falha na publicação não deixa mais lixo no deck.**
+
+Quando o `index.html` do deck era uma pasta, a montagem movia a pasta para o lado, escrevia o
+arquivo novo e então quebrava na limpeza, deixando para trás o `index.html` e uma pasta
+`.mira-fast.bak` com o seu conteúdo dentro. Agora a publicação **falha limpa** nesse caso, sem tocar
+na pasta, porque o plano B de troca existe para arquivo travado por outro processo e não para pasta.
+Trocar a sua pasta por um arquivo apagaria o conteúdo dela em silêncio.
+
 ## 0.1.56
 
 ### Novo

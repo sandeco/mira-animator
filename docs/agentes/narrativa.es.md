@@ -27,6 +27,14 @@ creyendo que pediste cine.
 
 `--cinema` deja en el deck el `mira-cinema.js`, el `mira-foco.js` (modo cámara en la **tecla C**, donde ajustas los cues en pantalla y grabas con `Ctrl+S`) y un `servidor.bat` en la raíz. **Un deck cinematográfico se autora por el `servidor.bat`**, porque el `Ctrl+S` solo escribe directo en el archivo por `http://localhost`; en `file://` depende del selector de archivos de Chrome. Para presentar, el doble clic en `index.html` sigue valiendo.
 
+## `/mira-concept-align`
+
+Aclara una idea **antes** de que se convierta en diapositiva. Interroga, detecta ambigüedad con preguntas contextualizadas, presenta lecturas concurrentes en lugar de elegir una en silencio, y hace **teach-back** para que corrijas lo que entendió mal. Produce `storyboard/understanding.md` durante la conversación y `storyboard/concept-brief.md` **solo cuando lo cierras**: el agente nunca cierra el brainstorming por su cuenta.
+
+## `/mira-storyboard`
+
+El Director Creativo. Convierte las metáforas candidatas en **cuadros reales**, SVG más PNG en `storyboard/` en la raíz del deck, en opciones concurrentes lado a lado, versionadas en cada corrección, con una hoja de contacto que abre en `file://`. Corriges en lenguaje natural ("en la diapositiva 3 la foto original debe desaparecer"), sin tocar SVG ni coordenadas. Blanco y negro, geométrico y deliberadamente tosco: un cuadro con aspecto terminado invita crítica estética cuando lo que se quiere es crítica conceptual.
+
 ## `/mira-premise-forge`
 
 Investiga hechos actuales, noticias, lanzamientos y disputas, desentierra el momento Eureka escondido en ellos y lo convierte en una premisa defendible y visualmente potente. Entrega un **Premise Brief** con el principio organizador, la espina causal y los límites factuales que la historia no puede cruzar.

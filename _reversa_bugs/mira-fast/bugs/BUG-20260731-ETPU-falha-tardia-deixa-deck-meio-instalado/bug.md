@@ -81,18 +81,27 @@ change_set:
   - id: CHG-003
     kind: specification
     artifact: "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
+  - id: CHG-004
+    kind: code
+    artifact: "agents/mira-fast/scripts/assemble-run.mjs"
+    note: >-
+      Segundo defeito, 2026-08-14: publishOutput trocava uma PASTA por arquivo e
+      quebrava na limpeza (rmSync sem recursive). Agora falha limpa quando o
+      caminho de saida e pasta, e as limpezas ganharam recursive.
 
 change_risk: baixa
 addenda:
   - "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
 
 delivery:
-  branch: agent/documentacao-completa-mira
-  base_commit: 456b38b
-  committed: false
-  pr: null
+  branch: feat/concept-align-storyboard
+  base_commit: 25b3f68
+  committed: true
+  commit: 6309639
+  pr: "https://github.com/sandeco/mira-animator/pull/10"
   merged: false
   published_version: null
+  target_version: "0.1.58"
 
 closure:
   policy: package
@@ -207,6 +216,39 @@ A primeira parece mais segura e mais barata.
 
 Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
 publicada. Estado atual `active` / `delivering`.
+
+### Segundo defeito, achado e corrigido em 2026-08-14
+
+A correção de 2026-08-01 moveu o `installRuntime` para depois da publicação, e isso está certo.
+Mas o teste `falha tardia não deixa runtime instalado num deck limpo` **continuava vermelho**, e
+por outro motivo, dentro do `publishOutput`.
+
+**O que acontecia.** Com `index.html` sendo uma pasta, o `rename(tmp → index.html)` falha com
+`EEXIST`/`EPERM` e o código cai no plano B: guarda o antigo em `index.html.mira-fast.bak` e repõe.
+O plano B então **funcionava**: movia a pasta para o lado e escrevia o `index.html` novo. Só quebrava
+na limpeza, em `rmSync(backupPath, { force: true })`, porque **`rmSync` sem `recursive: true` não
+apaga pasta** (`ERR_FS_EISDIR`, medido). O `catch` só restaura quando o `outputPath` não existe, e
+ele já existia, então nada era restaurado e o erro subia deixando dois restos: o `index.html` novo e
+a pasta `.bak` com o conteúdo do usuário dentro.
+
+**Por que não bastava pôr `recursive: true`.** Com só isso, a publicação passaria a **ter sucesso**:
+a pasta do usuário viraria um `.bak` apagado em seguida, e o conteúdo dela sumiria em silêncio. O
+teste exige `assert.throws`, e exige com razão.
+
+**Correção.** O plano B existe para o arquivo **travado por outro processo**, caso clássico do
+Windows (`EPERM`/`EACCES`). Ele não se aplica a pasta. Agora, antes do plano B, um
+`statSync(outputPath).isDirectory()` faz a publicação **falhar limpa**, removendo o temporário e sem
+tocar na pasta do usuário. E as duas chamadas de limpeza ganharam `recursive: true`, para que um
+`.bak` de pasta deixado por uma execução antiga não trave toda publicação futura.
+
+Arquivo: `agents/mira-fast/scripts/assemble-run.mjs`, função `publishOutput`.
+
+Verificação: `node --test test/mira-studio-contrato.test.mjs` passa 17 de 17, e a suíte inteira
+passa 233 de 233. Antes desta correção eram 232 de 233.
+
+**Continua não fechado pelo mesmo motivo de antes:** a closure policy é `package` e exige versão
+publicada. Fechar formalmente (`status: resolved`, `resolution_kind`, `closure.satisfied` e o
+`DONE.md`) é ritual do `/reversa-debugger-fix`, não foi feito aqui.
 
 ### A escolha entre as duas correções
 

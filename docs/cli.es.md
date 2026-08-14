@@ -94,6 +94,20 @@ npx mira-animator memoria onde
 
 `lembrancas` selecciona las preferencias aplicables al contexto; `--registro` guarda la procedencia fuera del deck. `nota` crea una instrucción explícita activa. `consolidar` detecta correcciones recurrentes y crea candidatas; `--simular` no escribe. `estado` cambia el ciclo de vida sin borrar la nota. `listar` muestra notas y refuerzos; `onde` muestra las rutas de memoria y evidencia. Todo vive en `~/.mira-memory/` por defecto; `MIRA_MEMORY_DIR` permite cambiar esa ruta.
 
+## `storyboard`
+
+Concept Storyboard: el borrador barato que valida la idea antes de que se convierta en animación.
+
+```bash
+npx mira-animator storyboard render <deck>/storyboard
+npx mira-animator storyboard render <deck>/storyboard --no-png
+npx mira-animator storyboard verify <deck>
+```
+
+El `render` lee cada escena `.json` de la carpeta y escribe el `.svg` y el `.png` al lado de cada una, más la hoja de contacto `storyboard/index.html`, que abre en `file://` sin servidor. La rasterización usa Chrome headless; sin él los SVG y la hoja salen igual y solo se omite el PNG.
+
+El `verify` responde una sola pregunta: ¿el concepto aprobado llegó a las diapositivas? Compara los marcadores `@MIRA:CONCEPT` contra `storyboard/approved/`, y reporta referencia rota, diapositiva sin marcador y briefing sin la sección obligatoria. **Nunca escribe ni corrige nada**: corregir es decisión tuya. Un deck sin `storyboard/concept-brief.md` simplemente *no está vinculado*, lo cual no es un defecto: lo dice en una línea y sale con 0.
+
 ## `status`
 
 ```bash
