@@ -81,18 +81,27 @@ change_set:
   - id: CHG-003
     kind: specification
     artifact: "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
+  - id: CHG-004
+    kind: code
+    artifact: "agents/mira-fast/scripts/assemble-run.mjs"
+    note: >-
+      Segundo defeito, 2026-08-14: publishOutput trocava uma PASTA por arquivo e
+      quebrava na limpeza (rmSync sem recursive). Agora falha limpa quando o
+      caminho de saida e pasta, e as limpezas ganharam recursive.
 
 change_risk: baixa
 addenda:
   - "_reversa_sdd/addenda/bug-BUG-20260731-ETPU-v001.md"
 
 delivery:
-  branch: agent/documentacao-completa-mira
-  base_commit: 456b38b
-  committed: false
-  pr: null
+  branch: feat/concept-align-storyboard
+  base_commit: 25b3f68
+  committed: true
+  commit: 6309639
+  pr: "https://github.com/sandeco/mira-animator/pull/10"
   merged: false
   published_version: null
+  target_version: "0.1.58"
 
 closure:
   policy: package
