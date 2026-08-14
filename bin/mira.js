@@ -18,6 +18,7 @@ const commands = {
   edit:      () => import('../lib/commands/edit.js'),
   memoria:   () => import('../lib/commands/memoria.js'),
   plugin:    () => import('../lib/commands/plugin.js'),
+  storyboard: () => import('../lib/commands/storyboard.js'),
   status:    () => import('../lib/commands/status.js'),
   update:    () => import('../lib/commands/update.js'),
   uninstall: () => import('../lib/commands/uninstall.js'),
@@ -50,6 +51,12 @@ if (!command || command === '--help' || command === '-h') {
     plugin <sub>         Plugins do usuário (pasta mira-plugins/)
                          list | sync | validate [<id>] | pack <id> | add <arquivo>
                          Instalar é colocar a pasta; desinstalar é apagar
+    storyboard <sub>     Concept Storyboard, o rascunho que valida a ideia antes
+                         de virar animação
+                         render <pasta>  cenas .json -> .svg + .png + folha de contato
+                                         Opção: --no-png
+                         verify <deck>   o conceito aprovado chegou nos slides?
+                                         Só relata, nunca corrige
     status               Mostra o estado da instalação e dos decks
     update               Atualiza agents e templates para a última versão
     uninstall            Remove o Mira da pasta atual

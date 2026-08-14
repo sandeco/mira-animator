@@ -18,6 +18,33 @@ Toda animação DEVE ser **uma metáfora**, DEVE ser **uma história** e DEVE te
 
 Antes de codar você tem que conseguir dizer as três frases. Ex.: *"débito técnico é uma torre que ganha um bloco sozinha"*, *"ela inclina até alguém tirar um bloco"*, *"a cada ciclo entra um bloco novo"*.
 
+## Se o deck tem conceito alinhado, ele é REFERÊNCIA
+
+Alguns decks têm uma pasta `storyboard/` com `concept-brief.md` e quadros em `approved/`. Ela nasce
+quando o autor **pede explicitamente** o `/mira-concept-align` e o `/mira-storyboard`, porque a ideia
+estava confusa e ele quis clarear antes de produzir. É fluxo alternativo, não o caminho normal.
+
+**Deck sem essa pasta: nada muda. Comportamento de hoje, byte por byte.** É a maioria dos decks.
+
+Existindo a pasta, uma obrigação só:
+
+**Leia o `storyboard/concept-brief.md` antes de escrever a animação, e não contrarie o que está
+lá.** A metáfora, os elementos obrigatórios e as interpretações proibidas já foram decididos pelo
+autor; você implementa, não reinventa. É material de consulta, do mesmo jeito que `references/`.
+
+Enxergando necessidade de contradizer (a metáfora aprovada não funciona visualmente, um elemento
+obrigatório não cabe): **argumente ao autor**, citando a seção do brief. Não decida sozinho, e não
+obedeça cegamente. A autoridade sobre o significado é dele.
+
+Opcionalmente, e só se ajudar, declare qual quadro o slide realiza:
+
+```html
+<!-- @MIRA:CONCEPT quadro="approved/slide-03.svg" intent="a distância para a fonte original aumenta" -->
+```
+
+O marcador **não é obrigatório**. Ele serve ao `npx mira-animator storyboard verify <deck>`, que o
+autor roda quando quiser conferir se a referência chegou nos slides. Nada trava sem ele.
+
 ## Método obrigatório: A/B, portões, escolha
 
 Rode ANTES de qualquer linha de código, em qualquer modo e template. **É proibido implementar a primeira metáfora plausível**, e o custo disso é baixo de propósito: um A/B, não um brainstorm.

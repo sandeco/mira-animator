@@ -5,6 +5,7 @@ import {
   readFileSync,
   renameSync,
   rmSync,
+  statSync,
   writeFileSync,
 } from 'node:fs';
 import { createHash } from 'node:crypto';
@@ -346,11 +347,25 @@ function publishOutput(outputPath, content) {
     }
   }
 
-  rmSync(backupPath, { force: true });
+  // O plano B abaixo (guardar o antigo de lado e repor) existe para o arquivo
+  // TRAVADO por outro processo, caso clássico do Windows (EPERM/EACCES). Ele
+  // NÃO se aplica quando o caminho de saída é uma PASTA: mover a pasta do
+  // usuário para o lado e pôr um arquivo no lugar destruiria o conteúdo dela em
+  // silêncio. Aqui a publicação falha limpa, sem deixar nada para trás, e o
+  // runtime não chega a ser instalado (BUG-20260731-ETPU).
+  if (statSync(outputPath).isDirectory()) {
+    rmSync(tempPath, { force: true });
+    throw new Error(`caminho de saída existe e é uma pasta, não um arquivo: ${outputPath}`);
+  }
+
+  // `recursive` é obrigatório: sem ele o rmSync estoura com ERR_FS_EISDIR se o
+  // `.bak` que sobrou de uma execução anterior for uma pasta, e aí toda
+  // publicação seguinte falharia por causa de um resto.
+  rmSync(backupPath, { recursive: true, force: true });
   renameSync(outputPath, backupPath);
   try {
     renameSync(tempPath, outputPath);
-    rmSync(backupPath, { force: true });
+    rmSync(backupPath, { recursive: true, force: true });
   } catch (error) {
     if (existsSync(backupPath) && !existsSync(outputPath)) renameSync(backupPath, outputPath);
     rmSync(tempPath, { force: true });

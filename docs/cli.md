@@ -94,6 +94,20 @@ npx mira-animator memoria onde
 
 `lembrancas` selects preferences for the current context; `--registro` records provenance outside the deck. `nota` creates an explicit active instruction. `consolidar` finds recurring corrections and creates candidates; `--simular` writes nothing. `estado` changes a note's lifecycle without deleting it. `listar` shows notes and reinforcement counts; `onde` prints memory and evidence paths. Data lives in `~/.mira-memory/` by default; set `MIRA_MEMORY_DIR` to override it.
 
+## `storyboard`
+
+Concept Storyboard: the cheap draft that validates the idea before it becomes an animation.
+
+```bash
+npx mira-animator storyboard render <deck>/storyboard
+npx mira-animator storyboard render <deck>/storyboard --no-png
+npx mira-animator storyboard verify <deck>
+```
+
+`render` reads every `.json` scene under the folder and writes `.svg` and `.png` next to each one, plus the contact sheet `storyboard/index.html`, which opens over `file://` with no server. Rasterisation uses headless Chrome; without it the SVGs and the sheet are still written and only the PNG is skipped.
+
+`verify` answers one question: did the approved concept reach the slides? It checks the `@MIRA:CONCEPT` markers against `storyboard/approved/`, reports broken references, unmarked slides and scene briefs missing the mandatory section. **It never writes or fixes anything** — fixing is your call. A deck with no `storyboard/concept-brief.md` is simply *not linked*, which is not a defect: it says so in one line and exits 0.
+
 ## `status`
 
 ```bash

@@ -36,6 +36,7 @@ Always installed, with the **Story Team**, it runs **before** the main line: it 
 
 | Step | Agent | What it does |
 |---|---|---|
+| -1 | **mira-concept-align** + **mira-storyboard** | Optional, and offered before everything else: clears the idea, then draws it as a cheap sketch in `storyboard/` so you can reject a misunderstanding before it becomes an animation. Closing it makes the deck **linked**, and from there the approved concept is mandatory reading downstream. |
 | 0 | **mira-cinema-deck** | Orchestrates the whole chain: creates the deck with `--cinema`, runs the seven stages in order and hands off to `mira-animator`. Without it the camera direction is written and never implemented. |
 | 1 | **mira-premise-forge** | Researches current facts and turns the Eureka hidden in them into a defensible **Premise Brief**. |
 | 2 | **mira-concept-storyteller** | Sets the **Concept Contract**: what the story must teach and may never distort. |

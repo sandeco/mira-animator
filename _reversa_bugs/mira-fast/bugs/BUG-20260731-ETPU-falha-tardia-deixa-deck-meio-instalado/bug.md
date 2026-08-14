@@ -208,6 +208,39 @@ A primeira parece mais segura e mais barata.
 Corrigido em 2026-08-01. **Não fechado**: closure policy `package`, exige merge e versão
 publicada. Estado atual `active` / `delivering`.
 
+### Segundo defeito, achado e corrigido em 2026-08-14
+
+A correção de 2026-08-01 moveu o `installRuntime` para depois da publicação, e isso está certo.
+Mas o teste `falha tardia não deixa runtime instalado num deck limpo` **continuava vermelho**, e
+por outro motivo, dentro do `publishOutput`.
+
+**O que acontecia.** Com `index.html` sendo uma pasta, o `rename(tmp → index.html)` falha com
+`EEXIST`/`EPERM` e o código cai no plano B: guarda o antigo em `index.html.mira-fast.bak` e repõe.
+O plano B então **funcionava**: movia a pasta para o lado e escrevia o `index.html` novo. Só quebrava
+na limpeza, em `rmSync(backupPath, { force: true })`, porque **`rmSync` sem `recursive: true` não
+apaga pasta** (`ERR_FS_EISDIR`, medido). O `catch` só restaura quando o `outputPath` não existe, e
+ele já existia, então nada era restaurado e o erro subia deixando dois restos: o `index.html` novo e
+a pasta `.bak` com o conteúdo do usuário dentro.
+
+**Por que não bastava pôr `recursive: true`.** Com só isso, a publicação passaria a **ter sucesso**:
+a pasta do usuário viraria um `.bak` apagado em seguida, e o conteúdo dela sumiria em silêncio. O
+teste exige `assert.throws`, e exige com razão.
+
+**Correção.** O plano B existe para o arquivo **travado por outro processo**, caso clássico do
+Windows (`EPERM`/`EACCES`). Ele não se aplica a pasta. Agora, antes do plano B, um
+`statSync(outputPath).isDirectory()` faz a publicação **falhar limpa**, removendo o temporário e sem
+tocar na pasta do usuário. E as duas chamadas de limpeza ganharam `recursive: true`, para que um
+`.bak` de pasta deixado por uma execução antiga não trave toda publicação futura.
+
+Arquivo: `agents/mira-fast/scripts/assemble-run.mjs`, função `publishOutput`.
+
+Verificação: `node --test test/mira-studio-contrato.test.mjs` passa 17 de 17, e a suíte inteira
+passa 233 de 233. Antes desta correção eram 232 de 233.
+
+**Continua não fechado pelo mesmo motivo de antes:** a closure policy é `package` e exige versão
+publicada. Fechar formalmente (`status: resolved`, `resolution_kind`, `closure.satisfied` e o
+`DONE.md`) é ritual do `/reversa-debugger-fix`, não foi feito aqui.
+
 ### A escolha entre as duas correções
 
 O registro apresentava as duas e recomendava a primeira. **Confirmada: mover, não desfazer.**
