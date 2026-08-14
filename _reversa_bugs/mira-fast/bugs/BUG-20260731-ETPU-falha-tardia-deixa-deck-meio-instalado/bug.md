@@ -3,12 +3,12 @@ schema_version: 1
 id: BUG-20260731-ETPU
 display_number: 10
 title: Falha tardia da montagem deixa o deck meio instalado, com módulos e launcher mas sem HTML
-status: active
-phase: delivering
+status: resolved
+phase: closed
 severity: medium
 priority: P2
 created: 2026-07-31
-updated: 2026-08-01
+updated: 2026-08-14
 
 origin:
   type: inspection
@@ -99,13 +99,17 @@ delivery:
   committed: true
   commit: 6309639
   pr: "https://github.com/sandeco/mira-animator/pull/10"
-  merged: false
-  published_version: null
-  target_version: "0.1.58"
+  merged: true
+  merge_commit: 36b2efd
+  published_version: "0.1.58"
 
 closure:
   policy: package
-  satisfied: false
+  satisfied: true
+  satisfied_at: 2026-08-14
+  evidence: >-
+    merge do PR #10 em 36b2efd e versao 0.1.58 publicada no npm
+    (npm view mira-animator version => 0.1.58)
 resolution_kind: fixed
 ---
 
@@ -246,9 +250,8 @@ Arquivo: `agents/mira-fast/scripts/assemble-run.mjs`, função `publishOutput`.
 Verificação: `node --test test/mira-studio-contrato.test.mjs` passa 17 de 17, e a suíte inteira
 passa 233 de 233. Antes desta correção eram 232 de 233.
 
-**Continua não fechado pelo mesmo motivo de antes:** a closure policy é `package` e exige versão
-publicada. Fechar formalmente (`status: resolved`, `resolution_kind`, `closure.satisfied` e o
-`DONE.md`) é ritual do `/reversa-debugger-fix`, não foi feito aqui.
+**FECHADO em 2026-08-14.** A closure policy `package` foi satisfeita: PR #10 mergeado em `36b2efd`
+e versão 0.1.58 publicada no npm. Ver `DONE.md`. A pasta está travada para leitura.
 
 ### A escolha entre as duas correções
 
