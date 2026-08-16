@@ -151,11 +151,37 @@ Starting from the 16:9 deck, without touching the original:
 | `mira-squared` | `index-1x1.html` | 1:1 (1080×1080) | Feed, LinkedIn |
 | `mira-vertical` | `index-9x16.html` | 9:16 (1080×1920) | Reels, Shorts, Stories, TikTok |
 | `mira-thirds` | `index-thirds.html` | rule of thirds | leaves a third free for text / presenter video |
-| `mira-studio` | `decks/<name>/` | 9:16 (1080×1920) | recording deck with the presenter's webcam live inside the slide (OBS-ready, native MP4 recording) |
-| `mira-studio-full` | `decks/<name>/index-16x9.html` | 16:9 (1920×1080) | full-hd recording deck with the webcam live inside the slide, roteiro.md-driven slides and an out-of-video teleprompter |
+| `mira-studio` | `decks/<name>/` | 9:16 (1080×1920) | recording deck with the presenter's webcam live inside the slide (OBS-ready, native MP4 recording with **stereo audio** and A/V-aligned tracks) |
+| `mira-studio-full` | `decks/<name>/index-16x9.html` | 16:9 (1920×1080) | full-hd recording deck with the webcam live inside the slide, roteiro.md-driven slides, an out-of-video teleprompter and the same **stereo + A/V-aligned** recorder |
 | `mira-transition-dissolve` | `index-dissolve.html` | dissolve | real crossfade between slides (Canva style) |
 
 `mira-squared` and `mira-vertical` lock the slides to the target ratio (fixed frame) and shrink the side gaps. `mira-thirds` is a **composition** variant (it does not change the ratio): it pushes content into the left two-thirds and leaves the right column free to overlay text, a lower-third or the presenter's video in editing. `mira-transition-dissolve` swaps the scroll between slides for a real crossfade via the View Transitions API, it works on `file://` with no server (Chrome/Edge).
+
+### Recording yourself inside the deck (native recorder)
+
+The Studio formats record straight from the browser: press **R** and the deck writes an MP4 to
+disk, no OBS, no chroma key, no compositing in the editor. A 5-second countdown runs first and
+never enters the video. What comes out of the recorder, as of **0.1.61**:
+
+- **Stereo audio.** Two channels are requested as `ideal`, never `exact`, so a mono microphone
+  can never break the recording. When the track still arrives mono, the channel is duplicated
+  through a Web Audio graph and the panel labels it `stereo (dup)` — never plain `stereo`.
+  Chrome's voice-processing filters (echo cancellation, noise suppression, auto gain) stay
+  **on**: switching them off is the only way to pull real stereo out of a device the chain is
+  flattening, but it changes how your audio sounds, so that call is yours.
+- **Audio and video aligned.** Both tracks are brought to a common origin before muxing, so the
+  real distance between the two capture starts survives in the file. It used to be discarded:
+  each track was zeroed at its own first frame, and the offset measured up to 30 ms on real
+  recordings — enough for a trained eye to catch.
+- **Constant frame rate** (the `CFR (edit)` switch, on by default) so editors that conform VFR
+  to a fixed grid, Adobe Premiere among them, stop accumulating lip-sync drift along the clip.
+- **A panel that shows its work.** Live counters for effective fps, dropped and duplicated
+  frames, plus `mic 2ch` and `A/V ±N ms`. The `save diagnostics JSON` button dumps everything,
+  including `mic{}` (what the microphone actually delivered) and `av{}` (the measured offset).
+  If a recording degrades, it is marked **PARTIAL** and the reason is named, never silent.
+
+**A deck that already exists does not get these fixes on its own.** Run
+`npx mira-animator edit <deck>` to update the recorder inside it. New decks ship corrected.
 
 ### From slides to an actual video file
 

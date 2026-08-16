@@ -15,7 +15,7 @@ npx mira-animator --version      # muestra la versión
 | `link <ruta>` | Vincula una carpeta o archivo como fuente de contenido. |
 | `sources` | Lista las fuentes vinculadas. |
 | `new <nombre>` | Crea un deck a partir de una plantilla. |
-| `edit <deck>` | Instala/actualiza las **herramientas de autoría** (modo edición E — reordenar, edición libre, crop con Alt — y dibujo P) en un deck existente. |
+| `edit <deck>` | Instala/actualiza las **herramientas de autoría** (modo edición E — reordenar, edición libre, crop con Alt — y dibujo P) en un deck existente, y **actualiza el grabador nativo** en los decks Studio. |
 | `memoria <subcomando>` | Consulta y administra la memoria local de preferencias. |
 | `status` | Muestra el estado de la instalación y los decks. |
 | `update` | Actualiza agentes y plantillas a la última versión. |
@@ -79,7 +79,7 @@ Ambas formas montan `decks/<nombre>/`, crean `references/`, instalan las herrami
 npx mira-animator edit <deck>
 ```
 
-Aplica las **herramientas de autoría** a un deck que ya existe: copia `mira-edit.js`, `mira-edit-free.js` y `mira-draw.js` a `<deck>/mira/` e inyecta los scripts antes de `</body>`. Abre el deck y pulsa **E** para editar (reordenar slides + edición libre: mover, redimensionar, girar, duplicar, eliminar, editar texto y **recortar con Alt + asa**, estilo OBS Studio) o **P** para dibujar encima, luego guarda. Los decks nuevos ya vienen con todo. También es el comando de **migración**: ejecuta `npx mira-animator edit <deck>` en decks antiguos para actualizarlos a la última versión de las herramientas (incluido el crop con Alt). Mira [Agentes útiles](agentes/uteis.md) para saber cómo funcionan el reorder y el guardado.
+Aplica las **herramientas de autoría** a un deck que ya existe: copia `mira-edit.js`, `mira-edit-free.js` y `mira-draw.js` a `<deck>/mira/` e inyecta los scripts antes de `</body>`. Abre el deck y pulsa **E** para editar (reordenar slides + edición libre: mover, redimensionar, girar, duplicar, eliminar, editar texto y **recortar con Alt + asa**, estilo OBS Studio) o **P** para dibujar encima, luego guarda. Los decks nuevos ya vienen con todo. También es el comando de **migración**: ejecuta `npx mira-animator edit <deck>` en decks antiguos para actualizarlos a la última versión de las herramientas (incluido el crop con Alt). **También actualiza el grabador** (`mira-record.js` / `mira-record-16x9.js`) en los decks Studio, que es como las correcciones de audio y de sincronía A/V de 0.1.61 llegan a un deck que ya existe — un deck creado antes de esa versión conserva el grabador antiguo hasta que ejecutes esto. Mira [Agentes útiles](agentes/uteis.md) para saber cómo funcionan el reorder y el guardado.
 
 ## `memoria`
 

@@ -15,7 +15,7 @@ npx mira-animator --version      # print version
 | `link <path>` | Links a folder or file as a content source. |
 | `sources` | Lists the linked sources. |
 | `new <name>` | Creates a deck from a template. |
-| `edit <deck>` | Installs/updates the **authoring tools** (edit mode E — reorder, free editing, Alt crop — and drawing P) in an existing deck. |
+| `edit <deck>` | Installs/updates the **authoring tools** (edit mode E — reorder, free editing, Alt crop — and drawing P) in an existing deck, and **updates the native recorder** in Studio decks. |
 | `memoria <subcommand>` | Reads and manages the local preference memory. |
 | `status` | Shows the state of the installation and the decks. |
 | `update` | Updates agents and templates to the latest version. |
@@ -79,7 +79,7 @@ Both assemble `decks/<name>/`, create `references/`, install edit and drawing to
 npx mira-animator edit <deck>
 ```
 
-Retrofits the **authoring tools** into a deck that already exists: it copies `mira-edit.js`, `mira-edit-free.js` and `mira-draw.js` into `<deck>/mira/` and injects the scripts before `</body>`. Open the deck and press **E** to edit (reorder slides + free editing: move, resize, rotate, duplicate, delete, edit text and **crop with Alt + handle**, OBS Studio style) or **P** to draw on top, then save. New decks already ship with everything. It is also the **migration** command: run `npx mira-animator edit <deck>` on older decks to upgrade them to the latest tools (including Alt crop). See [Utility agents](agentes/uteis.md) for how the reorder and saving work.
+Retrofits the **authoring tools** into a deck that already exists: it copies `mira-edit.js`, `mira-edit-free.js` and `mira-draw.js` into `<deck>/mira/` and injects the scripts before `</body>`. Open the deck and press **E** to edit (reorder slides + free editing: move, resize, rotate, duplicate, delete, edit text and **crop with Alt + handle**, OBS Studio style) or **P** to draw on top, then save. New decks already ship with everything. It is also the **migration** command: run `npx mira-animator edit <deck>` on older decks to upgrade them to the latest tools (including Alt crop). **It also updates the recorder** (`mira-record.js` / `mira-record-16x9.js`) in Studio decks, which is how the audio and A/V-sync fixes of 0.1.61 reach a deck that already exists — a deck created before that version keeps the old recorder until you run this. See [Utility agents](agentes/uteis.md) for how the reorder and saving work.
 
 ## `memoria`
 
