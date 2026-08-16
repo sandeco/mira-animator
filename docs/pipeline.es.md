@@ -36,7 +36,7 @@ Instalada siempre, con el **Story Team**, corre **antes** de la línea principal
 
 | Etapa | Agente | Qué hace |
 |---|---|---|
-| -1 | **mira-concept-align** + **mira-storyboard** | Opcional, y ofrecido antes de todo: aclara la idea y luego la dibuja como boceto barato en `storyboard/`, para que rechaces un malentendido antes de que se convierta en animación. Al cerrar esta etapa el deck queda **vinculado**, y desde ahí el concepto aprobado es lectura obligatoria para los agentes siguientes. |
+| -1 | **mira-brainstorming** + **mira-concept-align** + **mira-storyboard** | Opcional, y ofrecido antes de todo: encuentra el ángulo cuando solo existe un tema, aclara la idea y luego la dibuja como boceto barato en `storyboard/`, para que rechaces un malentendido antes de que se convierta en animación. Al cerrar esta etapa el deck queda **vinculado**, y desde ahí el concepto aprobado es lectura obligatoria para los agentes siguientes. |
 | 0 | **mira-cinema-deck** | Orquesta toda la cadena: crea el deck con `--cinema`, ejecuta las ocho etapas en orden y entrega a `mira-animator`. Sin él, la dirección de cámara se escribe y nunca se implementa. |
 | 1 | **mira-premise-forge** | Investiga hechos actuales y convierte el Eureka escondido en ellos en un **Premise Brief** defendible. |
 | 2 | **mira-concept-storyteller** | Fija el **Concept Contract**: lo que la historia tiene que enseñar y nunca puede distorsionar. |

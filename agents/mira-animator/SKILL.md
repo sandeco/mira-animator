@@ -128,7 +128,7 @@ Antes de codar, escreva uma **beat sheet** com acontecimento, ator focal, duraç
 2. **Causa antes do efeito.** O efeito começa depois da causa, no atraso da linha "atraso causa e efeito" do temperamento. Mesmo frame vira decoração sincronizada.
 3. **Antecipação.** Preparação curta antes da ação (recuo, compressão, inclinação, pausa), 8% a 15% do tempo dela.
 4. **Peso.** Pesado acelera devagar, arco menor, quase sem overshoot. Leve acelera rápido, admite overshoot e follow-through maior.
-5. **Easing semântico.** Fluxo uniforme linear; queda ease-in; chegada e dissipação ease-out; orgânico sine-in-out. Nunca o mesmo easing em tudo, e sempre dentro da família do temperamento. **`back`, `elastic` e `bounce` ficam fora do padrão**, liberados só em `tenso` ou quando a física da metáfora os exigir (uma mola é uma mola, e a beat sheet declara o motivo). São as curvas que produzem overshoot visível, e overshoot repetido faz a cena parecer agitada mesmo quando é lenta.
+5. **Easing semântico.** Fluxo uniforme linear; queda ease-in; chegada e dissipação ease-out; orgânico sine-in-out. **Deslocamento de objeto (ator viajando de A a B) usa por padrão o perfil explode-assenta**: `miraMotionBlur.explodeAssenta(h, k)` do `mira/mira-motion-blur.js` (instale o helper se o deck não tiver), explosão em velocidade máxima até a metade do tempo e chegada em cauda longa, rastejando. Em `sereno`, alongue a janela do deslocamento em vez de trocar a curva; pedido do autor veta ou troca. Nunca o mesmo easing em tudo, e sempre dentro da família do temperamento. **`back`, `elastic` e `bounce` ficam fora do padrão**, liberados só em `tenso` ou quando a física da metáfora os exigir (uma mola é uma mola, e a beat sheet declara o motivo). São as curvas que produzem overshoot visível, e overshoot repetido faz a cena parecer agitada mesmo quando é lenta.
 6. **Hierarquia.** Um ator primário e no máximo dois movimentos secundários. Durante a ação principal o ambiente perde contraste, amplitude e velocidade.
 7. **Leitura da consequência.** Segure o estado resultante antes de reiniciar, pelo tempo da linha "repouso" do temperamento.
 8. **Follow-through.** Depois de impacto ou parada, partes flexíveis e rastros continuam 150 a 500 ms.
@@ -176,6 +176,18 @@ Arrumações espaciais que o Mira já sabe montar. São **vocabulário de últim
 Hub-and-spoke, staircase com um ator subindo, duas colunas em confronto com centro que arbitra, flip cards 3D, grade que reage em cascata, trajetória entre nós com carga que viaja.
 
 **Não existe mapa conceito para formato.** Se pensou "isso é comparação, então battle arena", parou no atalho: volte à beat sheet e pergunte que geometria a HISTÓRIA exige. Se outra metáfora qualquer pudesse ocupar a mesma composição com os mesmos tempos, refaça. Pulso em uníssono, órbita e partícula genérica ficam fora desta lista de propósito, viraram muleta. E nada de "8 cards retangulares enfileirados" (o usuário já reclamou).
+
+## Motion blur (efeito de velocidade)
+
+Efeito **opcional** para DISPAROS: um ator que estava parado cruza o quadro rápido. **Nunca é padrão**: slide sem disparo não recebe nada, e "sem motion blur" no pedido do autor veta o efeito. Dose: o rastro é o corpo do efeito e cabe em qualquer disparo; o blur é acabamento e só aparece no pico da velocidade.
+
+Helper: `mira/mira-motion-blur.js` (copie de `templates/authoring/` ou de `mira-templates/authoring/` se o deck não tiver), com a tag logo após o d3: `<script src="mira/mira-motion-blur.js"></script>`. A API está documentada no cabeçalho do próprio arquivo. Três regras que não se negociam:
+
+- **Força = velocidade normalizada** (`miraMotionBlur.forca(vel, pico)`), com `vel` por diferença central da função do movimento. Parado, tudo desliga sozinho e o repouso fica limpo.
+- **Rastro analítico** (`.eco()`): o fantasma k é a posição de onde o ator estava há `k*passo` ms, tirada da própria função do movimento. Nunca guarde histórico de posições: o regente congela e zera o relógio, e histórico vira lixo na tela.
+- **Blur direcional**: movimento reto usa `.filtro()` aplicado no grupo rastro + ator, o conjunto borra num risco contínuo. Trajetória curva usa `.ator()`, que gira o blur para o ângulo do voo, com o rastro fora do rig, nítido.
+
+O perfil de velocidade padrão do disparo é o **explode-assenta** (`miraMotionBlur.explodeAssenta()`, regra 5 da beat sheet): normalize a força com o `.pico` anexado à função (`picoMs = ease.pico / duraçãoMs do disparo`).
 
 ## Ícone flat como ator, não bolinha
 

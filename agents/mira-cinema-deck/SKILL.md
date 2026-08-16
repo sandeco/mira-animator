@@ -163,8 +163,18 @@ câmera do `mira/mira-foco.js` (a **tecla A** é outra coisa, a barra de ritmo d
   tempo, que é o normal e não a exceção;
 - a agulha da régua percorre a cena quadro a quadro, para achar o instante exato de um cue;
 - intensidade e duração dos abalos em slider, com prévia ao vivo;
-- `Ctrl+S` grava tudo como comentários `@MIRA:FOCO`, `@MIRA:CICLO`, `@MIRA:LOOP` e `@MIRA:VOLTA`
-  dentro da `<section>`, no arquivo. Sobrevive ao F5 e ao próximo agente que abrir o deck.
+- uma quinta pista, a dos **pontos de execução**: onde a cena para enquanto você apresenta;
+- `Ctrl+S` grava tudo como comentários `@MIRA:FOCO`, `@MIRA:CICLO`, `@MIRA:LOOP`, `@MIRA:VOLTA` e
+  `@MIRA:PASSOS` dentro da `<section>`, no arquivo. Sobrevive ao F5 e ao próximo agente que abrir
+  o deck.
+
+**Ponto de execução não é cue de câmera, e por isso é lista à parte.** `@MIRA:PASSOS 1.85 7.37 9.80`
+(segundos, ordem crescente) diz onde a cena **espera por você**. Não existe botão de ligar: a lista
+é a declaração. Sem ponto nenhum a cena roda solta como qualquer slide; com pontos ela corre e para
+no primeiro, e cada seta a leva até o próximo. Depois do último, a seta **leva a cena até o fim** (a
+Regra Zero vale aqui: cena não congela), e só a próxima troca de slide. A seta para cima volta um
+ponto, cancela um avanço em curso e recaptura a cena solta no último ponto. Cria-se pelo ícone da
+última pista, no ponto da agulha, arrasta para mover e duplo clique remove.
 
 **E é por isso que deck cinematográfico se edita pelo `servidor.bat`, não por `file://`.** Em
 `http://localhost` o `Ctrl+S` lê e reescreve o `index.html` direto, sem diálogo. Em `file://` ele

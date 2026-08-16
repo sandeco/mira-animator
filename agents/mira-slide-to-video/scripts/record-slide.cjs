@@ -106,6 +106,21 @@ async function recordSlide(opts) {
 
     await page.goto(fileUrl, { waitUntil: 'networkidle2', timeout: 60000 });
 
+    // cena com pontos de passo (@MIRA:PASSOS, mira-foco): no navegador ela PARA
+    // no ponto e so a seta a leva adiante. Gravando nao ha quem aperte a seta,
+    // entao o video congelaria ali. Zera os pontos e devolve a cena ao movimento.
+    // So mexe em palco que de fato declarou pontos; deck sem foco fica intacto.
+    await page.evaluate(() => {
+      const estados = (window.miraFoco && window.miraFoco.estado) || null;
+      if (!estados) return;
+      ((window.MiraCinema && window.MiraCinema.palcos) || []).forEach((c) => {
+        const est = estados[c.id];
+        if (!est || !est.pontos || !est.pontos.length) return;
+        est.pontos = []; est._alvo = 0; est._solta = false;
+        if (c.tl) { c.tl.repeat(est.loop === false ? 0 : -1); c.tl.pause(0); }
+      });
+    });
+
     const total = await page.evaluate(() => document.querySelectorAll('body > section').length);
     // deck de cena unica: sem body>section, a pagina inteira e o "slide" e a animacao roda no load
     const singleScene = opts.singleScene || total === 0;
@@ -144,7 +159,7 @@ async function recordSlide(opts) {
 
     // esconder UI de navegacao + rolagem instantanea
     await page.addStyleTag({ content:
-      'html{scroll-behavior:auto !important;}#mira-progress,#mira-next{display:none !important;}' });
+      'html{scroll-behavior:auto !important;}#mira-progress,#mira-next,#mz-passo{display:none !important;}' });
 
     // posicionar o slide-alvo pela posicao de layout (animacao ainda em espera)
     await page.evaluate((idx) => {
