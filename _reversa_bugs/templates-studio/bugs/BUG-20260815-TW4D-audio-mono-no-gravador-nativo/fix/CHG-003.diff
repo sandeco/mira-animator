@@ -1,0 +1,125 @@
+diff --git a/test/mira-record-audio.test.mjs b/test/mira-record-audio.test.mjs
+new file mode 100644
+index 0000000..0669c2a
+--- /dev/null
++++ b/test/mira-record-audio.test.mjs
+@@ -0,0 +1,119 @@
++/* =====================================================================
++   mira-record-audio.test.mjs
++   ---------------------------------------------------------------------
++   A trilha de áudio da gravação nativa (tecla R), nos dois gravadores.
++
++   BUG-20260815-TW4D: o número de canais nunca é pedido. As chamadas de
++   getUserMedia passam só `audio: true` (ou um deviceId), sem
++   channelCount e sem desligar a cadeia de processamento de voz do
++   Chrome, que opera em mono. A track chega com channelCount 1 e
++   `numberOfChannels: ms.channelCount || 1` copia esse 1 para o
++   AudioEncoder. O MP4 sai mono.
++
++   ---------------------------------------------------------------------
++   POR QUE ESTE TESTE É SOBRE O CÓDIGO-FONTE, E NÃO EXECUTA NADA
++
++   A suíte irmã (mira-record-cfr.test.mjs, mira-record-sync.test.mjs)
++   roda o Worker DE VERDADE, porque extrai recordWorkerBody() e o
++   executa num sandbox. Aqui isso não é possível: a montagem de
++   audioCfg acontece em startWorkerPipeline, no MAIN THREAD, e essa
++   função segue direto para targetOut() e vencConfig() — fatiar só o
++   bloco de áudio produz um fragmento, não uma função executável.
++
++   As duas saídas eram extrair a montagem para um helper puro
++   (refatoração, proibida junto da correção pelo CLAUDE.md §3 e pelos
++   Agent Notes do bug) ou asserção sobre o texto do arquivo. Ficou a
++   segunda, CONSCIENTEMENTE: é uma trava mais fraca, que garante que a
++   decisão certa está escrita no lugar certo, e não que ela funciona em
++   tempo de execução. Está registrado assim no fix/plan.html do bug.
++
++   Rodar:  node --test test/mira-record-audio.test.mjs
++   ===================================================================== */
++import test from 'node:test';
++import assert from 'node:assert/strict';
++import { readFileSync } from 'node:fs';
++import { join, dirname } from 'node:path';
++import { fileURLToPath } from 'node:url';
++
++const RAIZ = join(dirname(fileURLToPath(import.meta.url)), '..');
++const GRAVADORES = ['mira-record-16x9.js', 'mira-record.js'];
++
++function fonte(nome) {
++    return readFileSync(join(RAIZ, 'templates', 'authoring', nome), 'utf8').replace(/\r\n/g, '\n');
++}
++
++for (const nome of GRAVADORES) {
++
++    /* ---------------------------------------------------------------
++       REGRESSÃO: o default mono explícito não pode voltar.
++       Antes da correção era `ms.channelCount || 1`: quando a track não
++       informava canais, o gravador ASSUMIA mono.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: o default mono explícito não existe mais`, () => {
++        const src = fonte(nome);
++        assert.doesNotMatch(src, /numberOfChannels:\s*ms\.channelCount\s*\|\|\s*1/,
++            'o `|| 1` era o que fechava o caminho em mono quando a track não informava');
++        assert.match(src, /numberOfChannels:\s*ms\.channelCount\s*\|\|\s*2/,
++            'sem informação da track, o alvo agora é stereo');
++    });
++
++    /* ---------------------------------------------------------------
++       CORREÇÃO: a captação pede 2 canais, e pede como `ideal`.
++       `exact` faria a gravação FALHAR em microfone mono, que é
++       justamente o hardware do autor.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: a captação pede 2 canais sem poder falhar em microfone mono`, () => {
++        const src = fonte(nome);
++        assert.match(src, /channelCount:\s*\{\s*ideal:\s*2\s*\}/,
++            'pede 2 canais como ideal');
++        assert.doesNotMatch(src, /channelCount:\s*\{\s*exact:/,
++            'exact rejeitaria o microfone mono e a gravação morreria sem áudio');
++    });
++
++    /* ---------------------------------------------------------------
++       CORREÇÃO: os filtros de voz NÃO são desligados.
++       Desligá-los é o único jeito de arrancar stereo real de um
++       dispositivo achatado pela cadeia do Chrome, mas muda o som de
++       todas as gravações. Critério de aceite 4 do bug: isso é decisão
++       do autor, não do código.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: a correção não desliga cancelamento de eco nem supressão de ruído`, () => {
++        const src = fonte(nome);
++        for (const filtro of ['echoCancellation', 'noiseSuppression', 'autoGainControl']) {
++            assert.doesNotMatch(src, new RegExp(filtro + '\\s*:\\s*false'),
++                filtro + ' desligado mudaria o som que o autor já aprovou, e ele não autorizou isso');
++        }
++    });
++
++    /* ---------------------------------------------------------------
++       CORREÇÃO: stereo obtido por duplicação é DECLARADO.
++       Critério de aceite 3: degradar em silêncio é proibido.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: stereo duplicado de um canal mono é declarado, não escondido`, () => {
++        const src = fonte(nome);
++        assert.match(src, /stereoDuplicado/, 'o estado existe');
++        assert.match(src, /stereoDuplicado:\s*S\.stereoDuplicado/, 'e vai para o diagnóstico JSON');
++        assert.match(src, /'stereo \(dup\)'/, 'e aparece no painel, com essas palavras');
++    });
++
++    /* ---------------------------------------------------------------
++       INSTRUMENTO: o que o microfone entregou continua publicado.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: o diagnóstico publica o que o microfone realmente entregou`, () => {
++        const src = fonte(nome);
++        assert.match(src, /micSettings|mic:\s*\{/,
++            'o diagnóstico traz um bloco com as settings reais do microfone');
++        for (const campo of ['channelCount', 'sampleRate', 'echoCancellation', 'noiseSuppression', 'autoGainControl']) {
++            assert.ok(src.includes(campo), `o diagnóstico precisa expor ${campo}`);
++        }
++    });
++
++    /* ---------------------------------------------------------------
++       O AudioContext do upmix não pode vazar entre gravações.
++       --------------------------------------------------------------- */
++    test(`${nome} · TW4D: o AudioContext do upmix é fechado no cleanup`, () => {
++        const src = fonte(nome);
++        assert.match(src, /S\.audioCtx\.close\(\)/, 'fecha o contexto');
++        assert.match(src, /S\.audioCtx = null/, 'e solta a referência');
++    });
++}

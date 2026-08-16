@@ -1,4 +1,4 @@
-<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-01T17:45:00Z a partir de 6 bugs -->
+<!-- GENERATED, DO NOT EDIT: regenerado por /reversa-debugger-graph em 2026-08-16T21:05:00Z a partir de 9 bugs -->
 
 # Matriz de relações BUG ↔ BUG · templates-studio
 
@@ -17,8 +17,9 @@
 | F74X | related-to | S3TX | templates-studio | proposed | mesmo par de arquivos, mesma assimetria entre os dois builders Studio, invertida: lá o 16:9 estava atrás, aqui é o 9:16 |
 | F74X | blocked-by | ADQX | templates-studio | **confirmed** | sem a correção do ADQX o Salvar recusava em deck gerado e os critérios de aceite 1 e 2 do F74X não tinham como passar; corrigidos no mesmo ciclo |
 | ADQX | related-to | F74X | templates-studio | **confirmed** | descoberto durante a reprodução do F74X, e era o que bloqueava o critério dele para deck gerado |
+| HYRG | related-to | TW4D | templates-studio | proposed | mesmos dois arquivos e mesma trilha de áudio do gravador nativo, relatados na mesma sessão. Vizinhança no código, não causa comum: o mono nasce nas constraints do `getUserMedia`, o deslocamento nasce no zeramento por trilha do muxer |
 
-Todos os bugs deste contexto têm ao menos uma aresta própria.
+| FJAU | related-to | HYRG | templates-studio | proposed | descoberto ao medir o HYRG, no mesmo diagnóstico JSON. É outro defeito: HYRG é ALINHAMENTO entre trilhas, FJAU é TAXA de captura. Fica proposed porque um vídeo com metade dos quadros duplicados pode piorar a percepção de dessincronia sem ser a causa dela |
 
 ## Arestas que chegam de outro contexto
 
@@ -27,13 +28,27 @@ Todos os bugs deste contexto têm ao menos uma aresta própria.
 | VPVV | mira-fast | related-to | JZNJ | **supported** |
 | VPUH | cli-mira-animator | related-to | OI56 | **supported** |
 
+## Bugs sem nenhuma aresta
+
+Nenhum. O cluster do gravador tem agora três bugs (TW4D, HYRG, FJAU), separado dos seis do
+builder, sem nenhuma aresta ligando os dois grupos.
+
+A aresta entre eles fica `proposed` de propósito. Os dois vivem nos mesmos dois arquivos e na
+mesma trilha de áudio, mas não se mostrou causa comum: o mono nasce nas constraints do
+`getUserMedia`, o deslocamento nasce no zeramento por trilha do muxer. Corrigir um não
+corrige o outro. Se o fix mostrar que uma correção mexe na outra, a aresta sobe para
+`supported` com evidência.
+
+Nenhuma aresta foi proposta entre o cluster do gravador e o cluster do builder: propor uma só
+pela vizinhança de pasta seria inventar parentesco.
+
 ## Estado epistemológico
 
 | state | arestas |
 |---|---|
 | supported | 6 |
 | confirmed | 2 |
-| proposed | 3 |
+| proposed | 5 |
 | rejected | 0 |
 
 Aresta `proposed` é hipótese e não entra no grafo como fato.

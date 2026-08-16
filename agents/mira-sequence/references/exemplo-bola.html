@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sequência · exemplo da bola</title>
+
+<!-- ==========================================================
+     EXEMPLO DE REFERÊNCIA DO /mira-sequence
+     ----------------------------------------------------------
+     Deck de verdade, no template mira-default. Abre por file://,
+     roda, e existe para ser lido junto do SKILL.md: cada peça do
+     contrato de continuidade está aqui implementada e comentada
+     no lugar onde ela mora.
+
+     São três slides:
+
+       1. capa            transição NORMAL para o slide 2 (rolagem
+                          suave, para servir de contraste)
+       2. origem          a bola quica da esquerda e repousa no centro
+       3. continuação     a bola já está lá e passa a subir e descer,
+                          com CORTE SECO vindo do slide 2
+
+     O QUE CONFERIR NO NAVEGADOR
+
+       1. Deixe a bola parar no centro e aperte a seta uma vez. Ela
+          não pode pular, piscar nem mudar de tamanho.
+       2. Volte e avance NO MEIO DO QUIQUE, com a bola no ar. Ela tem
+          que continuar do ar, não do chão, e a sombra tem que
+          continuar pequena.
+       3. Recarregue e vá direto para o slide 3 pelo teclado. A bola
+          tem que aparecer parada no centro, pelo plano B.
+       4. Esconda os títulos com a mão: os slides 2 e 3 têm que
+          parecer um só.
+       5. Na passagem do 2 para o 3 não pode haver rolagem NENHUMA: o
+          quadro troca de uma vez. Se você vir o slide deslizando,
+          mesmo pouco, o behavior do salto está errado e a
+          continuidade não acontece. Compare com a passagem do slide 1
+          para o 2, que rola suave de propósito, para dar o contraste.
+       6. Olhe o quadro logo depois do salto: o scroll-snap não pode
+          reassentar o slide com um tranco.
+
+     O QUE NÃO É DEFEITO
+
+       Voltando do slide 3 para o 2, a bola some do centro e recomeça
+       da esquerda. É o comportamento normal do deck: o regente zera o
+       relógio do slide toda vez que ele reaparece, para ninguém pegar
+       a história no meio. A continuidade é de ida.
+
+       Se os três slides ficarem pretos e nada se mexer, é o D3 que
+       não carregou: este arquivo o busca por CDN. Abra com internet,
+       ou rode /mira-offline no deck onde você for usar isto.
+
+     Copie a ESTRUTURA, não os números. A cena é outra em cada deck.
+     ========================================================== -->
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<style>
+/* @MIRA:THEME:START */
+:root {
+    --mira-primary: #FF904D;
+    --mira-bg: #000000;
+    --mira-text: #ffffff;
+    --mira-text-soft: rgba(255, 255, 255, 0.70);
+    --mira-text-softer: rgba(255, 255, 255, 0.50);
+    --mira-card-border: rgba(255, 255, 255, 0.10);
+    --mira-accent-2: #FFC766;
+}
+/* @MIRA:THEME:END */
+
+:root {
+    --accent: var(--mira-primary);
+    --bg: var(--mira-bg);
+    --ink: var(--mira-text);
+    --muted: var(--mira-text-soft);
+    --fmt-w: min(100vw, calc(100vh * 16 / 9));
+    --fmt-h: calc(var(--fmt-w) * 9 / 16);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html { background: #333333; scroll-behavior: smooth; scroll-snap-type: y proximity; }
+html { scrollbar-width: none; overflow-x: hidden; }
+html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; }
+
+body {
+    background: #333333;
+    color: var(--ink);
+    font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+body > section {
+    position: relative;
+    width: var(--fmt-w);
+    height: var(--fmt-h);
+    min-height: var(--fmt-h);
+    margin: calc((100vh - var(--fmt-h)) / 2) 0;
+    scroll-margin-top: calc((100vh - var(--fmt-h)) / 2);
+    overflow: hidden;
+    background: var(--bg);
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    isolation: isolate;
+}
+
+h1 { font-size: clamp(34px, 7.4vh, 72px); line-height: 1.02; letter-spacing: -.02em; font-weight: 800; }
+h2 { font-size: clamp(28px, 4.6vh, 46px); line-height: 1.1; letter-spacing: -.01em; font-weight: 800; }
+p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
+.accent { color: var(--accent); }
+
+.slide-centro {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 18px;
+    padding: 50px;
+    text-align: center;
+}
+.slide-centro .marca {
+    font-size: 12px; letter-spacing: .22em; text-transform: uppercase;
+    color: var(--mira-text-softer);
+}
+
+.slide-main {
+    width: 100%;
+    height: 100%;
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 50px;
+}
+.slide-main h2 {
+    flex: 0 0 auto;
+    margin-bottom: 14px;
+    text-align: center;
+    position: relative;
+    z-index: 10;
+}
+.anim-stage {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    width: auto;
+    height: auto;
+    min-height: 0;
+    background: none;
+    border-radius: 0;
+}
+.anim-stage svg { width: 100%; height: 100%; display: block; }
+</style>
+</head>
+<body>
+
+<!-- === SLIDE 1 · CAPA (transição normal para o próximo) === -->
+<section>
+    <div class="slide-centro">
+        <span class="marca">mira-sequence</span>
+        <h1>Dois slides que se comportam como <span class="accent">um só</span></h1>
+        <p>Aperte a seta para baixo. Da capa para o próximo a rolagem é suave. Do próximo para o último, não.</p>
+    </div>
+</section>
+
+<!-- === SLIDE 2 · ORIGEM ===
+     @MIRA:SEQ origem="bola" · a continuação nasce da pose entregue aqui.
+     O comentário é para quem lê; o atributo data-mira-seq é o que o
+     código da navegação lê. -->
+<section data-mira-seq="bola">
+    <div class="slide-main">
+        <h2>A bola que <span class="accent">quica</span></h2>
+        <div class="anim-stage"><svg id="stage-bola-quica" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+</section>
+
+<!-- === SLIDE 3 · CONTINUAÇÃO ===
+     @MIRA:SEQ continua="bola" · sem entrada: já está em cena.
+     Mesmo título do slide anterior de propósito: título trocando é a
+     única coisa que o espectador enxerga no corte. -->
+<section data-mira-seq-de="bola">
+    <div class="slide-main">
+        <h2>A bola que <span class="accent">quica</span></h2>
+        <div class="anim-stage"><svg id="stage-bola-sobe" preserveAspectRatio="xMidYMid meet"></svg></div>
+    </div>
+</section>
+
+<script>
+(function () {
+    'use strict';
+
+    /* ==========================================================
+       PEÇA 2 DO CONTRATO · BARRAMENTO DA POSE
+       Uma vez por deck. Guarda a pose viva que um slide entrega ao
+       seguinte. Mora em window para atravessar blocos de script.
+       ========================================================== */
+    /* @MIRA:SEQ:BUS  pose viva entregue de um slide para o seguinte */
+    window.__miraSeq = window.__miraSeq || {};
+    var MiraSeq = {
+        gravar: function (id, pose) { if (pose) window.__miraSeq[id] = pose; },
+        ler: function (id) { return window.__miraSeq[id] || null; }
+    };
+
+    /* ---------- cor sai do tema, nunca fixa no código ---------- */
+    function cor(nome, reserva) {
+        var v = getComputedStyle(document.documentElement).getPropertyValue(nome).trim();
+        return v || reserva;
+    }
+    var COR = {
+        marca: cor('--mira-primary', '#FF904D'),
+        acento: cor('--mira-accent-2', '#FFC766'),
+        tinta: cor('--mira-text', '#ffffff'),
+        fundo: cor('--mira-bg', '#000000')
+    };
+
+    /* ---------- regente do mira-default ----------
+       Slide fora da tela: relógio congelado no zero. Slide entrou:
+       relógio começa do zero. É esse quadro(0) perpétuo do slide
+       congelado que obriga a guarda `ms > 0` na gravação da pose. */
+    function reger(svgId, quadro) {
+        var svg = document.getElementById(svgId);
+        var slide = svg && svg.closest('section');
+        if (!slide || typeof IntersectionObserver !== 'function') {
+            d3.timer(function (ms) { quadro(ms); });
+            return;
+        }
+        var relogio = null, visivel = false;
+        d3.timer(function (ms) {
+            if (!visivel) { quadro(0); return; }
+            if (relogio === null) relogio = ms;
+            quadro(ms - relogio);
+        });
+        new IntersectionObserver(function (entradas) {
+            entradas.forEach(function (e) {
+                if (e.isIntersecting === visivel) return;
+                visivel = e.isIntersecting;
+                relogio = null;
+            });
+        }, { threshold: 0.6 }).observe(slide);
+    }
+
+    /* ---------- palco do mira-default ---------- */
+    function palco(svgId) {
+        var svg = d3.select('#' + svgId);
+        if (svg.empty()) return null;
+        var caixa = svg.node().closest('.anim-stage');
+        var secao = caixa && caixa.closest ? caixa.closest('section') : null;
+        var titulo = secao && secao.querySelector
+            ? secao.querySelector('.slide-main h2, .slide-main h1')
+            : null;
+        var RESPIRO = 18;
+        var F = { W: 960, H: 460, topo: 0, alturaUtil: 460 };
+        F.vy = function (k) { return F.topo + F.alturaUtil * k; };
+
+        function casar() {
+            var r = caixa.getBoundingClientRect();
+            if (r.width > 0 && r.height > 0) F.H = Math.round(F.W * r.height / r.width);
+            svg.attr('viewBox', '0 0 ' + F.W + ' ' + F.H);
+            F.topo = 0;
+            if (titulo && titulo.getBoundingClientRect && r.height > 0) {
+                var t = titulo.getBoundingClientRect();
+                var basePx = Math.max(0, (t.bottom || 0) - (r.top || 0));
+                F.topo = Math.round(F.H * basePx / r.height) + RESPIRO;
+                F.topo = Math.min(F.topo, Math.round(F.H * 0.40));
+            }
+            F.alturaUtil = F.H - F.topo;
+        }
+        casar();
+        window.addEventListener('resize', casar);
+        svg.selectAll('*').remove();
+        return { svg: svg, F: F };
+    }
+
+    /* ==========================================================
+       O DESENHO, COMPARTILHADO PELOS DOIS SLIDES
+
+       Uma função só é o jeito mais barato de garantir raio, traço,
+       sombra e empilhamento idênticos nos dois lados. Desenho
+       duplicado é onde o piscar no corte nasce.
+
+       A sombra NÃO viaja no barramento: ela é função da pose, então
+       dá o mesmo valor nos dois lados sem ser entregue. Repare que
+       ela sai da altura REAL da bola sobre o piso, nunca de um
+       contador de tempo local: é isso que faz a entrega no meio do
+       quique funcionar. A continuação não sabe em que ponto do ciclo
+       a origem parou, mas sabe onde a bola está.
+       ========================================================== */
+    function desenharBola(bola, sombra, F, pose) {
+        var piso = F.vy(.88);
+        var rx = pose.r * pose.achatamento, ry = pose.r / pose.achatamento;
+        bola.attr('cx', pose.x).attr('cy', pose.chao - ry).attr('rx', rx).attr('ry', ry);
+
+        var k = Math.max(0, 1 - Math.max(0, piso - pose.chao) / (F.alturaUtil * .6));
+        sombra.attr('cx', pose.x).attr('cy', piso + 6)
+            .attr('rx', rx * (.55 + .45 * k)).attr('ry', 9 * (.4 + .6 * k))
+            .attr('opacity', .06 + .14 * k);
+    }
+
+    /* ==========================================================
+       SLIDE 2 · ORIGEM
+       Quica da esquerda e repousa no centro.
+
+       A história é de mão única e satura no repouso. O loop perpétuo
+       fica por conta do respiro, que é a deriva lenta que o
+       temperamento sereno prefere. Repouso estável é o que dá ao
+       autor controle sobre onde a continuação começa.
+       ========================================================== */
+    function animBolaQuica(svgId) {
+        var p = palco(svgId); if (!p) return;
+        var svg = p.svg, F = p.F, DUR = 5200, R = 46, NB = 3;
+
+        var raiz = svg.append('g');
+        var sombra = raiz.append('ellipse').attr('fill', COR.tinta);
+        var bola = raiz.append('ellipse').attr('fill', COR.marca);
+
+        reger(svgId, function (ms) {
+            var piso = F.vy(.88), x0 = F.W * .12, xc = F.W / 2;
+            var u = Math.min(1, ms / DUR);
+
+            /* atravessa desacelerando; a amplitude do quique morre em u = 1 */
+            var x = x0 + (xc - x0) * (1 - Math.pow(1 - u, 2));
+            var alt = F.alturaUtil * .55 * Math.pow(1 - u, 2) * Math.abs(Math.sin(Math.PI * NB * u));
+
+            /* achatamento perto do chão; depois do repouso o respiro assume.
+               O respiro entra valendo zero e cresce, senão haveria um salto
+               visível no instante exato em que u chega a 1. */
+            var respiro = ms <= DUR ? 0
+                : .025 * Math.sin((ms - DUR) / 1100) * Math.min(1, (ms - DUR) / 800);
+            var achat = 1 + .20 * (1 - u) * Math.max(0, 1 - alt / 60) + respiro;
+
+            var pose = { x: x, chao: piso - alt, achatamento: achat, r: R };
+            desenharBola(bola, sombra, F, pose);
+
+            /* PEÇA 2 · a origem grava.
+               O `ms > 0` não é enfeite: o reger chama quadro(0) a cada frame
+               com o slide fora da tela, e sem a guarda sair do slide
+               apagaria a pose de entrega pelo primeiro quadro da história.
+               Objeto novo a cada gravação, nunca um mutado no lugar. */
+            if (ms > 0) MiraSeq.gravar('bola', pose);
+        });
+    }
+
+    /* ==========================================================
+       SLIDE 3 · CONTINUAÇÃO
+       Começa exatamente na pose entregue e passa a subir e descer.
+       ========================================================== */
+
+    /* PLANO B, OBRIGATÓRIO.
+       Escrito com a MESMA expressão do repouso da origem, sem número
+       mágico. É o que faz o slide funcionar sozinho: link direto no
+       meio do deck, e principalmente /mira-slide-to-video, que grava
+       cada slide isolado a partir do zero. Continuação que só
+       funciona depois da origem está quebrada. */
+    function poseEntregaBola(F) { return { x: F.W / 2, chao: F.vy(.88), achatamento: 1, r: 46 }; }
+
+    function animBolaSobe(svgId) {
+        var p = palco(svgId); if (!p) return;
+        var svg = p.svg, F = p.F, CICLO = 3400;
+        var base = poseEntregaBola(F);
+
+        /* nasce já na pose: sem opacity 0, sem scale 0, sem transição de
+           entrada, sem data-aos. A entrada já aconteceu no slide anterior. */
+        var raiz = svg.append('g');
+        var sombra = raiz.append('ellipse').attr('fill', COR.tinta);
+        var bola = raiz.append('ellipse').attr('fill', COR.marca);
+
+        reger(svgId, function (ms) {
+            /* PEÇA 3 · trava a pose ao entrar.
+               ms === 0 acontece nos quadros congelados e no primeiro quadro
+               ao vivo, então a pose fica atualizada enquanto a origem roda e
+               trava no instante exato da entrada. */
+            if (ms === 0) base = MiraSeq.ler('bola') || poseEntregaBola(F);
+
+            /* O PORTÃO DURO: em ms = 0 o cosseno vale 1 e alt vale 0, então a
+               cena começa em `base` exato. Trocar por sin() com fase
+               diferente de zero quebraria o corte. Confira essa conta antes
+               de escrever o resto da animação. */
+            var alt = F.alturaUtil * .42 * (.5 - .5 * Math.cos(2 * Math.PI * ms / CICLO));
+
+            /* o achatamento sai de `base` e migra para o natural da queda em
+               700 ms. Mesmo portão: em ms = 0 o peso é zero e sobra base. */
+            var natural = 1 + .18 * Math.max(0, 1 - alt / 70);
+            var w = Math.min(1, ms / 700);
+            var achat = base.achatamento * (1 - w) + natural * w;
+
+            desenharBola(bola, sombra, F, {
+                x: base.x, chao: base.chao - alt, achatamento: achat, r: base.r
+            });
+        });
+    }
+
+    function ligar() {
+        animBolaQuica('stage-bola-quica');
+        animBolaSobe('stage-bola-sobe');
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ligar);
+    else ligar();
+})();
+</script>
+
+<script>
+/* ==============================================================
+   PEÇA 4 DO CONTRATO · CORTE SECO NA NAVEGAÇÃO
+
+   Rolagem suave mostra os dois slides deslizando e mata a ilusão.
+   O par em sequência salta sem rolagem, nos dois sentidos.
+
+   Num deck de verdade, procure por scrollIntoView e não por
+   "function ir": cada template chama a passagem de slide de um
+   jeito, e um deck costuma ter mais de um caminho (teclado, botão
+   #mira-next, barra #mira-progress, controle remoto). Patch
+   aplicado só no teclado deixa o botão rolando suave, e o defeito
+   só aparece na hora da palestra.
+
+   A TRANSIÇÃO GLOBAL DO DECK É INTOCÁVEL. Repare que o patch é um
+   ternário: o par salta seco, e TODO o resto continua com o
+   'smooth' que já tinha. O CSS de rolagem não é tocado. Não existe
+   versão disso que mude o comportamento padrão do deck, porque o
+   corte só lê como continuidade se as outras passagens forem
+   diferentes dele.
+   ============================================================== */
+(function () {
+    'use strict';
+    var secs = Array.prototype.slice.call(document.querySelectorAll('body > section'));
+    function atual() {
+        var meio = window.innerHeight / 2, achado = 0;
+        secs.forEach(function (s, i) {
+            var r = s.getBoundingClientRect();
+            if (r.top <= meio && r.bottom > meio) achado = i;
+        });
+        return achado;
+    }
+    function parSeq(a, b) {
+        var origem = a.getAttribute('data-mira-seq');
+        return !!origem && b.getAttribute('data-mira-seq-de') === origem;
+    }
+    function ir(d) {
+        var de = atual(), i = Math.max(0, Math.min(secs.length - 1, de + d));
+        if (i === de) return;
+        /* @MIRA:SEQ  par em sequência salta sem rolagem, nos dois sentidos.
+
+           É 'instant', nunca 'auto'. Pela especificação, 'auto' quer dizer
+           "use o que o CSS mandar", e o CSS deste deck manda
+           html { scroll-behavior: smooth }. Com 'auto' o salto continuaria
+           suave e a continuidade morreria, sem nenhum erro no console. */
+        var seco = parSeq(secs[de], secs[i]) || parSeq(secs[i], secs[de]);
+        secs[i].scrollIntoView({ behavior: seco ? 'instant' : 'smooth', block: 'start' });
+    }
+    document.addEventListener('keydown', function (e) {
+        var t = e.target;
+        if (t && (t.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(t.tagName || ''))) return;
+        if (e.ctrlKey || e.metaKey || e.altKey) return;
+        if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); ir(1); }
+        else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); ir(-1); }
+    });
+})();
+</script>
+</body>
+</html>

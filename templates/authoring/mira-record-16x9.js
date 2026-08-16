@@ -327,11 +327,49 @@
        que alguma permissão é concedida (a câmera do deck já pede no load). */
     var CAMKEY = 'mira-cam-device', MICKEY = 'mira-mic-device';
     function devPref(key) { try { return localStorage.getItem(key) || ''; } catch (e) { return ''; } }
+    /* ---------- microfone em STEREO (BUG-20260815-TW4D) ------------------
+       O gravador pedia `audio: true` e copiava para o AAC o que a track
+       dissesse. Medido na maquina do autor: channelCount 1, com
+       echoCancellation, noiseSuppression e autoGainControl TODOS ligados.
+       Essa cadeia de voz do Chrome opera em mono, entao o arquivo saia mono.
+
+       Duas coisas, nesta ordem:
+       1) PEDE 2 canais como `ideal`, nao `exact`. Ideal nao falha em
+          dispositivo mono, e nao desliga nenhum dos filtros de voz: o som
+          continua sendo captado do mesmo jeito que voce ja aprovou.
+       2) Se mesmo assim a track vier com 1 canal (microfone mono de
+          fabrica, ou a cadeia de voz achatando), o sinal passa por um
+          grafo Web Audio cujo destino e stereo, e o canal unico e
+          duplicado nos dois lados.
+
+       O caso 2 e stereo no ARQUIVO, nao na captacao. Isso NAO e escondido:
+       o painel mostra `stereo (dup)` e o diagnostico traz
+       `mic.stereoDuplicado: true`. Mentir aqui seria pior que o mono. */
+    function paraStereo(stream) {
+        var t = stream && stream.getAudioTracks()[0];
+        var ms = (t && t.getSettings) ? t.getSettings() : {};
+        if (!t || ms.channelCount === 2) return stream;          /* ja veio stereo de verdade */
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if (!AC) return stream;                                  /* sem Web Audio: segue mono */
+        try {
+            S.audioCtx = new AC();
+            var src = S.audioCtx.createMediaStreamSource(stream);
+            var dst = S.audioCtx.createMediaStreamDestination();  /* destino stereo */
+            src.connect(dst);
+            S.stereoDuplicado = true;
+            return dst.stream;
+        } catch (e) {
+            S.audioCtx = null;
+            return stream;                                        /* falhou: mono e melhor que nada */
+        }
+    }
+    var MIC_CONSTRAINTS = { channelCount: { ideal: 2 } };
     function getMic() {
         var id = devPref(MICKEY);
-        if (!id) return navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-        return navigator.mediaDevices.getUserMedia({ audio: { deviceId: { exact: id } }, video: false })
-            .catch(function () { return navigator.mediaDevices.getUserMedia({ audio: true, video: false }); });
+        var base = id ? { deviceId: { exact: id }, channelCount: { ideal: 2 } } : MIC_CONSTRAINTS;
+        return navigator.mediaDevices.getUserMedia({ audio: base, video: false })
+            .catch(function () { return navigator.mediaDevices.getUserMedia({ audio: MIC_CONSTRAINTS, video: false }); })
+            .then(paraStereo);
     }
     function fillSelect(sel, devs, saved, rotulo) {
         if (!sel) return;
@@ -719,6 +757,10 @@
         maxNavPtsMs: 0, maxNavFirstFrameMs: 0, path: '', input: null, crop: null, lastStats: null,
         /* linha do tempo do vídeo: modo (cfr/vfr) e contadores da grade */
         timing: { mode: '', dupFilled: 0, dupDropped: 0, gapJumped: 0 },
+        /* BUG-20260815-TW4D: settings REAIS da track do microfone. Sem
+           isto ninguem sabe se o mono vem do dispositivo ou da cadeia de
+           voz do Chrome, e a causa raiz nao sai de `supported`. */
+        micSettings: null, av: null, audioCtx: null, stereoDuplicado: false,
         /* Element Capture: ativo nesta sessão, seção atualmente restrita e
            rAF que evita reaplicar o restrictTo mais de uma vez por frame */
         elemActive: false, lastRestrictSec: null, reRaf: 0,
@@ -870,6 +912,18 @@
             quality: qualityMode(),
             /* linha do tempo do vídeo: 'cfr' = grade fixa (importa certo no
                Premiere); 'vfr' = timestamps de captura (drift no editor) */
+            /* o que o microfone entregou (TW4D) e a distancia medida entre
+               as ancoras das duas trilhas (HYRG). Instrumento: le, nao muda. */
+            mic: S.micSettings ? {
+                channelCount: S.micSettings.channelCount,
+                sampleRate: S.micSettings.sampleRate,
+                echoCancellation: S.micSettings.echoCancellation,
+                noiseSuppression: S.micSettings.noiseSuppression,
+                autoGainControl: S.micSettings.autoGainControl,
+                /* true = os 2 canais do arquivo vieram de 1 canal duplicado, nao da captacao */
+                stereoDuplicado: S.stereoDuplicado
+            } : null,
+            av: S.av,
             timing: {
                 mode: S.timing.mode || (cfrWanted() ? 'cfr' : 'vfr'),
                 fps: FPS,
@@ -915,8 +969,13 @@
         var timing = (S.timing.mode || (cfrWanted() ? 'cfr' : 'vfr')) +
             (S.timing.dupFilled || S.timing.dupDropped || S.timing.gapJumped
                 ? ' ' + S.timing.dupFilled + '/' + S.timing.dupDropped + '/' + S.timing.gapJumped : '');
+        var mic = S.micSettings
+            ? ' · mic ' + (S.micSettings.channelCount === 2 ? (S.stereoDuplicado ? 'stereo (dup)' : 'stereo') : (S.micSettings.channelCount || '?') + 'ch')
+                + (S.micSettings.echoCancellation ? ' +proc' : ' cru') : '';
+        var av = (S.av && S.av.deltaMs !== null && S.av.deltaMs !== undefined)
+            ? ' · A/V ' + (S.av.deltaMs > 0 ? '+' : '') + Math.round(S.av.deltaMs) + ' ms' : '';
         ui.diag.textContent = (S.path || 'aguardando') + ' · in ' + input + ' · crop ' + crop + ' · out ' + out +
-            ' · ' + timing +
+            ' · ' + timing + mic + av +
             ' · nav PTS/rAF/long/1º ' + Math.round(S.maxNavPtsMs) + '/' + Math.round(S.maxNavRafMs) + '/' +
             Math.round(S.maxNavLongMs) + '/' + Math.round(S.maxNavFirstFrameMs) + ' ms' +
             (S.falhas.length ? ' · PARCIAL — ' + resumoFalhas(S.falhas) : '');
@@ -992,7 +1051,12 @@
            NÃO é tocado — 'offset' por trilha continua resolvendo o offset
            inicial (defeito diferente, ver o comentário do muxer). */
         var cfr = false, cfrFps = 30, cfrCap = 60, cfrQCap = 60;
-        var slotT0 = -1, lastSlot = -1, lastFrame = null;   /* lastFrame: clone do último aceito (caminho direto) */
+        var slotT0 = -1, lastSlot = -1, lastFrame = null;
+        /* BUG-20260815-HYRG: instrumento de alinhamento A/V. As duas
+           trilhas sao zeradas cada uma na propria origem, e a distancia
+           real entre elas some do arquivo. Aqui ela e MEDIDA, para que o
+           painel possa mostra-la em vez de ninguem saber. */
+        var firstVideoUs = null, firstAudioUs = null;   /* lastFrame: clone do último aceito (caminho direto) */
         var canvasReady = false;                            /* o canvas de escala já tem um quadro desenhado */
         var dupFilled = 0, dupDropped = 0, gapJumped = 0;
         var scaleCanvas = null, scaleCtx = null, scaleMode = 'encoder', cropFrac = null, sourceViewport = null;
@@ -1052,6 +1116,86 @@
         /* o muxer pode lançar ao adicionar chunk (inclusive RangeError de
            memória); uma vez morto, não dá para finalizar */
         function onMuxError(e) { if (muxDead) return; muxDead = true; fatal('mux', e); }
+
+        /* ---------- PORTA DE ALINHAMENTO A/V (BUG-20260815-HYRG) ------------
+           O video chega ao muxer ja rebaseado em zero pela grade CFR; o audio
+           chega no relogio nativo. Com firstTimestampBehavior 'offset' o muxer
+           zerava CADA trilha na propria origem e a distancia real entre as duas
+           capturas era descartada. Medido na maquina do autor: -1,1 ms numa
+           gravacao e -30,4 ms na seguinte. 30 ms e visivel.
+
+           NAO adianta so deslocar os chunks: com 'offset' o muxer desfaz
+           qualquer deslocamento, porque rebaseia pelo primeiro chunk de cada
+           trilha. E NAO adianta so trocar para 'cross-track-offset': o video ja
+           chega em zero, entao Math.min(0, ~290 s) = 0 e o audio iria parar a
+           290 segundos. E quase certamente o que produziu o commit 6e84363
+           (video congelado, duracao absurda).
+
+           A correcao e as duas coisas juntas: aqui os chunks das duas trilhas
+           sao levados para uma origem COMUM antes de entrar no muxer, e o
+           'cross-track-offset' vira uma rede de seguranca (subtrai zero quando o
+           basing ja esta certo) em vez do mecanismo principal.
+
+           Enquanto as duas ancoras nao sao conhecidas, os chunks esperam aqui.
+           Isso dura o intervalo entre a chegada do 1o frame e do 1o pacote,
+           medido em milissegundos. */
+        var LIMITE_RELOGIOS_US = 5000000;   /* acima disso as bases nao sao comparaveis */
+        var TETO_FILA_ALINHAMENTO = 240;    /* ~8 s de video: rede contra vazamento */
+        var origemComum = null, deslocVideo = 0, filaMux = [], alinhFallback = false, preRollDescartado = 0;
+
+        function temAudio() { return !!(cfg && cfg.audio); }
+        function tentaResolverOrigem() {
+            if (origemComum !== null) return true;
+            if (firstVideoUs === null) return false;
+            /* sem trilha de audio nao ha o que alinhar: a origem e o video */
+            if (!temAudio()) { origemComum = firstVideoUs; deslocVideo = 0; return true; }
+            if (firstAudioUs === null) return false;
+            var delta = firstAudioUs - firstVideoUs;
+            if (delta > LIMITE_RELOGIOS_US || delta < -LIMITE_RELOGIOS_US) {
+                /* bases de relogio incomparaveis (o caso que o comentario antigo
+                   descrevia). Nao inventa alinhamento: volta ao comportamento de
+                   sempre e DIZ que voltou, em vez de entregar arquivo torto. */
+                alinhFallback = true;
+                origemComum = firstVideoUs; deslocVideo = 0;
+                registrarFalha('av-relogios', 'audio e video em bases de relogio diferentes ('
+                    + Math.round(delta / 1000) + ' ms): alinhamento inicial nao corrigido');
+                return true;
+            }
+            origemComum = Math.min(firstVideoUs, firstAudioUs);
+            deslocVideo = firstVideoUs - origemComum;
+            return true;
+        }
+        function tsAlinhado(tipo, ts) {
+            if (tipo === 'v') return ts + deslocVideo;          /* ts ja e 0-based (grade CFR) */
+            return alinhFallback ? ts : (ts - origemComum);     /* audio: relogio nativo */
+        }
+        function drenaFila() {
+            for (var i = 0; i < filaMux.length; i++) {
+                var it = filaMux[i];
+                try {
+                    if (it.t === 'v') muxer.addVideoChunk(it.c, it.m, tsAlinhado('v', it.c.timestamp));
+                    else muxer.addAudioChunk(it.c, it.m, tsAlinhado('a', it.c.timestamp));
+                } catch (e) { onMuxError(e); }
+            }
+            filaMux = [];
+        }
+        /* unico caminho dos chunks para o muxer */
+        function mandaAoMux(tipo, chunk, meta) {
+            if (!muxer || muxDead) return;
+            if (origemComum === null && !tentaResolverOrigem()) {
+                if (filaMux.length < TETO_FILA_ALINHAMENTO) { filaMux.push({ t: tipo, c: chunk, m: meta }); return; }
+                /* fila estourou: uma das trilhas nunca chegou. Segue sem corrigir. */
+                alinhFallback = true; origemComum = (firstVideoUs === null ? 0 : firstVideoUs); deslocVideo = 0;
+            }
+            if (filaMux.length) drenaFila();
+            var ts = tsAlinhado(tipo, chunk.timestamp);
+            /* audio anterior ao 1o frame nao tem imagem para acompanhar */
+            if (tipo === 'a' && ts < 0) { preRollDescartado++; return; }
+            try {
+                if (tipo === 'v') muxer.addVideoChunk(chunk, meta, ts);
+                else muxer.addAudioChunk(chunk, meta, ts);
+            } catch (e) { onMuxError(e); }
+        }
         /* mismatch de dimensão no 1º frame: passa a escalar no OffscreenCanvas
            (ainda no Worker) e recria o encoder do zero */
         function switchToCanvas() {
@@ -1102,7 +1246,7 @@
             venc = new VideoEncoder({
                 output: function (chunk, meta) {
                     encoded++; encBytes += chunk.byteLength; winBytes += chunk.byteLength;
-                    if (muxer && !muxDead) { try { muxer.addVideoChunk(chunk, meta); } catch (e) { onMuxError(e); } }
+                    mandaAoMux('v', chunk, meta);
                 },
                 error: function (err) { onVencError(err); }
             });
@@ -1177,7 +1321,7 @@
                            (vídeo congelado no 1º frame + duração absurda). Os dois
                            processors nascem juntos no start, então o desvio A/V do
                            offset por track é <= 1 frame. */
-                        firstTimestampBehavior: 'offset'
+                        firstTimestampBehavior: 'cross-track-offset'
                     });
                 } catch (e) { fatal('muxer', e); return; }
                 if (scaleMode === 'canvas') ensureCanvas();
@@ -1351,6 +1495,7 @@
             (function loop() {
                 vReader.read().then(function (r) {
                     if (r.done || stopping) { if (r.value) r.value.close(); return; }
+                    if (firstVideoUs === null) firstVideoUs = r.value.timestamp;
                     encodeFrame(r.value);
                     loop();
                 }).catch(function (e) {
@@ -1369,7 +1514,7 @@
                 aenc = new AudioEncoder({
                     output: function (chunk, meta) {
                         encBytes += chunk.byteLength; winBytes += chunk.byteLength;
-                        if (muxer && !muxDead) { try { muxer.addAudioChunk(chunk, meta); } catch (e) { onMuxError(e); } }
+                        mandaAoMux('a', chunk, meta);
                     },
                     /* áudio quebrado não derruba o vídeo: degrada e marca PARCIAL */
                     error: function (err) { falhaDegradada('audio', err); }
@@ -1387,6 +1532,7 @@
             (function loop() {
                 aReader.read().then(function (r) {
                     if (r.done || stopping) { if (r.value) r.value.close(); return; }
+                    if (firstAudioUs === null) firstAudioUs = r.value.timestamp;
                     /* AAC costuma acompanhar; se a fila estourar, descarta em
                        vez de crescer sem limite (áudio não trava o vídeo) */
                     if (aenc && aenc.state === 'configured' && aenc.encodeQueueSize < 40) {
@@ -1449,6 +1595,7 @@
                     terminalPosted = true;
                     var buffer = null, err = '';
                     if (muxer && !muxDead) {
+                        if (filaMux.length) { tentaResolverOrigem(); if (origemComum === null) { origemComum = 0; deslocVideo = 0; alinhFallback = true; } drenaFila(); }
                         try { muxer.finalize(); if (!toDisk) buffer = muxer.target.buffer; }
                         catch (e) { err = causa(e); }
                     } else { err = 'mux indisponível'; }
@@ -1463,6 +1610,11 @@
                                 audioDropped: audioDropped, maxQ: maxQ, maxNavPtsGapMs: maxNavPtsGapUs / 1000,
                                 maxNavFirstFrameDelayMs: maxNavFirstFrameMs,
                                 mode: cfr ? 'cfr' : 'vfr', dupFilled: dupFilled, dupDropped: dupDropped, gapJumped: gapJumped,
+                                av: {
+                                    firstVideoUs: firstVideoUs, firstAudioUs: firstAudioUs,
+                                    deltaMs: (firstVideoUs === null || firstAudioUs === null)
+                                        ? null : (firstAudioUs - firstVideoUs) / 1000
+                                },
                                 input: inputSize, crop: cropRect, output: cfg.out, path: pathName,
                                 /* toda falha da sessão viaja com a causa original; o main
                                    usa isso para marcar o arquivo como PARCIAL */
@@ -1702,9 +1854,10 @@
 
         var audioCfg = null, audioReadable = null;
         var micTrack = S.mic && S.mic.getAudioTracks()[0];
+        S.micSettings = (micTrack && micTrack.getSettings) ? micTrack.getSettings() : null;
         if (micTrack && typeof AudioEncoder !== 'undefined') {
-            var ms = micTrack.getSettings ? micTrack.getSettings() : {};
-            audioCfg = { codec: 'mp4a.40.2', sampleRate: ms.sampleRate || 48000, numberOfChannels: ms.channelCount || 1, bitrate: 128000 };
+            var ms = S.micSettings || {};
+            audioCfg = { codec: 'mp4a.40.2', sampleRate: ms.sampleRate || 48000, numberOfChannels: ms.channelCount || 2, bitrate: 128000 };
             var sup = await AudioEncoder.isConfigSupported(audioCfg).catch(function () { return null; });
             if (sup && sup.supported) {
                 try { audioReadable = new MediaStreamTrackProcessor({ track: micTrack }).readable; }
@@ -1820,6 +1973,7 @@
         var blob = null;
         if (d.buffer && d.buffer.byteLength) blob = new Blob([d.buffer], { type: 'video/mp4' });
         S.lastStats = d.stats || null;
+        if (d.stats && d.stats.av) S.av = d.stats.av;
         if (S.lastStats) {
             /* falhas que o Worker acumulou (inclusive as do flush, que só
                acontecem depois do stop) entram no estado antes de entregar */
@@ -2004,6 +2158,8 @@
         if (S.mic) S.mic.getTracks().forEach(function (t) { t.stop(); });
         if (S.cvs) S.cvs.getTracks().forEach(function (t) { t.stop(); });
         S.worker = null; S.rvfc = 0; S.raf = 0; S.diagRaf = 0; S.diagLastRaf = 0; S.timer = null; S.vid = null; S.tab = null; S.vt = null;
+        if (S.audioCtx) { try { S.audioCtx.close(); } catch (e) { } S.audioCtx = null; }
+        S.stereoDuplicado = false;
         S.mic = null; S.cvs = null; S.rec = null; S.chunks = []; S.noAudio = false; S.gotMetrics = false; S.slowWarned = false;
         S.memWarned = false;
         if (S.reRaf) cancelAnimationFrame(S.reRaf);

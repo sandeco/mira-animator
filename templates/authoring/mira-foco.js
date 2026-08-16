@@ -73,7 +73,7 @@
  A persistencia sai pelo botao Copiar,
        que gera os marcadores @MIRA:FOCO para o texto-fonte. */
     var mundos = {};
-    var ativo = false, sel = -1, palco = null, camada = null;
+    var ativo = false, sel = -1, selPonto = -1, palco = null, camada = null;
     var painel = null, barra = null, saida = null;
     /* agulha: posicao 0..1 do ciclo. Vive fora do desenhar() porque a barra
        e reconstruida a cada redesenho e a agulha nao pode voltar para o zero
@@ -89,7 +89,7 @@
        precisa parar no ultimo quadro declara `@MIRA:LOOP off`. */
     function estadoDe(cena) {
         if (!mundos[cena.id]) {
-            mundos[cena.id] = { focos: [], ciclo: +(cena.tl.duration().toFixed(1)) || 12, beats: 5, loop: true, volta: false, passo: false };
+            mundos[cena.id] = { focos: [], pontos: [], ciclo: +(cena.tl.duration().toFixed(1)) || 12, beats: 5, loop: true, volta: false };
             lerMarcadores(cena, mundos[cena.id]);
         }
         return mundos[cena.id];
@@ -101,8 +101,21 @@
         var it = document.createNodeIterator(cena.slide, NodeFilter.SHOW_COMMENT), n;
         while ((n = it.nextNode())) {
             var v = n.nodeValue || '';
-            var ps = /@MIRA:PASSO\s+(on|off)/.exec(v);
-            if (ps) { est.passo = (ps[1] === 'on'); continue; }
+            /* DIGITO OBRIGATORIO no regex. Sem exigir digito, um comentario
+               em portugues explicando os pontos da cena viraria lista de
+               pontos, que e a armadilha que o @MIRA:FOCO ja custou horas
+               neste deck.
+
+               O antigo `@MIRA:PASSO on|off` nao e mais lido: quem declara o
+               passo e a lista. O marcador velho que sobrar em algum arquivo
+               e limpo no primeiro Ctrl+S. */
+            var pt = /@MIRA:PASSOS\s+([\d.][\d.\s]*)/.exec(v);
+            if (pt) {
+                est.pontos = pt[1].trim().split(/\s+/).map(parseFloat)
+                    .filter(function (t) { return isFinite(t) && t >= 0; })
+                    .sort(function (a, b) { return a - b; });
+                continue;
+            }
             var vt = /@MIRA:VOLTA\s+(on|off)/.exec(v);
             if (vt) { est.volta = (vt[1] === 'on'); continue; }
             var lp = /@MIRA:LOOP\s+(on|off)/.exec(v);
@@ -366,6 +379,17 @@
             '.mz-seg .p.e{left:-2px;border-radius:6px 0 0 6px}',
             '.mz-seg .p.d{right:-2px;border-radius:0 6px 6px 0}',
             '.mz-seg .p:hover{background:rgba(0,0,0,.22)}',
+            /* --- ponto de execucao: marca, nao faixa ---
+               Cue tem duracao e por isso e retangulo. Ponto de execucao e um
+               INSTANTE onde a seta para, entao ele e estreito de proposito:
+               desenha-lo com largura sugeriria um trecho que ele nao tem. */
+            '.mz-ponto{position:absolute;top:2px;height:16px;width:16px;margin-left:-8px;',
+            '  border-radius:5px;background:' + AMARELO + ';color:#101010;cursor:grab;',
+            '  display:flex;align-items:center;justify-content:center;touch-action:none;',
+            '  font:700 10px/1 Inter,system-ui,sans-serif;z-index:3;',
+            '  box-shadow:inset 0 0 0 1px rgba(0,0,0,.25)}',
+            '.mz-ponto:active{cursor:grabbing}',
+            '.mz-ponto.sel{box-shadow:inset 0 0 0 2px #fff,0 0 0 1px rgba(0,0,0,.4)}',
 
             /* --- agulha: onde a cena esta AGORA ---
                pointer-events:none de proposito. A agulha e fina, e se ela
@@ -548,7 +572,56 @@
         previa = (f.tipo === 'tremor') ? Cam.tremor(palco, o) : Cam.tensao(palco, o);
     }
 
+    /* PAINEL DA KEY SELECIONADA.
+
+       O duplo clique sozinho nao bastava: todo o resto da barra apaga por
+       botao de lixeira, e um gesto que so existe na dica do title e um
+       controle que ninguem acha. A key ganha o MESMO painel dos cues, na
+       versao curta: numero, instante e lixeira.
+
+       Ele nasce colado na key, e nao no alto do palco como o dos abalos,
+       porque a key so existe na regua: o olho ja esta ali quando clica. */
+    function desenharPainelPonto(est) {
+        painel.innerHTML = '';
+        var el = document.querySelectorAll('.mz-ponto')[selPonto];
+        if (!el) { painel.classList.remove('on'); return; }
+        painel.classList.add('on');
+
+        var tag = document.createElement('span');
+        tag.className = 'mz-tag';
+        tag.style.color = AMARELO;
+        tag.innerHTML = icone(IC.passo, 15) + '<span>' + (selPonto + 1) + '</span>';
+        painel.appendChild(tag);
+
+        var quando = document.createElement('span');
+        quando.className = 'mz-dica';
+        quando.textContent = est.pontos[selPonto].toFixed(2) + 's';
+        painel.appendChild(quando);
+
+        var sp = document.createElement('span');
+        sp.className = 'mz-sep';
+        painel.appendChild(sp);
+
+        painel.appendChild(botao(IC.lixo, 'apagar esta key', function () {
+            est.pontos.splice(selPonto, 1);
+            selPonto = -1;
+            desenhar();
+        }));
+
+        /* A ALTURA E MEDIDA, nao chutada: com deslocamento fixo o painel
+           encostava na key e cobria justamente o que se esta editando.
+           Aqui ele e posicionado pelo tamanho que de fato tem, mais uma
+           folga, entao a key continua visivel enquanto voce a apaga. */
+        var r = el.getBoundingClientRect();
+        var p = painel.getBoundingClientRect();
+        var largura = p.width || 150;
+        painel.style.left = Math.round(Math.max(12,
+            Math.min(window.innerWidth - largura - 12, r.left + r.width / 2 - largura / 2))) + 'px';
+        painel.style.top = Math.round(Math.max(12, r.top - (p.height || 44) - 16)) + 'px';
+    }
+
     function desenharPainel(est) {
+        if (selPonto >= 0) { desenharPainelPonto(est); return; }
         painel.innerHTML = '';
         if (sel < 0 || !est.focos[sel]) { painel.classList.remove('on'); return; }
         var f = est.focos[sel];
@@ -686,14 +759,6 @@
         l1.appendChild(botao(IC.loop, 'loop', function () {
             est.loop = !est.loop; aplicarLoop(palco, est); desenhar();
         }, est.loop));
-        l1.appendChild(botao(IC.passo, 'avancar por beat na seta para baixo', function () {
-            est.passo = !est.passo;
-            aplicarPasso(palco, est);
-            desenhar();
-            aviso(est.passo
-                ? ('seta avanca 1 de ' + est.beats + ' beats, depois troca de slide')
-                : 'a cena volta a rodar sozinha');
-        }, est.passo));
         l1.appendChild(botao(IC.volta, 'volta ao base', function () {
             est.volta = !est.volta;
             montarCamera(palco, est);
@@ -768,7 +833,7 @@
 
                 g.addEventListener('pointerdown', function (e) {
                     if (e.target === ae || e.target === ad) return;
-                    sel = i; desenharBolas(est); desenharPainel(est);
+                    sel = i; selPonto = -1; desenharBolas(est); desenharPainel(est);
                     arrastarSeg(e, est, f, 'mover', g, trilha);
                 });
                 ae.addEventListener('pointerdown', function (e) {
@@ -796,6 +861,85 @@
             pista.appendChild(trilha);
             pistas.appendChild(pista);
         });
+
+        /* ---------- pista dos PONTOS DE EXECUCAO ----------
+           Nao e um TIPOS a mais, e nao pode ser: entrar na lista de tipos
+           traria junto a bolinha de enquadramento e o painel de intensidade
+           e duracao, que um instante de parada nao tem. Seria controle
+           desenhado mentindo sobre o que existe.
+
+           Fica na ultima pista porque nao e camera: e onde a SETA para
+           enquanto voce apresenta. As pistas de cima dizem o que a camera
+           faz; esta diz onde a cena espera por voce. */
+        var pistaP = document.createElement('div');
+        pistaP.className = 'mz-pista';
+        var guarP = botao(IC.passo, 'ponto de execucao: clique para criar no ponto da agulha', function () {
+            novoPonto(est);
+        });
+        guarP.className += ' mz-guar';
+        guarP.style.color = AMARELO;
+        pistaP.appendChild(guarP);
+
+        var trilhaP = document.createElement('div');
+        trilhaP.className = 'mz-trilha';
+        for (var bp = 1; bp < est.beats; bp++) {
+            var mp = document.createElement('i');
+            mp.style.left = (bp / est.beats * 100) + '%';
+            trilhaP.appendChild(mp);
+        }
+        est.pontos.forEach(function (t, i) {
+            var p = document.createElement('div');
+            p.className = 'mz-ponto' + (i === selPonto ? ' sel' : '');
+            /* teto de 100%: baixar o ciclo na barra deixa pontos alem do fim,
+               e sem o teto eles sairiam da trilha (overflow hidden) e
+               sumiriam da regua enquanto continuariam gastando uma seta */
+            p.style.left = Math.min(100, t / est.ciclo * 100) + '%';
+            p.textContent = (i + 1);
+            p.title = 'ponto ' + (i + 1) + ' · ' + t.toFixed(2) + 's'
+                + ' · arraste para mover, duplo clique remove';
+            /* O DUPLO CLIQUE E CONTADO AQUI, e nao por um listener de
+               `dblclick`. O arraste precisa de preventDefault no pointerdown
+               (senao o navegador entra em selecao de texto no meio do
+               gesto), e cancelar o pointerdown suprime os eventos de mouse
+               sinteticos: `dblclick` simplesmente nunca dispara. Foi medido,
+               com o listener escrito e o ponto se recusando a sair.
+
+               Dois pointerdown no mesmo elemento dentro de 400 ms e a
+               definicao aqui. O elemento SOBREVIVE entre os dois cliques
+               porque o soltar() so redesenha quando o ponto andou. */
+            p.addEventListener('pointerdown', function (e) {
+                if (p._ult && e.timeStamp - p._ult < 400) {
+                    e.preventDefault();
+                    est.pontos.splice(i, 1);
+                    selPonto = -1;
+                    desenhar();
+                    return;
+                }
+                p._ult = e.timeStamp;
+                /* selecao SEM redesenhar a barra: um desenhar() aqui mataria
+                   este elemento entre os dois cliques e levaria junto o
+                   duplo clique. A marca e a classe, o painel vem sozinho. */
+                sel = -1;
+                selPonto = i;
+                var todos = trilhaP.querySelectorAll('.mz-ponto');
+                for (var k = 0; k < todos.length; k++) todos[k].classList.remove('sel');
+                p.classList.add('sel');
+                desenharPainel(est);
+                arrastarPonto(e, est, i, p, trilhaP);
+            });
+            trilhaP.appendChild(p);
+        });
+        var agP = document.createElement('div');
+        agP.className = 'mz-agulha';
+        trilhaP.appendChild(agP);
+        agulhas.push(agP);
+        trilhaP.addEventListener('pointerdown', function (e) {
+            if (e.target.closest && e.target.closest('.mz-ponto')) return;
+            arrastarAgulha(e, est, trilhaP);
+        });
+        pistaP.appendChild(trilhaP);
+        pistas.appendChild(pistaP);
+
         barra.appendChild(pistas);
 
         /* veredito */
@@ -919,7 +1063,70 @@
             tipo: T.id, razao: ''
         });
         sel = est.focos.length - 1;
+        selPonto = -1;
         desenhar();
+    }
+
+    /* ---------- pontos de execucao ----------
+       Em SEGUNDOS, e nao em beats. Beat e grade de ritmo da camera; ponto
+       de execucao e o instante da cena onde a fala do apresentador encosta
+       ("o baque aos 7,37"). Guardar em beat faria o ponto migrar sozinho
+       toda vez que o numero de beats mudasse na barra, e o autor perderia
+       as paradas por mexer numa grade que nao tem nada a ver com elas.
+
+       Sem grade de encaixe pelo mesmo motivo: a parada e onde o olho ve o
+       acontecimento, nao onde a grade permite. */
+    function novoPonto(est) {
+        var t = +(agulhaP * est.ciclo).toFixed(2);
+        /* dois pontos no mesmo instante seriam duas paradas identicas: a
+           seta gastaria um passo sem nada mudar na tela */
+        for (var i = 0; i < est.pontos.length; i++) {
+            if (Math.abs(est.pontos[i] - t) < 0.05) {
+                aviso('ja existe um ponto em ' + t.toFixed(2) + 's', true);
+                return;
+            }
+        }
+        est.pontos.push(t);
+        est.pontos.sort(function (a, b) { return a - b; });
+        /* nasce SELECIONADA, com o painel e a lixeira a vista: e onde o
+           autor descobre que da para apagar sem precisar adivinhar gesto */
+        sel = -1;
+        selPonto = est.pontos.indexOf(t);
+        if (est.pontos.length === 1) {
+            aviso('a cena passa a parar neste ponto, e a seta a leva adiante');
+        }
+        desenhar();
+    }
+
+    function arrastarPonto(ev, est, i, el, trilha) {
+        ev.preventDefault();
+        ev.stopPropagation();
+        var r = trilha.getBoundingClientRect();
+        var x0 = ev.clientX, t0 = est.pontos[i];
+        function mover(e) {
+            var t = t0 + (e.clientX - x0) / r.width * est.ciclo;
+            t = Math.max(0.01, Math.min(est.ciclo, +t.toFixed(2)));
+            est.pontos[i] = t;
+            el.style.left = (t / est.ciclo * 100) + '%';
+            el.title = t.toFixed(2) + 's';
+            /* percorre a cena junto com o ponto: a parada se escolhe
+               OLHANDO o quadro, nao lendo o numero */
+            porAgulha(est, t / est.ciclo);
+        }
+        function soltar() {
+            window.removeEventListener('pointermove', mover);
+            window.removeEventListener('pointerup', soltar);
+            /* SO redesenha se o ponto ANDOU. O desenhar() reconstroi a barra
+               inteira, entao redesenhar a cada pointerup destruiria este
+               elemento entre os dois cliques de um duplo clique: o dblclick
+               cairia num elemento novo, que nunca viu o primeiro clique, e o
+               remover seria controle desenhado que nao remove nada. E o
+               mesmo perigo que o arrastarSeg evita durante o gesto, um
+               evento depois dele. */
+            if (est.pontos[i] !== t0) desenhar();
+        }
+        window.addEventListener('pointermove', mover);
+        window.addEventListener('pointerup', soltar);
     }
 
     /* ---------- agulha: a cena no instante que a regua aponta ----------
@@ -1033,6 +1240,13 @@
            e um indice guardado apontaria para outro foco depois da ordenacao */
         var alvo = (sel >= 0) ? est.focos[sel] : null;
         est.focos.sort(function (a, b) { return a.beat - b.beat; });
+        /* arrastar um ponto por cima de outro reordena a fila: sem isto a
+           numeracao na pista deixaria de ser a ordem em que a seta anda.
+           A selecao segue o VALOR, senao o painel passaria a apontar para a
+           key vizinha depois do arraste, e a lixeira apagaria a errada. */
+        var alvoPonto = (selPonto >= 0 && selPonto < est.pontos.length) ? est.pontos[selPonto] : null;
+        est.pontos.sort(function (a, b) { return a - b; });
+        selPonto = (alvoPonto === null) ? -1 : est.pontos.indexOf(alvoPonto);
         if (alvo) sel = est.focos.indexOf(alvo);
         desenharBolas(est);
         desenharBarra(est);
@@ -1249,8 +1463,15 @@
     function marcadores(est) {
         var l = ['<!-- @MIRA:LOOP ' + (est.loop ? 'on' : 'off') + ' -->',
                  '<!-- @MIRA:VOLTA ' + (est.volta ? 'on' : 'off') + ' -->',
-                 '<!-- @MIRA:PASSO ' + (est.passo ? 'on' : 'off') + ' -->',
                  '<!-- @MIRA:CICLO ' + est.ciclo + ' BEATS ' + est.beats + ' -->'];
+        /* lista vazia NAO escreve o marcador: ausencia e o que significa
+           "sem ponto declarado, cai no uniforme", e um `@MIRA:PASSOS` vazio
+           no arquivo nao diria isso a ninguem */
+        if (est.pontos.length) {
+            l.push('<!-- @MIRA:PASSOS ' + est.pontos.map(function (t) {
+                return (+t).toFixed(2);
+            }).join(' ') + ' -->');
+        }
         est.focos.forEach(function (f, i) {
             l.push(linhaFoco(f, i));
         });
@@ -1261,8 +1482,12 @@
        tinha so FOCO, CICLO e LOOP, mas o gravador ja emitia VOLTA e PASSO:
        eles nao eram limpos e o arquivo ganhava uma linha repetida de cada um
        a cada save. Com o PROF entrando agora, o mesmo aconteceria com ele.
-       Escrever sem limpar é sempre acumulo, nunca atualizacao. */
-    var LIMPA = /[ \t]*<!--\s*@MIRA:(FOCO|CICLO|LOOP|VOLTA|PASSO|PROF)\b[\s\S]*?-->[ \t]*\r?\n?/g;
+       Escrever sem limpar é sempre acumulo, nunca atualizacao.
+
+       PASSOS vem ANTES de PASSO na alternancia. Com `PASSO\b` primeiro, o
+       `\b` falha no S de PASSOS e a linha inteira escapa da limpeza: o
+       arquivo ganharia uma lista de pontos repetida a cada Ctrl+S. */
+    var LIMPA = /[ \t]*<!--\s*@MIRA:(FOCO|CICLO|LOOP|VOLTA|PASSOS|PASSO|PROF)\b[\s\S]*?-->[ \t]*\r?\n?/g;
 
     function compor(src) {
         Object.keys(mundos).forEach(function (id) {
@@ -1369,17 +1594,29 @@
                 /* a camera deste deck vem SO dos marcadores: sem isto,
                    salvar nao teria efeito nenhum depois do F5 */
                 if (est.focos.length) montarCamera(c, est);
-                if (est.passo) aplicarPasso(c, est);
+                if (est.pontos.length) reiniciarPasso(c, est);
             });
         }, 0);
     });
 
     /* =================================================================
-       PASSO A PASSO na seta para baixo (tecla P do passador de slides).
+       PONTOS DE EXECUCAO na seta do passador.
 
-       Com PASSO ligado, a cena nao roda sozinha: cada seta para baixo
-       avanca UM BEAT, e so depois do ultimo a seta volta a trocar de slide.
-       E o que permite conduzir a propria animacao com o passador.
+       NAO EXISTE BOTAO DE LIGAR. Quem manda e a lista de pontos: sem
+       nenhum, a cena roda solta como qualquer slide do Mira; com pontos,
+       ela corre e PARA em cada um, e cada seta a leva ate o proximo.
+
+       O botao veio junto com a divisao uniforme do ciclo em beats, e
+       trazia duas coisas erradas. Uma PARADA INVISIVEL NO ZERO: a cena
+       nascia congelada esperando a primeira seta, mesmo sem ponto nenhum
+       ali, e o autor via a animacao morta sem nada na regua explicando por
+       que. E um segundo estado que podia contradizer o que estava
+       desenhado, ponto na tela com o passo desligado. O ponto na regua E a
+       declaracao; nao precisa de segunda chave para valer.
+
+       Com isso a divisao por beats saiu junto. Ela era o unico motivo de
+       existir um "ligado sem pontos", e passo por grade de ritmo nunca foi
+       o que se quer numa cena: 24 setas para tres acontecimentos.
 
        DETALHE QUE DECIDE SE FUNCIONA: o script de navegacao do deck
        registra o keydown durante o parsing, antes deste modulo. Em fase de
@@ -1388,73 +1625,152 @@
        apenas quando de fato consome o passo. Toda outra tecla passa
        intacta, senao o E e o P quebrariam.
        ================================================================= */
-    var escoando = false;
+    function temPontos(est) { return est.pontos.length > 0; }
 
-    function passoDe(est, i) {
-        return (est.ciclo / est.beats) * i;
-    }
+    function pontoDe(est, i) { return Math.min(est.ciclo, est.pontos[i]); }
 
-    function irAoPasso(cena, est, i) {
-        i = Math.max(0, Math.min(est.beats, i));
-        est._i = i;
-        var alvo = passoDe(est, i);
-        var agora = cena.tl.time();
-        var dur = Math.abs(alvo - agora);
-        escoando = true;
-        cena.tl.tweenTo(alvo, {
-            duration: dur, ease: 'none',
-            onComplete: function () { escoando = false; cena.tl.pause(); }
-        });
+    /* `_alvo` e o INDICE DO PROXIMO PONTO onde a cena vai parar: comeca em
+       0 (correndo em direcao ao primeiro) e vale `pontos.length` quando ela
+       ja parou no ultimo. `_solta` marca a cena devolvida ao movimento
+       depois do ultimo ponto. */
+    function reiniciarPasso(cena, est) {
+        est._alvo = 0;
+        est._solta = false;
+        est._ultT = 0;
+        if (!temPontos(est)) {
+            cena.tl.repeat(est.loop ? -1 : 0);
+        } else {
+            /* enquanto houver ponto a cumprir o ciclo NAO repete: com
+               repeat -1 o tempo volta ao zero sozinho e a cena passaria
+               direto pelo ponto que ainda faltava. O loop declarado volta
+               quando a cena e solta. */
+            cena.tl.repeat(0);
+            cena.tl.time(0);
+        }
+        if (cena._visivel && !ativo) cena.tl.play();
         pintarPasso(cena, est);
     }
 
-    function aplicarPasso(cena, est) {
-        if (est.passo) {
-            est._i = 0;
+    /* DEPOIS DO ULTIMO PONTO A CENA VAI ATE O FIM, e nao congela.
+
+       A Regra Zero vale aqui: cena nao congela. Sem isto a animacao ficava
+       presa no ultimo quadro ate a troca de slide, e num deck de um slide
+       so ficava presa para sempre. */
+    function soltarCena(cena, est) {
+        est._solta = true;
+        est._ultT = cena.tl.time();
+        cena.tl.repeat(est.loop ? -1 : 0);
+        cena.tl.play();
+        pintarPasso(cena, est);
+    }
+
+    /* busca para TRAS. Zera os abalos antes, pelo mesmo motivo da agulha:
+       tremor e tensao limpam em onComplete, que o GSAP nao dispara quando a
+       busca retrocede, e o canal fica preso no ultimo valor sorteado. */
+    function buscar(cena, t) {
+        if (cena.abalo) { cena.abalo.x = 0; cena.abalo.y = 0; }
+        if (cena.tensao) { cena.tensao.x = 0; cena.tensao.y = 0; }
+        cena.tl.pause(Math.min(t, cena.tl.duration()));
+    }
+
+    /* voltar e CORRECAO, nao percurso: percorrer de tras para frente em
+       tempo real levaria o tempo que a cena ja andou, e de uma cena solta
+       em loop levaria um numero qualquer. */
+    function voltarUmPonto(cena, est) {
+        if (est._solta) {                     /* recaptura no ultimo ponto */
+            est._solta = false;
+            est._alvo = est.pontos.length;
             cena.tl.repeat(0);
-            cena.tl.pause(0);
-        } else {
-            cena.tl.repeat(est.loop ? -1 : 0);
-            if (cena._visivel && !ativo) cena.tl.play();
+            buscar(cena, pontoDe(est, est.pontos.length - 1));
+        } else if (!cena.tl.paused() && est._alvo >= 1) {
+            /* A CAMINHO do proximo ponto: a seta para tras CANCELA o avanco
+               e devolve a cena ao ponto de onde ela saiu. Sem esta ramo ela
+               pularia dois pontos de uma vez, porque `_alvo` ja aponta para
+               o destino desde que o avanco comecou. */
+            buscar(cena, pontoDe(est, est._alvo - 1));
+        } else if (est._alvo >= 2) {          /* um ponto para tras */
+            est._alvo -= 1;
+            buscar(cena, pontoDe(est, est._alvo - 1));
+        } else {                              /* volta ao inicio e recomeca */
+            est._alvo = 0;
+            buscar(cena, 0);
+            cena.tl.play();
         }
         pintarPasso(cena, est);
     }
 
-    /* guarda: o IntersectionObserver do mira-cinema chama play() quando o
-       slide aparece, e nao existe API para desligar isso. Reafirmar a pausa
-       por tique e o unico jeito de nao editar o arquivo dele. */
+    /* A PARADA acontece aqui, no tique, e nao por tweenTo com duracao
+       calculada: a cena roda no ritmo dela e e pausada quando cruza o
+       ponto. Buscar com tween dava o mesmo lugar por um caminho artificial,
+       e obrigava a saber de antemao quanto tempo faltava. */
     var visivelAntes = null;
     function segurarPasso() {
         var cena = ativoAgora();
         if (cena !== visivelAntes) {
-            /* trocou de slide: o passo recomeca do zero */
-            if (cena) { var e0 = estadoDe(cena); if (e0.passo) { e0._i = 0; } }
+            /* trocou de slide: a cena recomeca do inicio, como o resto do
+               Mira ja faz, e volta a valer o primeiro ponto */
+            if (cena) reiniciarPasso(cena, estadoDe(cena));
             visivelAntes = cena;
-            pintarPasso(cena, cena && estadoDe(cena));
         }
-        if (!cena) return;
+        if (!cena || ativo) return;
         var est = estadoDe(cena);
-        if (!est.passo || escoando || ativo) return;
-        if (!cena.tl.paused()) cena.tl.pause();
+        if (!temPontos(est)) return;
+
+        /* A VOLTA DO LOOP REARMA AS KEYS.
+
+           Solta, a cena corre ate o fim e o loop a devolve ao zero. Sem
+           isto ela seguia rodando livre para sempre a partir dali, e as
+           keys valiam uma unica passagem: quem apresentasse duas vezes o
+           mesmo slide perdia as paradas na segunda.
+
+           O sinal da volta e o tempo ANDAR PARA TRAS: com repeat -1 o GSAP
+           reinicia a iteracao no zero. Nao ha evento para isso que nao
+           exija mexer na timeline do mira-cinema. */
+        var t = cena.tl.time();
+        if (est._solta) {
+            if (t < (est._ultT || 0) - 0.05) {
+                est._solta = false;
+                est._alvo = 0;
+                cena.tl.repeat(0);
+                pintarPasso(cena, est);
+            }
+            est._ultT = t;
+            return;
+        }
+        est._ultT = t;
+        var i = est._alvo || 0;
+        if (i >= est.pontos.length) {
+            /* parada no ultimo ponto: so a seta solta daqui */
+            if (!cena.tl.paused()) cena.tl.pause();
+            return;
+        }
+        var alvo = pontoDe(est, i);
+        if (cena.tl.time() >= alvo - 0.001) {
+            cena.tl.pause(alvo);
+            est._alvo = i + 1;
+            pintarPasso(cena, est);
+        }
     }
     gsap.ticker.add(segurarPasso);
 
-    /* indicador discreto: quem apresenta precisa saber quantos passos faltam
-       antes de a seta trocar de slide */
+    /* indicador discreto: quem apresenta precisa saber quantos pontos
+       faltam antes de a seta trocar de slide */
     var selo = null;
     function pintarPasso(cena, est) {
-        if (!est || !est.passo) { if (selo) selo.className = ''; return; }
+        if (!est || !temPontos(est)) { if (selo) selo.className = ''; return; }
         estilo();
         if (!selo) {
             selo = document.createElement('div');
             selo.id = 'mz-passo';
             document.body.appendChild(selo);
         }
-        var i = est._i || 0;
+        var i = est._alvo || 0, n = est.pontos.length;
         selo.className = 'on';
         selo.innerHTML = icone(IC.passo, 15)
-            + '<span>' + i + '/' + est.beats + '</span>'
-            + '<em>' + (i >= est.beats ? 'proxima seta troca de slide' : 'seta avanca') + '</em>';
+            + '<span>' + i + '/' + n + '</span>'
+            + '<em>' + (est._solta ? 'cena ate o fim · proxima seta troca de slide'
+                : i >= n ? 'seta leva a cena ate o fim'
+                : 'seta vai ao proximo ponto') + '</em>';
     }
 
     var AVANCA = ['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'];
@@ -1472,15 +1788,33 @@
         var cena = ativoAgora();
         if (!cena) return;
         var est = estadoDe(cena);
-        if (!est.passo) return;
-        var i = est._i || 0;
-        /* esgotou para frente, ou esta no inicio para tras: DEIXA PASSAR,
-           e e a navegacao do deck que troca de slide */
-        if (frente && i >= est.beats) return;
+        /* sem ponto declarado a cena roda solta e a seta e do deck */
+        if (!temPontos(est)) return;
+        var i = est._alvo || 0, n = est.pontos.length;
+        /* CENA JA SOLTA: para frente a seta e do deck (troca de slide),
+           para tras ela recaptura a cena no ultimo ponto */
+        if (est._solta) {
+            if (frente) return;
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            voltarUmPonto(cena, est);
+            return;
+        }
+        /* antes do primeiro ponto, para tras: DEIXA PASSAR */
         if (tras && i <= 0) return;
         e.preventDefault();
         e.stopImmediatePropagation();
-        irAoPasso(cena, est, i + (frente ? 1 : -1));
+        if (!frente) { voltarUmPonto(cena, est); return; }
+        if (i >= n) { soltarCena(cena, est); return; }   /* ultimo: ate o fim */
+        if (cena.tl.paused()) {
+            cena.tl.play();                  /* corre ate o proximo ponto */
+        } else {
+            /* ainda a caminho: a seta ADIANTA ate o ponto pendente, em vez
+               de nao fazer nada enquanto a cena anda */
+            cena.tl.pause(pontoDe(est, i));
+            est._alvo = i + 1;
+        }
+        pintarPasso(cena, est);
     }, true);
 
     /* =================================================================
@@ -1500,6 +1834,7 @@
         gsap.ticker.add(manterParado);
         var est = estadoDe(palco);
         if (!est.focos.length) sel = -1;
+        selPonto = -1;
         /* a agulha nasce onde a cena PAROU, nao no zero: o modo entra no
            quadro que estava na tela, senao ligar o painel daria um salto */
         agulhaP = est.ciclo ? Math.min(1, palco.tl.time() / est.ciclo) : 0;
@@ -1514,7 +1849,16 @@
         if (camada) { camada.remove(); camada = null; }
         if (barra) barra.classList.remove('on');
         if (painel) painel.classList.remove('on');
-        if (palco) { palco._presaNaBase = false; palco.tl.play(); }
+        if (palco) {
+            palco._presaNaBase = false;
+            /* SAIR DO MODO devolve a cena ao comeco. Um `play()` daqui, com
+               pontos declarados, punha a cena a correr do instante em que o
+               autor estava editando, e o primeiro ponto ja tinha passado:
+               era isso que fazia a cena "nao parar no ponto". */
+            var e0 = estadoDe(palco);
+            if (e0.pontos.length) reiniciarPasso(palco, e0);
+            else palco.tl.play();
+        }
     }
 
     document.addEventListener('keydown', function (e) {

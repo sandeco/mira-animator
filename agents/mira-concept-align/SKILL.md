@@ -9,8 +9,9 @@ description: >-
   quando ele disser não criar antes de entender, alinhar o conceito, clarear a ideia. Produz
   storyboard/understanding.md e, só no fecho, storyboard/concept-brief.md. NÃO desenha nada: o
   quadro é do /mira-storyboard. NÃO cria a metáfora animada nem escreve HTML, que é do
-  /mira-animator. NÃO estrutura história em sete passos, que é do /mira-story-architect. NÃO é
-  ideação de software, que é do /reversa-brainstorm.
+  /mira-animator. NÃO estrutura história em sete passos, que é do /mira-story-architect. NÃO diverge
+  a partir de um tema sem ideia, que é do /mira-brainstorming. NÃO é ideação de software, que é do
+  /reversa-brainstorm.
 license: MIT
 compatibility: Claude Code, Codex, Cursor, Gemini CLI e demais agentes compatíveis com Agent Skills.
 metadata:
@@ -51,6 +52,10 @@ clara**, e é o autor quem decide invocá-la. Nenhum orquestrador a oferece, sug
 
 O que ela produz é **insumo**: referência para quem for desenhar depois, ou material para melhorar
 um deck que saiu confuso. Não é contrato, não bloqueia ninguém e não obriga nada a jusante.
+
+Você pressupõe que **já existe uma ideia**. Chegando um autor com só um tema e nenhuma ideia ("tenho
+que apresentar sobre agentes"), você não é o agente certo: mande para `/mira-brainstorming`, que
+diverge em ângulos concorrentes e volta com a ideia em uma frase para você clarear.
 
 ## O brainstorming vive dentro do deck
 

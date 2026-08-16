@@ -4,6 +4,117 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.61
+
+### Corrigido
+
+**O áudio da gravação nativa sai em stereo.** A tecla R gravava sempre em mono, nos dois
+formatos. O gravador nunca pedia o número de canais: abria o microfone com `audio: true` e
+copiava para o AAC o que a track dissesse, com um `|| 1` que fechava o caminho em mono quando
+ela não dizia nada. Medido na máquina do autor, com o diagnóstico novo: `channelCount: 1`, com
+cancelamento de eco, supressão de ruído e ganho automático todos ligados. Essa cadeia de voz do
+Chrome opera em um canal.
+
+Agora a captação pede 2 canais como **ideal**, nunca `exact`: `exact` faria a gravação falhar
+em microfone mono e sair sem áudio nenhum, que é pior que o defeito. Se a track vier com 1 canal
+mesmo assim, o sinal passa por um grafo Web Audio com destino stereo e o canal é duplicado nos
+dois lados. **Isso é declarado, sempre**: o painel mostra `stereo (dup)` e o diagnóstico traz
+`mic.stereoDuplicado: true`. Chamar mono duplicado de stereo seria pior que entregar mono.
+
+Os filtros de voz **não** foram desligados. Desligá-los é o único jeito de tirar stereo real de
+um dispositivo que a cadeia esteja achatando, mas muda o som de todas as gravações e sem
+cancelamento de eco uma caixa aberta volta a vazar para o microfone. Essa troca é decisão de
+quem grava, e fica para uma próxima volta.
+
+**Áudio e vídeo alinhados no MP4.** As duas trilhas eram zeradas **cada uma na própria origem**,
+e a distância real entre o início das duas capturas era descartada. Medido em duas gravações
+seguidas: 1,1 ms numa e **30,4 ms na outra**. O desvio varia conforme a latência de
+inicialização de cada pipeline, e 30 ms é acima do limiar em que a boca desencontra da voz para
+quem sabe olhar.
+
+Não confundir com o drift do Premiere, corrigido na 0.1.55 pela grade CFR: aquele é
+**progressivo** e vem de VFR. Este é um deslocamento que já nasce com o arquivo, e sobreviveu às
+duas correções de relógio anteriores.
+
+A correção não é trocar a constante do muxer. `firstTimestampBehavior: 'offset'` destrói o
+alinhamento, e `'cross-track-offset'` sozinho destrói o arquivo: o vídeo já chega ao muxer
+rebaseado em zero pela grade CFR, então o mínimo entre as duas trilhas dá zero e o áudio iria
+parar a minutos de distância. Agora as duas trilhas são levadas a uma **origem comum** antes do
+muxer, com uma fila de espera até as duas âncoras serem conhecidas e uma guarda: se os relógios
+estiverem em bases incomparáveis, o gravador volta ao comportamento antigo e **avisa**, em vez
+de entregar arquivo torto em silêncio.
+
+### Novo
+
+**O painel de gravação mostra o que antes ninguém conseguia ver.** Ao lado dos contadores da
+grade CFR aparecem agora `mic 2ch` (ou `stereo (dup)`) e `A/V ±N ms`, o desvio medido entre as
+âncoras das duas trilhas. O diagnóstico JSON ganhou `mic{}` com as settings reais do microfone e
+`av{firstVideoUs, firstAudioUs, deltaMs}`.
+
+Sem isso, nenhum dos dois defeitos acima era verificável por quem grava, e foi exatamente por
+isso que uma afirmação errada sobre a sincronia sobreviveu tanto tempo na documentação.
+
+**Contagem regressiva no `/mira-studio`.** O 9:16 ganhou a contagem de 5 segundos antes de
+começar a gravar que o `/mira-studio-full` já tinha. Ela aparece para você e não entra no vídeo.
+
+### Nota
+
+Deck que já existe **não** recebe estas correções sozinho. Rode `mira edit <deck>` para atualizar
+a cópia do gravador dentro dele. Deck novo já nasce corrigido.
+
+## 0.1.60
+
+### Novo
+
+**`/mira-sequence`, uma animação que continua no slide seguinte.**
+
+Todo slide do Mira começa do zero. A animação entra coreografada, roda o loop dela e acaba ali,
+porque o slide seguinte é outro palco com outra história. Faltava o caso em que a cena não acabou:
+a bola quica pela tela e para no centro, e o que você quer é **continuar dali**, com a bola só
+subindo e descendo, sem que ninguém perceba que trocou de slide.
+
+O `/mira-sequence` cria esse slide seguinte. Ele nasce na pose exata em que o anterior estava,
+sem entrada nenhuma, e a passagem entre os dois é um corte seco. Na plateia lê como uma animação
+só, que muda de comportamento no meio.
+
+O problema real não é copiar o último quadro, é que **loop perpétuo não tem último quadro**: a bola
+está onde estiver no instante em que você aperta a seta. Por isso a continuidade é resolvida por
+uma pose viva. O slide de origem publica a posição real dos atores num barramento a cada quadro, e
+o slide de continuação trava essa pose no instante em que entra. Entregando com a bola no ar, ela
+continua do ar. Existe ainda uma pose de repouso declarada como plano B, obrigatória, que faz o
+slide funcionar sozinho para quem abrir o deck direto nele e para o `/mira-slide-to-video`, que
+grava cada slide isolado a partir do zero.
+
+**A transição global do deck não é tocada.** O corte seco vale para o par e para mais nada, porque
+ele só lê como continuidade se as outras passagens continuarem diferentes dele.
+
+Vem com um deck de exemplo que abre e roda, em `references/exemplo-bola.html`.
+
+## 0.1.59
+
+### Novo
+
+**`/mira-brainstorming`, a porta que faltava na camada de brainstorming.**
+
+Os dois agentes da 0.1.58 assumem que já existe alguma coisa: o `/mira-concept-align` assume uma
+ideia, o `/mira-storyboard` assume metáforas candidatas. Faltava o caso mais comum, o de chegar com
+um tema e nada mais ("tenho que apresentar sobre agentes"). Nele, perguntar "qual é a sua ideia?" é
+a pergunta errada, porque você ainda não tem uma.
+
+O `/mira-brainstorming` pergunta plateia, formato e o que te incomoda no assunto, e a partir daí
+**gera**: de 8 a 12 ângulos concorrentes, cada um vindo de uma origem diferente de propósito (o
+contraintuitivo, o mecanismo por dentro, o custo escondido, o eco histórico, a consequência, o erro
+que a plateia comete hoje). Você reage à lista, ele corta para 2 a 4 finalistas e declara **o que
+cada um custa**, o que fica de fora e onde pode ser lido errado. Candidato sem custo declarado é
+candidato mal descrito.
+
+O fecho é uma frase só: "o deck existe para a plateia sair entendendo que...". É ela que o
+`/mira-concept-align` recebe para clarear. Grava `storyboard/brainstorm.md` na raiz do deck,
+anexando cada rodada sem apagar a anterior, e **só você escolhe o ângulo**.
+
+Sendo a porta da camada, ele também roteia: chegou com a ideia pronta e só confusa, ele te manda
+para o `/mira-concept-align`; chegou com as candidatas definidas, para o `/mira-storyboard`.
+
 ## 0.1.58
 
 ### Novo

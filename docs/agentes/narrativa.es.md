@@ -27,6 +27,10 @@ creyendo que pediste cine.
 
 `--cinema` deja en el deck el `mira-cinema.js`, el `mira-foco.js` (modo cámara en la **tecla C**, donde ajustas los cues en pantalla y grabas con `Ctrl+S`) y un `servidor.bat` en la raíz. **Un deck cinematográfico se autora por el `servidor.bat`**, porque el `Ctrl+S` solo escribe directo en el archivo por `http://localhost`; en `file://` depende del selector de archivos de Chrome. Para presentar, el doble clic en `index.html` sigue valiendo.
 
+## `/mira-brainstorming`
+
+La puerta de la capa de alineación, para cuando existe **solo un tema y ninguna idea todavía**. Pregunta público, formato y qué te incomoda del asunto, genera de 8 a 12 ángulos concurrentes venidos de orígenes deliberadamente distintos (el contraintuitivo, el mecanismo, el costo escondido, el eco histórico), corta a 2 a 4 finalistas con **el costo de cada uno** declarado, y cierra en una sola frase: "el deck existe para que el público salga entendiendo que...". Esa frase es lo que recibe `/mira-concept-align`. Graba `storyboard/brainstorm.md`, anexando cada ronda, y nunca elige el ángulo por ti.
+
 ## `/mira-concept-align`
 
 Aclara una idea **antes** de que se convierta en diapositiva. Interroga, detecta ambigüedad con preguntas contextualizadas, presenta lecturas concurrentes en lugar de elegir una en silencio, y hace **teach-back** para que corrijas lo que entendió mal. Produce `storyboard/understanding.md` durante la conversación y `storyboard/concept-brief.md` **solo cuando lo cierras**: el agente nunca cierra el brainstorming por su cuenta.

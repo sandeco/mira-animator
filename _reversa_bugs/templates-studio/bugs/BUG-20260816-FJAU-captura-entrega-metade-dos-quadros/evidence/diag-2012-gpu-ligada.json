@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-08-16T20:12:18.691Z",
+  "renderer": "NVIDIA GeForce RTX 4070",
+  "encoderPreference": "gpu",
+  "quality": "alta",
+  "mic": {
+    "channelCount": 1,
+    "sampleRate": 48000,
+    "echoCancellation": true,
+    "noiseSuppression": true,
+    "autoGainControl": true
+  },
+  "av": {
+    "firstVideoUs": 572093400,
+    "firstAudioUs": 572063042,
+    "deltaMs": -30.358
+  },
+  "timing": {
+    "mode": "cfr",
+    "fps": 30,
+    "dupFilled": 227,
+    "dupDropped": 5,
+    "gapJumped": 0
+  },
+  "output": {
+    "w": 1920,
+    "h": 1080
+  },
+  "input": {
+    "w": 2560,
+    "h": 1440
+  },
+  "crop": {
+    "x": 0,
+    "y": 0,
+    "w": 2560,
+    "h": 1440,
+    "path": "direct"
+  },
+  "path": "direct",
+  "parcial": false,
+  "falhas": [],
+  "navigation": {
+    "maxLongTaskMs": 0,
+    "maxRafGapMs": 0,
+    "maxPtsGapMs": 0,
+    "maxFirstFrameDelayMs": 0
+  },
+  "worker": {
+    "frames": 330,
+    "dropped": 1,
+    "encoded": 551,
+    "audioDropped": 0,
+    "maxQ": 2,
+    "maxNavPtsGapMs": 0,
+    "maxNavFirstFrameDelayMs": 0,
+    "mode": "cfr",
+    "dupFilled": 227,
+    "dupDropped": 5,
+    "gapJumped": 0,
+    "av": {
+      "firstVideoUs": 572093400,
+      "firstAudioUs": 572063042,
+      "deltaMs": -30.358
+    },
+    "input": {
+      "w": 2560,
+      "h": 1440
+    },
+    "crop": {
+      "x": 0,
+      "y": 0,
+      "w": 2560,
+      "h": 1440,
+      "path": "direct"
+    },
+    "output": {
+      "w": 1920,
+      "h": 1080
+    },
+    "path": "direct",
+    "falhas": [],
+    "parcial": false
+  }
+}
