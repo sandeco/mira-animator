@@ -240,8 +240,18 @@ for (const g of GRAVADORES) {
         assert.match(src, /localStorage\.setItem\('mira-rec-cfr'/, 'preferência é gravada');
         assert.match(src, /cfr: cfrWanted\(\)/, 'o config do Worker leva a chave');
         assert.match(src, /fps: FPS/, 'o config do Worker leva o FPS da grade');
-        /* o defeito A (offset inicial) continua corrigido do jeito antigo */
-        assert.match(src, /firstTimestampBehavior: 'offset'/);
-        assert.doesNotMatch(src, /firstTimestampBehavior: 'cross-track-offset'/);
+        /* ATUALIZADO em 2026-08-16 pelo BUG-20260815-HYRG.
+           Este teste afirmava que o offset inicial de A/V "continua corrigido do
+           jeito antigo" com firstTimestampBehavior 'offset'. A medicao mostrou que
+           'offset' NAO corrigia coisa nenhuma: ele zera cada trilha na propria
+           origem e joga fora a distancia entre elas (-30,4 ms numa das gravacoes
+           do autor). A constante agora e 'cross-track-offset', e ela so e segura
+           porque os chunks passam por mandaAoMux(), que leva as duas trilhas a uma
+           origem COMUM antes do muxer. Trocar a constante sem esse basing devolve o
+           commit 6e84363 (video congelado, duracao absurda), porque o video ja
+           chega em zero e Math.min(0, ~290 s) = 0.
+           A cobertura do alinhamento em si esta em mira-record-sync.test.mjs. */
+        assert.match(src, /firstTimestampBehavior: 'cross-track-offset'/);
+        assert.match(src, /function mandaAoMux/, 'o basing comum precisa existir junto da constante');
     });
 }

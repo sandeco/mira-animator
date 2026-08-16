@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano · HYRG · A/V deslocado</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:25px;margin:0 0 6px}
+  h2{font-size:18px;margin:34px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px;color:var(--blue)}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:12.5px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .open{color:var(--red);border-color:var(--red)}
+  .sup{color:var(--blue);border-color:var(--blue)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:16px 0}
+  .box.warn{border-color:var(--yellow)}
+  .box.stop{border-color:var(--red)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .node{fill:#16181f;stroke:#4a5164}
+  .node.me{stroke:var(--red);stroke-width:2}
+  text{font:12px ui-sans-serif,system-ui,sans-serif;fill:#e8e9ee}
+  text.sub{font-size:10.5px;fill:#9aa0ae}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · #17 <code>BUG-20260815-HYRG</code></h1>
+<p class="meta">contexto <code>templates-studio</code> · 2026-08-15 ·
+<span class="pill high">high</span> <span class="pill high">P1</span> ·
+<span class="pill open">active · diagnosing</span> · closure policy <code>package</code></p>
+
+<h2>1. O defeito</h2>
+<p class="prose">Áudio e vídeo saem com deslocamento fixo de milissegundos, igual do começo ao
+fim do clipe. Perceptível para quem sabe olhar.</p>
+
+<h2>2. Causa raiz <span class="pill sup">supported</span></h2>
+<p class="prose">As duas trilhas são zeradas <strong>separadamente</strong>. O vídeo ancora no
+primeiro <code>VideoFrame</code> (<code>slotT0 = ts</code>) e o áudio ancora no próprio
+primeiro <code>AudioData</code>, porque o muxer roda com
+<code>firstTimestampBehavior: 'offset'</code>. Confirmado no código do
+<code>mp4-muxer.js</code> que vocês distribuem:</p>
+<pre>if (firstTimestampBehavior === "offset") {
+    baseDecodeTimestamp = track.firstDecodeTimestamp;        // ← a PRÓPRIA trilha
+} else {                                    // cross-track-offset
+    baseDecodeTimestamp = Math.min(videoTrack?.firstDecodeTimestamp ?? Infinity,
+                                   audioTrack?.firstDecodeTimestamp ?? Infinity);
+}
+decodeTimestamp -= baseDecodeTimestamp;</pre>
+<p class="prose">A distância real entre o início das duas capturas é descartada e reaparece no
+arquivo como deslocamento fixo. E ela não é zero: o microfone é aberto num <code>await</code> e
+a captura de tela no <code>await</code> seguinte, com pipelines independentes.</p>
+
+<div class="box warn">
+<strong>Por que <code>supported</code> e não <code>confirmed</code>:</strong> o mecanismo ser
+legível no código <strong>não prova</strong> que ele produz os milissegundos observados.
+Nenhuma claquete foi gravada, nenhum MP4 foi medido. Poderia haver outra fonte somando ou
+dominando. Ver <a href="../evidence/reproduction.md">evidence/reproduction.md</a>.
+</div>
+
+<h2>3. O que este bug NÃO é</h2>
+<div class="box">
+<p class="prose"><strong>Não é regressão, e não reabre a correção de 2026-07-27.</strong> O
+commit <code>c7a3222</code> ("video em CFR, fim do drift de audio no Premiere") tratou deriva
+<strong>progressiva</strong> por VFR, e a suíte dele passa <strong>18/18</strong> hoje. Você
+relatou deslocamento <strong>constante</strong>, que é outro mecanismo: deriva acumulada cresce
+com a duração, por definição.</p>
+<p class="prose"><code>git show c7a3222^</code> mostra <code>firstTimestampBehavior: 'offset'</code>
+já presente nos dois gravadores antes daquela correção (linhas 945 e 1090). O defeito é
+<strong>anterior</strong> às duas correções de relógio e sobreviveu às duas. Por isso a chave
+"CFR (edição)" não o altera, e a sua dúvida sobre qual cópia você usou não muda nada aqui.</p>
+<p class="prose"><strong>O que aquele commit declarou fora de escopo é exatamente o que este bug
+acusa:</strong> "Nao confundir com o defeito antigo de offset inicial de A/V, ja corrigido por
+firstTimestampBehavior: 'offset'". Como o código do muxer acima mostra, <code>'offset'</code>
+não corrige o alinhamento inicial: ele o descarta.</p>
+</div>
+
+<h2>4. Estratégia: medir antes de corrigir, sem exceção</h2>
+<p class="prose">Correção direta, sem debate multiagente, mas em <strong>duas voltas</strong>. A
+volta 1 é um change set de instrumentação <strong>compartilhado com o
+<a href="../../BUG-20260815-TW4D-audio-mono-no-gravador-nativo/bug.md">BUG-20260815-TW4D</a></strong>:
+uma gravação sua responde as perguntas abertas dos dois bugs.</p>
+
+<div class="box stop">
+<strong>Por que a medição não é opcional aqui.</strong> Foi assim que a afirmação errada de
+<code>SKILL.md:82</code> entrou e sobreviveu: troca de constante, raciocínio plausível sobre
+relógios, nenhuma medição do arquivo final. Repetir o método é repetir o erro. Além disso,
+<strong>sem medição este bug não pode chegar a <code>resolution_kind: fixed</code></strong>,
+porque isso exige <code>root_cause.state: confirmed</code>.
+</div>
+
+<h3>O instrumento decide qual correção é possível</h3>
+<p class="prose">A pergunta que ele responde: em que base de tempo cada trilha realmente chega?
+O comentário do código diz que as bases são diferentes; a mensagem de erro do próprio muxer diz
+que timestamps de <code>MediaStreamTrack</code> são "relative to the age of the document", o que
+sugere base comum. Só a medição resolve, e cada resultado leva a uma correção diferente:</p>
+<table>
+<thead><tr><th>medição</th><th>leitura</th><th>correção</th></tr></thead>
+<tbody>
+<tr><td>os dois t0 na mesma base (diferença de ms)</td><td>o comentário está desatualizado</td><td><code>'cross-track-offset'</code> volta a ser viável: é a correção mais simples possível, uma constante</td></tr>
+<tr><td>bases diferentes, distância estável entre gravações</td><td>o comentário está certo</td><td>medir a distância e aplicá-la explicitamente no mux</td></tr>
+<tr><td>bases diferentes, distância instável</td><td>pior caso</td><td>referência comum obtida no momento da captura, não deduzida depois</td></tr>
+</tbody>
+</table>
+<p class="prose"><strong><code>'cross-track-offset'</code> não pode ser tentado às cegas:</strong>
+já foi usado e produziu o commit <code>6e84363</code>, vídeo congelado no primeiro frame e
+duração absurda. Trocar a constante de volta sem medir reintroduz um defeito pior que o atual.</p>
+
+<h2>5. Correction Change Set proposto (volta 1)</h2>
+<table>
+<thead><tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td><code>code</code></td><td><code>templates/authoring/mira-record.js</code></td><td>no Worker, guardar o primeiro <code>VideoFrame.timestamp</code> e o primeiro <code>AudioData.timestamp</code>, e publicar os dois mais a diferença entre eles no painel e no JSON de diagnóstico</td></tr>
+<tr><td>CHG-002</td><td><code>code</code></td><td><code>templates/authoring/mira-record-16x9.js</code></td><td>idêntico: o caminho de relógio é o mesmo nos dois</td></tr>
+<tr><td>CHG-003</td><td><code>test</code></td><td><code>test/mira-record-sync.test.mjs</code> (novo)</td><td>trancar as âncoras e a diferença publicada, no sandbox que roda o Worker de verdade</td></tr>
+</tbody>
+</table>
+<p class="prose">O instrumento é <strong>read-only</strong> em relação à captura e à
+codificação: lê timestamps que já passam pelo caminho e os mostra. Nenhum PTS muda, nenhuma
+constraint muda, <code>firstTimestampBehavior</code> continua <code>'offset'</code>.</p>
+
+<h2>6. Testes planejados</h2>
+<table>
+<thead><tr><th>tipo</th><th>o que prova</th><th>alcance</th></tr></thead>
+<tbody>
+<tr><td>reprodução</td><td>que, com áudio e vídeo entrando com t0 diferentes, o arquivo sai com as duas trilhas zeradas na própria origem e a diferença é perdida</td><td><strong>bom</strong>: as duas âncoras estão no Worker, que a suíte existente já executa de verdade</td></tr>
+<tr><td>regressão</td><td>que a diferença medida entre as âncoras é publicada no diagnóstico e não é sempre zero</td><td>bom, mesmo sandbox</td></tr>
+<tr><td>regressão (existente)</td><td>que a grade CFR continua intacta: <code>mira-record-cfr.test.mjs</code> segue 18/18</td><td>já roda hoje</td></tr>
+<tr><td>regressão (volta 2)</td><td>que a correção não reintroduz o <code>6e84363</code>: duração correta e vídeo não congelado no primeiro frame</td><td>a definir na volta 2</td></tr>
+</tbody>
+</table>
+<div class="box">
+<strong>Este bug tem sorte que o TW4D não tem.</strong> As duas âncoras (<code>slotT0</code> no
+<code>encodeFrameCFR</code> e o <code>firstTimestampBehavior</code> no muxer) vivem dentro de
+<code>recordWorkerBody()</code>, e a suíte <code>mira-record-cfr.test.mjs</code> já extrai esse
+corpo e o roda num sandbox com stubs de WebCodecs. Dá para escrever teste <strong>de
+verdade</strong>, que executa o código, e não asserção sobre texto do arquivo.
+</div>
+
+<h2>7. Riscos e o que fica de fora</h2>
+<p class="prose"><code>change_risk</code> da volta 1: <strong>baixa</strong>. Instrumentação
+aditiva, reversível apagando as linhas.</p>
+<p class="prose"><code>change_risk</code> da volta 2: <strong>alta</strong>, e declarado desde
+já. Mexer no alinhamento das trilhas é mexer na saída de todas as gravações futuras, num
+arquivo que já produziu dois defeitos graves de relógio (<code>6e84363</code> e o VFR). Vai
+exigir prova antes e depois, com número medido.</p>
+<h3>Fora do escopo, registrado para não passar em silêncio</h3>
+<ul class="prose">
+<li><strong><code>audioDropped</code> não foi investigado.</strong> <code>mira-record.js:1247-1249</code> descarta <code>AudioData</code> quando a fila passa de 40. Descarte com timestamp preservado abre buraco, não desloca, mas o efeito no arquivo final não foi verificado e o contador não aparece no painel ao vivo. Se a claquete mostrar deslocamento <em>variável</em> entre gravações, olhar aqui.</li>
+<li><strong>O texto errado de <code>SKILL.md:82</code> e o equivalente do 16:9</strong> só são corrigidos na volta 2, junto do veredito de spec, para não documentar uma correção que ainda não existe.</li>
+<li><strong>Decks existentes</strong> não recebem nada automaticamente: ver a seção 9.</li>
+</ul>
+
+<h2>8. Grafo do bug</h2>
+<svg viewBox="0 0 620 150" width="100%" height="150" role="img" aria-label="HYRG relacionado a TW4D">
+  <a href="../bug.md"><rect class="node me" x="350" y="40" rx="8" width="250" height="70"/>
+    <text x="366" y="66">#17 HYRG · A/V deslocado</text>
+    <text class="sub" x="366" y="86">high · P1 · active/diagnosing</text>
+    <text class="sub" x="366" y="102">este bug</text></a>
+  <a href="../../BUG-20260815-TW4D-audio-mono-no-gravador-nativo/bug.md">
+    <rect class="node" x="20" y="40" rx="8" width="250" height="70"/>
+    <text x="36" y="66">#16 TW4D · áudio mono</text>
+    <text class="sub" x="36" y="86">high · P1 · active/diagnosing</text>
+    <text class="sub" x="36" y="102">mesmo instrumento</text></a>
+  <line x1="270" y1="75" x2="350" y2="75" stroke="#4a5164" stroke-width="2" stroke-dasharray="6 4"/>
+  <text class="sub" x="276" y="68">related-to</text>
+  <text class="sub" x="276" y="94">proposed</text>
+</svg>
+<table>
+<thead><tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr></thead>
+<tbody>
+<tr><td><a href="../bug.md">HYRG</a></td><td>related-to</td><td><a href="../../BUG-20260815-TW4D-audio-mono-no-gravador-nativo/bug.md">TW4D</a></td><td><code>proposed</code></td></tr>
+</tbody>
+</table>
+<p class="prose">Tracejada de propósito: mesmos arquivos, mesma trilha, <strong>causas
+diferentes</strong>. Corrigir o mono não corrige o deslocamento.</p>
+
+<h2>9. Ordem sugerida e o passo que faz a medição chegar até você</h2>
+<p class="prose"><strong>O instrumento antes dos dois bugs.</strong> Depois da medição, TW4D e
+HYRG seguem em paralelo, sem dependência entre eles.</p>
+<div class="box stop">
+<p class="prose"><strong>Nenhum deck no disco tem o gravador atual</strong>
+(<code>grep -c mrc-cfr</code> devolve 0 em todos). Aplicar o instrumento em
+<code>templates/authoring/</code> <strong>não</strong> o coloca no deck em que você grava. A
+sequência tem que ser:</p>
+<ol class="prose">
+<li>Gate 2 aplica o instrumento nos arquivos canônicos</li>
+<li><strong>você roda <code>npx mira-animator edit &lt;deck&gt;</code></strong> no deck em que vai gravar</li>
+<li>grava a claquete: um estalo audível junto de um gesto visível, no <strong>início e no fim</strong> de um clipe longo</li>
+<li>mede as duas claquetes no editor e me traz os dois números, mais o que o painel passou a mostrar</li>
+</ol>
+<p class="prose">As duas claquetes separam os dois mecanismos: números iguais confirmam
+deslocamento constante (este bug); número maior no fim revela deriva acumulada junto, que seria
+o gravador velho no seu deck.</p>
+</div>
+
+</div>
+</body>
+</html>

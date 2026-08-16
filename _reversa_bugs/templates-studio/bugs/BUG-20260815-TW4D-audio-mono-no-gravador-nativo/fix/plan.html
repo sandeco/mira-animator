@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Plano · TW4D · áudio mono</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1100px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:25px;margin:0 0 6px}
+  h2{font-size:18px;margin:34px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  h3{font-size:15px;margin:22px 0 6px;color:var(--blue)}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  pre{background:#1b1e27;border:1px solid var(--line);border-radius:8px;padding:12px 14px;overflow-x:auto;font-size:12.5px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .open{color:var(--red);border-color:var(--red)}
+  .sup{color:var(--blue);border-color:var(--blue)}
+  .box{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 18px;margin:16px 0}
+  .box.warn{border-color:var(--yellow)}
+  .box.stop{border-color:var(--red)}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .node{fill:#16181f;stroke:#4a5164}
+  .node.me{stroke:var(--red);stroke-width:2}
+  text{font:12px ui-sans-serif,system-ui,sans-serif;fill:#e8e9ee}
+  text.sub{font-size:10.5px;fill:#9aa0ae}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<h1>Plano de correção · #16 <code>BUG-20260815-TW4D</code></h1>
+<p class="meta">contexto <code>templates-studio</code> · 2026-08-15 ·
+<span class="pill high">high</span> <span class="pill high">P1</span> ·
+<span class="pill open">active · diagnosing</span> · closure policy <code>package</code></p>
+
+<h2>1. O defeito</h2>
+<p class="prose">Todo MP4 gravado pela tecla R sai com trilha de áudio AAC de <strong>um
+canal</strong>, nos dois formatos. O autor quer stereo.</p>
+
+<h2>2. Causa raiz <span class="pill sup">supported</span></h2>
+<p class="prose">O número de canais <strong>nunca é pedido</strong>. As três chamadas de
+<code>getUserMedia</code> passam só <code>audio: true</code> (ou um <code>deviceId</code>),
+sem <code>channelCount</code> e sem desligar a cadeia de processamento de voz do Chrome, que
+opera em mono. A track chega com <code>channelCount: 1</code> e a linha</p>
+<pre>numberOfChannels: ms.channelCount || 1</pre>
+<p class="prose">copia esse 1 para o <code>AudioEncoder</code>. O muxer só repete. O
+<code>|| 1</code> é, além disso, um default mono explícito.</p>
+
+<div class="box warn">
+<strong>Por que <code>supported</code> e não <code>confirmed</code>:</strong> ninguém sabe o
+que <code>micTrack.getSettings().channelCount</code> vale na máquina do autor. Se der
+<code>2</code>, a análise inteira cai e o defeito está em outro ponto. Ver
+<a href="../evidence/reproduction.md">evidence/reproduction.md</a>.
+</div>
+
+<h2>3. Estratégia: instrumentar primeiro, corrigir depois</h2>
+<p class="prose">Correção direta, sem debate multiagente. Mas <strong>em duas voltas</strong>,
+porque a escolha da correção depende de um número que só uma gravação do autor produz.</p>
+
+<div class="box">
+<h3>Volta 1 (este plano): o instrumento</h3>
+<p class="prose">Um único change set de instrumentação, <strong>compartilhado com o
+<a href="../../BUG-20260815-HYRG-av-dessincronizado-por-deslocamento-constante/bug.md">BUG-20260815-HYRG</a></strong>,
+que responde as perguntas abertas dos dois bugs de <strong>uma só gravação</strong>. Para
+este bug, ele expõe o que o microfone realmente entregou.</p>
+<h3>Volta 2 (depois da medição): a correção</h3>
+<p class="prose">Com o número na mão, uma das três estratégias abaixo, escolhida por você.</p>
+</div>
+
+<h3>As três estratégias possíveis, e o que cada uma custa</h3>
+<table>
+<thead><tr><th>#</th><th>o que faz</th><th>quando é a certa</th><th>custo</th></tr></thead>
+<tbody>
+<tr><td><strong>a</strong></td><td>pedir <code>channelCount: 2</code>, deixando o processamento de voz ligado</td><td>se a track já puder entregar 2 canais</td><td>nenhum, mas <strong>provavelmente não funciona</strong>: a cadeia de voz opera em mono e tende a ignorar a constraint</td></tr>
+<tr><td><strong>b</strong></td><td>pedir 2 canais <strong>e</strong> desligar <code>echoCancellation</code>, <code>noiseSuppression</code> e <code>autoGainControl</code></td><td>se o microfone for stereo de verdade e estiver sendo colapsado pela cadeia</td><td><strong>muda o som do que você grava.</strong> Sem cancelamento de eco, caixa aberta volta a vazar para o microfone. É decisão sua, não do código</td></tr>
+<tr><td><strong>c</strong></td><td>deixar a captação como está e duplicar o canal na saída</td><td>se o microfone for mono de fábrica</td><td>é stereo no arquivo, não na captação. Honesto se declarado, enganoso se silencioso</td></tr>
+</tbody>
+</table>
+<p class="prose">A medição da volta 1 elimina duas das três. Sem ela, escolher é adivinhar.</p>
+
+<h2>4. Correction Change Set proposto (volta 1)</h2>
+<table>
+<thead><tr><th>CHG</th><th>tipo</th><th>artefato</th><th>propósito</th></tr></thead>
+<tbody>
+<tr><td>CHG-001</td><td><code>code</code></td><td><code>templates/authoring/mira-record.js</code></td><td>ler <code>micTrack.getSettings()</code> ao abrir o microfone e expor <code>channelCount</code>, <code>sampleRate</code> e o estado das três chaves de processamento de voz no painel e no JSON de diagnóstico</td></tr>
+<tr><td>CHG-002</td><td><code>code</code></td><td><code>templates/authoring/mira-record-16x9.js</code></td><td>o mesmo, idêntico: o caminho de áudio é igual nos dois</td></tr>
+<tr><td>CHG-003</td><td><code>test</code></td><td><code>test/mira-record-audio.test.mjs</code> (novo)</td><td>trancar a configuração de áudio e, na volta 2, o número de canais</td></tr>
+</tbody>
+</table>
+
+<div class="box">
+<strong>O instrumento não toca em captação nem em codificação.</strong> Ele lê valores que já
+existem e os mostra. Nenhuma constraint muda, nenhum timestamp muda, nenhum encoder muda. É
+por isso que o risco é <strong>baixa</strong> mesmo mexendo no arquivo mais sensível do
+projeto.
+</div>
+
+<h2>5. Testes planejados</h2>
+<table>
+<thead><tr><th>tipo</th><th>o que prova</th><th>alcance</th></tr></thead>
+<tbody>
+<tr><td>reprodução</td><td>que a config entregue ao <code>AudioEncoder</code> e ao muxer sai com 1 canal quando a track reporta 1</td><td><strong>limitado</strong>, ver a ressalva abaixo</td></tr>
+<tr><td>regressão (volta 2)</td><td>que a chamada de <code>getUserMedia</code> carrega constraint de canais e que o default mono <code>|| 1</code> não existe mais</td><td>asserção sobre o código-fonte</td></tr>
+<tr><td>regressão (existente)</td><td>que a grade CFR continua intacta: <code>test/mira-record-cfr.test.mjs</code> segue 18/18</td><td>já roda hoje</td></tr>
+</tbody>
+</table>
+
+<div class="box stop">
+<strong>Ressalva honesta sobre o teste, decidida agora e não depois:</strong> a suíte
+existente (<code>mira-record-cfr.test.mjs</code>) roda o Worker de verdade extraindo o corpo
+de <code>recordWorkerBody()</code> num sandbox. Só que o defeito deste bug mora em
+<code>startWorkerPipeline</code>, no <strong>main thread</strong>, fora do alcance dessa
+técnica: a função continua direto em <code>targetOut()</code> e <code>vencConfig()</code>, e
+fatiar só o bloco de áudio produz um fragmento, não uma função executável.
+<br><br>
+Duas saídas, e eu escolhi a segunda:
+<br>
+<strong>(i)</strong> extrair a montagem de <code>audioCfg</code> para um helper puro e testá-lo
+de verdade. Trava mais forte, mas é <strong>refatoração</strong>, que o CLAUDE.md §3 e os
+Agent Notes deste bug proíbem junto da correção.
+<br>
+<strong>(ii)</strong> <strong>asserção sobre o código-fonte</strong>: o teste lê o arquivo e
+verifica que a constraint de canais está presente e que o <code>|| 1</code> sumiu. Mais fraca,
+não executa o caminho, mas é cirúrgica e não pede aprovação de refatoração.
+<br><br>
+Se você preferir a (i), diga no gate e eu troco. O que eu <strong>não</strong> vou fazer é
+prometer trava forte agora e entregar asserção de texto depois.
+</div>
+
+<h2>6. Riscos e o que fica de fora</h2>
+<p class="prose"><code>change_risk</code> da volta 1: <strong>baixa</strong>. Instrumentação
+aditiva, sem alterar captação, codificação ou muxagem. Reversível apagando as linhas.</p>
+<p class="prose"><code>change_risk</code> da volta 2: <strong>a definir</strong>, e depende da
+estratégia. A <strong>(b)</strong> é <strong>alta</strong>: muda a qualidade do áudio de todas
+as gravações futuras.</p>
+<h3>Fora do escopo, registrado para não passar em silêncio</h3>
+<ul class="prose">
+<li>O <strong>9:16 não tem seletor de microfone</strong> (o 16:9 tem). Assimetria preexistente, não é este bug, e limita onde uma escolha de canais caberia no 9:16.</li>
+<li>O <strong>bitrate é fixo em 128 kbps</strong> e não acompanha o número de canais. Se a volta 2 mudar para stereo, decidir conscientemente se o bitrate sobe.</li>
+<li><strong>Decks existentes não recebem a correção</strong> automaticamente: ver a seção 9.</li>
+</ul>
+
+<h2>7. Grafo do bug</h2>
+<svg viewBox="0 0 620 150" width="100%" height="150" role="img" aria-label="TW4D relacionado a HYRG">
+  <a href="../bug.md"><rect class="node me" x="20" y="40" rx="8" width="250" height="70"/>
+    <text x="36" y="66">#16 TW4D · áudio mono</text>
+    <text class="sub" x="36" y="86">high · P1 · active/diagnosing</text>
+    <text class="sub" x="36" y="102">este bug</text></a>
+  <a href="../../BUG-20260815-HYRG-av-dessincronizado-por-deslocamento-constante/bug.md">
+    <rect class="node" x="350" y="40" rx="8" width="250" height="70"/>
+    <text x="366" y="66">#17 HYRG · A/V deslocado</text>
+    <text class="sub" x="366" y="86">high · P1 · active/diagnosing</text>
+    <text class="sub" x="366" y="102">mesmo instrumento</text></a>
+  <line x1="270" y1="75" x2="350" y2="75" stroke="#4a5164" stroke-width="2" stroke-dasharray="6 4"/>
+  <text class="sub" x="276" y="68">related-to</text>
+  <text class="sub" x="276" y="94">proposed</text>
+</svg>
+<table>
+<thead><tr><th>origem</th><th>tipo</th><th>destino</th><th>estado</th></tr></thead>
+<tbody>
+<tr><td><a href="../../BUG-20260815-HYRG-av-dessincronizado-por-deslocamento-constante/bug.md">HYRG</a></td><td>related-to</td><td><a href="../bug.md">TW4D</a></td><td><code>proposed</code></td></tr>
+</tbody>
+</table>
+<p class="prose">Aresta tracejada de propósito: os dois vivem nos mesmos dois arquivos e na
+mesma trilha, mas <strong>não têm causa comum</strong>. O mono nasce nas constraints do
+<code>getUserMedia</code>; o deslocamento nasce no zeramento por trilha do muxer. Corrigir um
+não corrige o outro.</p>
+
+<h2>8. Ordem sugerida entre os dois bugs</h2>
+<p class="prose"><strong>Nenhum dos dois primeiro: o instrumento antes dos dois.</strong> Um
+único change set de instrumentação serve aos dois, e uma única gravação sua responde as
+perguntas abertas de ambos. Depois disso, TW4D e HYRG seguem em paralelo, sem dependência
+entre eles.</p>
+
+<h2>9. O passo que faz a medição chegar até você</h2>
+<div class="box stop">
+<p class="prose"><strong>Nenhum deck no disco tem o gravador atual.</strong>
+<code>grep -c mrc-cfr</code> devolve 0 em <code>decks/vasco-da-gama/</code>,
+<code>decks/vasco-da-gama-plus-teste/</code> e no exemplo do Studio: todos são anteriores a
+2026-07-27.</p>
+<p class="prose">Então a instrumentação chegar em <code>templates/authoring/</code>
+<strong>não</strong> a coloca no deck em que você grava. A sequência tem que ser:</p>
+<ol class="prose">
+<li>Gate 2 aplica o instrumento nos arquivos canônicos</li>
+<li><strong>você roda <code>npx mira-animator edit &lt;deck&gt;</code></strong> no deck em que vai gravar</li>
+<li>só então a gravação de medição</li>
+</ol>
+<p class="prose">Pulando o passo 2, você grava com o arquivo velho, não vê campo novo nenhum,
+e nós dois perdemos tempo procurando o que não está lá.</p>
+</div>
+
+</div>
+</body>
+</html>
