@@ -60,6 +60,7 @@ Estos corren sobre un deck existente.
 |---|---|
 | **mira-animated-metaphor** | Atajo compatible de `mira-animator` (modo reemplazar), mantenido por estar citado en material publicado. |
 | **mira-size-animator** | Lee el marcador `@MIRA:SIZE N/10` y escala la percepción de tamaño de las animaciones (radios, longitudes, espaciados, fuentes internas, glow) en una escala de 1 a 10, sin cambiar la altura del escenario ni romper el bucle. *"Pon las animaciones en 6/10."* |
+| **mira-sequence-director** | Orquestador del plano secuencia: convierte una explicación en una cadena de slides encadenados que el público lee como una sola animación. Aplica una prueba de forma con poder de rechazo, escribe un guion de continuidad en `references/sequence-director-<id>.md`, y construye la cadena **en serie**, la escena 1 con `mira-animator` y cada eslabón siguiente con `mira-sequence`. Serial por contrato, no por preferencia: el eslabón N+1 hay que escribirlo tras leer el eslabón N. |
 
 ## Agentes visuales / de imagen
 

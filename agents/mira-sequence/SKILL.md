@@ -38,7 +38,7 @@ Diga isso na entrega, não deixe implícito.
 
 ## O contrato de continuidade
 
-Quatro peças. Nenhuma é opcional.
+Cinco peças. Nenhuma é opcional.
 
 ### 1. Marcadores do par
 
@@ -137,6 +137,21 @@ function ir(d) {
 
 **É `'instant'`, nunca `'auto'`.** Pela especificação, `'auto'` quer dizer "use o valor de `scroll-behavior` do elemento", e todo deck do Mira traz `html { scroll-behavior: smooth }`. Escrever `'auto'` deixa o salto suave, não dá erro nenhum no console, e a continuidade morre sem explicação aparente. É a armadilha mais fácil de cair nesta skill inteira. Os templates `mira-studio` já usam `'instant'` pelo mesmo motivo.
 
+### 5. A volta retrocede
+
+Voltar da continuação para a origem não reinicia a história. Antes do corte seco, a continuação percorre o movimento para trás por cerca de um segundo e pousa em `base`; depois a origem reaparece no instante de entrega que havia gravado, com o loop de repouso ativo.
+
+No **palco declarativo**, `gravar(id, pose, ms)` publica pose e relógio. Registre os relógios por palco em `RELOGIOS`: o relógio da continuação precisa aceitar um valor dirigido e o da origem precisa retomar com deslocamento. No rewind, pegue a fase corrente do ciclo e dirija `quadro(ms)` até zero com `d3.easeSinInOut`; o último quadro tem que chamar `quadro(0)` e devolver `base` exato. Nunca reproduza todo o tempo absoluto acumulado: no máximo um ciclo, senão a volta fica frenética depois de uma palestra longa.
+
+A navegação arma uma **flag one-shot** antes do salto. Na ativação, a origem consome a flag e retoma no `ms` gravado; se não houver registro, usa o instante de repouso declarado pela origem. Sem flag, o relógio continua começando em zero: sair do par e retornar toca a história normalmente.
+
+No **palco imperativo**, que não tem `quadro(ms)`, faça o fallback percebido: tween da pose atual da continuação até a pose base na mesma duração. Ao entrar com a flag, a origem monta direto no estado final e pula apenas a coreografia de entrada; loops internos continuam rodando.
+
+Duas guardas são obrigatórias:
+
+- **Deep link na continuação:** sem pose gravada, não invente movimento. Arme a flag e salte seco; a origem cai no repouso declarado.
+- **Novo comando durante o rewind:** aborte timer ou tween e salte seco imediatamente, sem enfileirar navegação.
+
 ### A transição global do deck é intocável
 
 **O corte seco vale para o par em sequência e para mais nada.** Todo o resto do deck continua passando exatamente como passava antes, byte por byte. Isto não é preferência de estilo, é requisito: o corte só lê como continuidade porque as outras passagens são diferentes dele. Deck inteiro seco não tem par em sequência, tem deck sem transição.
@@ -176,8 +191,10 @@ Qualquer diferença aqui aparece como um piscar no corte.
 5. **Beat sheet da continuação**, temperamento herdado da origem, sem beat de entrada. O primeiro beat começa na pose.
 6. **Escreva a `<section>` nova logo depois da origem**, com os marcadores, o mesmo título e o palco.
 7. **Escreva a função**, criando os elementos já na pose, com `poseEntrega(F)` de plano B, e registre em `ligar()` ou em `setupAnimationTriggers()`, conforme o template.
-8. **Aplique o corte seco** em todo caminho de navegação do deck, achado por busca de `scrollIntoView`.
-9. **Reporte** o que o autor precisa olhar no navegador: passe da origem para a continuação com a seta e veja se algum ator pula, pisca ou muda de tamanho no corte.
+8. **Instale o retrocesso:** relógios por palco, pose+instante gravados, repouso declarado e flag one-shot.
+9. **Aplique o corte seco e o rewind** em todo caminho de navegação do deck, achado por busca de `scrollIntoView`.
+10. **Teste as bordas:** deep link na continuação, segundo comando durante o rewind e retorno à origem vindo de fora do par.
+11. **Reporte** o que o autor precisa olhar no navegador: ida sem salto, volta visível até o repouso e loop da origem ativo depois do pouso.
 
 ## Portões de entrega
 
@@ -193,18 +210,24 @@ Qualquer diferença aqui aparece como um piscar no corte.
 - [ ] Título repetido, ou trocado com o mesmo número de linhas e o autor avisado.
 - [ ] Cor, raio, traço, opacidade e empilhamento idênticos nos atores herdados.
 - [ ] Corte seco com `behavior: 'instant'`, nos dois sentidos, em TODOS os caminhos de navegação do deck, não só no teclado.
+- [ ] Barramento grava pose e relógio; origem declara o instante de repouso.
+- [ ] Volta dirige o relógio da continuação para trás em cerca de um segundo e pousa em `base` exato.
+- [ ] Flag one-shot consumida pela origem: retoma no instante gravado; vindo de fora do par, começa do zero.
+- [ ] Deep link volta sem rewind pelo plano B; novo comando durante rewind aborta e salta sem fila.
+- [ ] Palco imperativo usa tween até a pose base e monta a origem no estado final.
 - [ ] Transição global intacta: guarda sempre condicional ao par, CSS de rolagem não tocado, dissolve e AOS dos outros slides preservados, passagens restantes conferidas uma a uma.
 - [ ] Anti-vazamento preservado, deck não reordenado, nada mais tocado.
 
 ## Limites conhecidos, diga na entrega
 
-- **O corte seco vale para a navegação do deck**, teclado e botão. Rolando com a roda do mouse o espectador vê os slides deslizando, porque a rolagem é dele, não do deck.
+- **A roda do mouse não aciona o rewind.** Ela é rolagem direta do espectador, não um comando da navegação do deck.
+- **Controle remoto pendente.** O caminho do remoto ainda depende da correção `BUG-20260818-R7MC`; até ela convergir, não declare a volta remota como verificada.
 - **Continuação sem origem cai no plano B.** É por isso que o plano B é obrigatório.
 - **Origem sem repouso entrega pose imprevisível.** A continuação nasce correta de qualquer jeito, mas o autor não controla onde a cena começa.
 - **Modo cinema:** se a origem usa `MiraCinema`, a câmera também faz parte da pose. Entregue `cena.camera` junto ou deixe as duas cenas na mesma posição de câmera, senão o corte tem zoom.
 
 ## Exemplo completo
 
-`references/exemplo-bola.html` é um deck de verdade, no `mira-default`, que abre por `file://` e roda: a bola quica e para no centro, e o slide seguinte continua dali. Três slides, porque o primeiro existe para dar o contraste da rolagem suave contra o corte seco. As quatro peças do contrato estão implementadas e comentadas no lugar onde moram, e o cabeçalho do arquivo traz o que conferir no navegador.
+`references/exemplo-bola.html` é um deck de verdade, no `mira-default`, que abre por `file://` e roda: a bola quica e para no centro, o slide seguinte continua dali e a volta retrocede até o repouso. Três slides, porque o primeiro existe para dar o contraste da rolagem suave contra o corte seco. As cinco peças do contrato estão implementadas e comentadas no lugar onde moram, e o cabeçalho do arquivo traz o que conferir no navegador.
 
 Antes de escrever a sua, abra ele e passe os slides. É mais rápido que ler a especificação de novo.

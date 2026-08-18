@@ -60,6 +60,7 @@ These run on top of an existing deck.
 |---|---|
 | **mira-animated-metaphor** | Compatibility alias for `mira-animator` (replace mode), kept because it is cited in published material. |
 | **mira-size-animator** | Reads the `@MIRA:SIZE N/10` marker and scales the perceived size of animations (radii, lengths, spacing, internal fonts, glow) on a 1–10 scale, without changing the stage height or breaking the loop. *"Put the animations at 6/10."* |
+| **mira-sequence-director** | Orchestrator of the long take: turns one explanation into a chain of chained slides the audience reads as a single animation. Applies a form test with the power to refuse, writes a continuity script to `references/sequence-director-<id>.md`, and builds the chain **serially**, scene 1 through `mira-animator` and every following link through `mira-sequence`. Serial by contract, not by preference: link N+1 has to be written after reading link N. |
 
 ## Visual / image agents
 

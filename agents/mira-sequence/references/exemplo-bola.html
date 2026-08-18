@@ -37,15 +37,19 @@
           mesmo pouco, o behavior do salto está errado e a
           continuidade não acontece. Compare com a passagem do slide 1
           para o 2, que rola suave de propósito, para dar o contraste.
-       6. Olhe o quadro logo depois do salto: o scroll-snap não pode
-          reassentar o slide com um tranco.
+       6. No slide 3, aperte a seta para cima. A bola percorre o
+          movimento de volta por cerca de um segundo e pousa no repouso
+          do slide 2; a história da origem não recomeça.
+       7. Depois da volta, suba até a capa e desça de novo. Vindo de
+          fora do par, a origem volta a tocar a história do zero.
+       8. Recarregue, vá direto ao slide 3 e volte. Sem história
+          gravada, o salto é imediato e a origem abre no repouso.
+       9. Durante o rewind, aperte a seta outra vez. O rewind aborta e
+          o salto seco acontece imediatamente, sem fila de comandos.
+      10. Olhe o quadro logo depois de cada salto: o scroll-snap não
+          pode reassentar o slide com um tranco.
 
      O QUE NÃO É DEFEITO
-
-       Voltando do slide 3 para o 2, a bola some do centro e recomeça
-       da esquerda. É o comportamento normal do deck: o regente zera o
-       relógio do slide toda vez que ele reaparece, para ninguém pegar
-       a história no meio. A continuidade é de ida.
 
        Se os três slides ficarem pretos e nada se mexer, é o D3 que
        não carregou: este arquivo o busca por CDN. Abra com internet,
@@ -111,6 +115,8 @@ body > section {
 h1 { font-size: clamp(34px, 7.4vh, 72px); line-height: 1.02; letter-spacing: -.02em; font-weight: 800; }
 h2 { font-size: clamp(28px, 4.6vh, 46px); line-height: 1.1; letter-spacing: -.01em; font-weight: 800; }
 p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
+body > section:first-of-type h1,
+body > section:first-of-type h2 { text-wrap: balance; }
 .accent { color: var(--accent); }
 
 .slide-centro {
@@ -201,9 +207,78 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
        ========================================================== */
     /* @MIRA:SEQ:BUS  pose viva entregue de um slide para o seguinte */
     window.__miraSeq = window.__miraSeq || {};
+    var RELOGIOS = {};
+    var RETORNOS = {};
+    var RETROCEDORES = {};
+    var REWINDS = {};
     var MiraSeq = {
-        gravar: function (id, pose) { if (pose) window.__miraSeq[id] = pose; },
-        ler: function (id) { return window.__miraSeq[id] || null; }
+        gravar: function (id, pose, ms) {
+            if (pose) window.__miraSeq[id] = { pose: pose, ms: ms };
+        },
+        ler: function (id) {
+            var registro = window.__miraSeq[id];
+            return registro ? registro.pose : null;
+        },
+        instante: function (id) {
+            var registro = window.__miraSeq[id];
+            return registro && Number.isFinite(registro.ms) ? registro.ms : null;
+        },
+        temRegistro: function (id) { return !!window.__miraSeq[id]; },
+        declararRepouso: function (id, ms) {
+            window.__miraSeqRepousos = window.__miraSeqRepousos || {};
+            window.__miraSeqRepousos[id] = ms;
+        },
+        repouso: function (id) {
+            return window.__miraSeqRepousos && window.__miraSeqRepousos[id] || 0;
+        },
+        armarRetorno: function (id) { RETORNOS[id] = true; },
+        consumirRetorno: function (id) {
+            var armado = !!RETORNOS[id];
+            delete RETORNOS[id];
+            return armado;
+        },
+        retornoPendente: function (id) { return !!RETORNOS[id]; },
+        registrarRelogio: function (id, controle) { RELOGIOS[id] = controle; },
+        relogio: function (id) { return RELOGIOS[id] || null; },
+        registrarRetrocesso: function (id, iniciar) { RETROCEDORES[id] = iniciar; },
+        retroceder: function (id, concluir) {
+            if (REWINDS[id] || typeof RETROCEDORES[id] !== 'function') return false;
+            var token = {};
+            REWINDS[id] = token;
+            var finalizar = function () {
+                if (REWINDS[id] !== token) return;
+                delete REWINDS[id];
+                concluir();
+            };
+            token.abortar = RETROCEDORES[id](finalizar);
+            if (typeof token.abortar !== 'function') {
+                delete REWINDS[id];
+                return false;
+            }
+            window.__miraSeqDebug.rewindsIniciados += 1;
+            return true;
+        },
+        abortarRetrocesso: function (id) {
+            var ativo = REWINDS[id];
+            if (!ativo) return false;
+            delete REWINDS[id];
+            ativo.abortar();
+            window.__miraSeqDebug.rewindsAbortados += 1;
+            return true;
+        },
+        emRetrocesso: function (id) { return !!REWINDS[id]; }
+    };
+    window.__miraSeqAPI = MiraSeq;
+    window.__miraSeqDebug = {
+        pronto: false,
+        rewindsIniciados: 0,
+        rewindsAbortados: 0,
+        relogio: function (id) {
+            var r = MiraSeq.relogio(id);
+            return r ? r.agora() : 0;
+        },
+        retornoPendente: function (id) { return MiraSeq.retornoPendente(id); },
+        rewindAtivo: function (id) { return MiraSeq.emRetrocesso(id); }
     };
 
     /* ---------- cor sai do tema, nunca fixa no código ---------- */
@@ -222,26 +297,38 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
        Slide fora da tela: relógio congelado no zero. Slide entrou:
        relógio começa do zero. É esse quadro(0) perpétuo do slide
        congelado que obriga a guarda `ms > 0` na gravação da pose. */
-    function reger(svgId, quadro) {
+    function reger(svgId, quadro, aoEntrar) {
         var svg = document.getElementById(svgId);
         var slide = svg && svg.closest('section');
         if (!slide || typeof IntersectionObserver !== 'function') {
             d3.timer(function (ms) { quadro(ms); });
-            return;
+            return null;
         }
-        var relogio = null, visivel = false;
+        var origem = null, visivel = false, deslocamento = 0, dirigido = null, ultimo = 0;
+        var controle = {
+            agora: function () { return ultimo; },
+            dirigir: function (ms) { dirigido = Math.max(0, ms); ultimo = dirigido; quadro(dirigido); },
+            liberar: function () { dirigido = null; origem = null; deslocamento = ultimo; },
+            retomar: function (ms) { dirigido = null; origem = null; deslocamento = Math.max(0, ms || 0); ultimo = deslocamento; },
+            zerar: function () { dirigido = null; origem = null; deslocamento = 0; ultimo = 0; }
+        };
+        MiraSeq.registrarRelogio(svgId, controle);
         d3.timer(function (ms) {
             if (!visivel) { quadro(0); return; }
-            if (relogio === null) relogio = ms;
-            quadro(ms - relogio);
+            if (dirigido !== null) { ultimo = dirigido; quadro(dirigido); return; }
+            if (origem === null) origem = ms;
+            ultimo = deslocamento + ms - origem;
+            quadro(ultimo);
         });
         new IntersectionObserver(function (entradas) {
             entradas.forEach(function (e) {
                 if (e.isIntersecting === visivel) return;
                 visivel = e.isIntersecting;
-                relogio = null;
+                if (visivel) controle.retomar(typeof aoEntrar === 'function' ? aoEntrar() : 0);
+                else controle.zerar();
             });
         }, { threshold: 0.6 }).observe(slide);
+        return controle;
     }
 
     /* ---------- palco do mira-default ---------- */
@@ -313,6 +400,7 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
     function animBolaQuica(svgId) {
         var p = palco(svgId); if (!p) return;
         var svg = p.svg, F = p.F, DUR = 5200, R = 46, NB = 3;
+        MiraSeq.declararRepouso('bola', DUR);
 
         var raiz = svg.append('g');
         var sombra = raiz.append('ellipse').attr('fill', COR.tinta);
@@ -341,7 +429,11 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
                com o slide fora da tela, e sem a guarda sair do slide
                apagaria a pose de entrega pelo primeiro quadro da história.
                Objeto novo a cada gravação, nunca um mutado no lugar. */
-            if (ms > 0) MiraSeq.gravar('bola', pose);
+            if (ms > 0) MiraSeq.gravar('bola', pose, ms);
+        }, function () {
+            if (!MiraSeq.consumirRetorno('bola')) return 0;
+            var gravado = MiraSeq.instante('bola');
+            return gravado === null ? MiraSeq.repouso('bola') : gravado;
         });
     }
 
@@ -369,7 +461,7 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
         var sombra = raiz.append('ellipse').attr('fill', COR.tinta);
         var bola = raiz.append('ellipse').attr('fill', COR.marca);
 
-        reger(svgId, function (ms) {
+        var controle = reger(svgId, function (ms) {
             /* PEÇA 3 · trava a pose ao entrar.
                ms === 0 acontece nos quadros congelados e no primeiro quadro
                ao vivo, então a pose fica atualizada enquanto a origem roda e
@@ -392,6 +484,24 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
                 x: base.x, chao: base.chao - alt, achatamento: achat, r: base.r
             });
         });
+
+        MiraSeq.registrarRetrocesso('bola', function (concluir) {
+            var fase = controle.agora() % CICLO;
+            if (fase < 250) fase = CICLO;
+            var timer = d3.timer(function (ms) {
+                var t = Math.min(1, ms / 1000);
+                controle.dirigir(fase * (1 - d3.easeSinInOut(t)));
+                if (t === 1) {
+                    timer.stop();
+                    controle.dirigir(0);
+                    concluir();
+                }
+            });
+            return function () {
+                timer.stop();
+                controle.liberar();
+            };
+        });
     }
 
     function ligar() {
@@ -405,10 +515,12 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
 
 <script>
 /* ==============================================================
-   PEÇA 4 DO CONTRATO · CORTE SECO NA NAVEGAÇÃO
+   PEÇAS 4 E 5 DO CONTRATO · CORTE SECO E VOLTA QUE RETROCEDE
 
    Rolagem suave mostra os dois slides deslizando e mata a ilusão.
-   O par em sequência salta sem rolagem, nos dois sentidos.
+   O par em sequência salta sem rolagem. Na volta, antes do salto,
+   a continuação dirige o próprio relógio para trás; a origem
+   consome uma flag one-shot e retoma no instante que havia gravado.
 
    Num deck de verdade, procure por scrollIntoView e não por
    "function ir": cada template chama a passagem de slide de um
@@ -439,6 +551,36 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
         var origem = a.getAttribute('data-mira-seq');
         return !!origem && b.getAttribute('data-mira-seq-de') === origem;
     }
+    function saltar(i, seco) {
+        secs[i].scrollIntoView({ behavior: seco ? 'instant' : 'smooth', block: 'start' });
+    }
+    function voltarNoPar(de, i) {
+        var id = secs[i].getAttribute('data-mira-seq');
+        var seq = window.__miraSeqAPI;
+
+        /* Segundo comando não entra em fila: aborta e salta. */
+        if (seq.emRetrocesso(id)) {
+            seq.abortarRetrocesso(id);
+            seq.armarRetorno(id);
+            saltar(i, true);
+            return;
+        }
+
+        /* Deep link: sem história gravada não existe o que rebobinar. */
+        if (!seq.temRegistro(id)) {
+            seq.armarRetorno(id);
+            saltar(i, true);
+            return;
+        }
+
+        if (!seq.retroceder(id, function () {
+            seq.armarRetorno(id);
+            saltar(i, true);
+        })) {
+            seq.armarRetorno(id);
+            saltar(i, true);
+        }
+    }
     function ir(d) {
         var de = atual(), i = Math.max(0, Math.min(secs.length - 1, de + d));
         if (i === de) return;
@@ -448,8 +590,12 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
            "use o que o CSS mandar", e o CSS deste deck manda
            html { scroll-behavior: smooth }. Com 'auto' o salto continuaria
            suave e a continuidade morreria, sem nenhum erro no console. */
+        if (d < 0 && parSeq(secs[i], secs[de])) {
+            voltarNoPar(de, i);
+            return;
+        }
         var seco = parSeq(secs[de], secs[i]) || parSeq(secs[i], secs[de]);
-        secs[i].scrollIntoView({ behavior: seco ? 'instant' : 'smooth', block: 'start' });
+        saltar(i, seco);
     }
     document.addEventListener('keydown', function (e) {
         var t = e.target;
@@ -458,6 +604,8 @@ p  { font-size: clamp(15px, 2vh, 20px); line-height: 1.5; color: var(--muted); }
         if (['ArrowDown', 'ArrowRight', 'PageDown', ' ', 'Spacebar'].indexOf(e.key) !== -1) { e.preventDefault(); ir(1); }
         else if (['ArrowUp', 'ArrowLeft', 'PageUp'].indexOf(e.key) !== -1) { e.preventDefault(); ir(-1); }
     });
+    window.__miraSeqDebug.slideAtual = atual;
+    window.__miraSeqDebug.pronto = true;
 })();
 </script>
 </body>

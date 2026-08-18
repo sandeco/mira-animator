@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bugs · sincronia-temporal-slides</title>
+<style>
+  :root{--bg:#0e0f13;--panel:#16181f;--line:#262a35;--ink:#e8e9ee;--muted:#9aa0ae;
+        --red:#e05260;--yellow:#e0b152;--green:#4fbf8b;--blue:#5aa9e6;--purple:#9b7fd4;}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font:15px/1.6 ui-sans-serif,system-ui,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  .wrap{max-width:1180px;margin:0 auto;padding:32px 20px 64px}
+  h1{font-size:26px;margin:0 0 6px}
+  h2{font-size:19px;margin:36px 0 10px;border-bottom:1px solid var(--line);padding-bottom:8px}
+  .meta{color:var(--muted);font-size:13px;margin:0 0 22px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+  .card .n{font-size:22px;font-weight:650}
+  .card .k{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;margin-top:6px}
+  .card.green .n{color:var(--green)}.card.red .n{color:var(--red)}.card.yellow .n{color:var(--yellow)}
+  .card.purple .n{color:var(--purple)}
+  table{width:100%;border-collapse:collapse;margin-top:10px;font-size:14px;display:block;overflow-x:auto}
+  th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.05em}
+  a{color:var(--blue);text-decoration:none}a:hover{text-decoration:underline}
+  code{background:#1b1e27;border:1px solid var(--line);border-radius:4px;padding:1px 5px;font-size:12.5px}
+  .pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:11.5px;font-weight:600;border:1px solid}
+  .high{color:var(--yellow);border-color:var(--yellow)}
+  .medium{color:var(--blue);border-color:var(--blue)}
+  .low{color:var(--muted);border-color:var(--muted)}
+  .open{color:var(--red);border-color:var(--red)}
+  .blk{color:var(--purple);border-color:var(--purple)}
+  tr.novo td{background:#1a1416}
+  p.prose{color:#c9cdd8;max-width:82ch}
+  .graph{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:8px;overflow-x:auto}
+  .graph svg{display:block;min-width:660px}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Bugs · sincronia-temporal-slides</h1>
+<p class="meta">gerado por <code>/reversa-debugger-graph</code> em 2026-08-18T15:11:00Z · 4 bug(s) · closure policy <code>package</code> · 0 inconsistências</p>
+
+<div class="cards">
+  <div class="card"><div class="n">4</div><div class="k">total</div></div>
+  <div class="card red"><div class="n">4</div><div class="k">abertos, em triagem</div></div>
+  <div class="card purple"><div class="n">1</div><div class="k">sintoma observado pelo autor</div></div>
+  <div class="card yellow"><div class="n">0</div><div class="k">travados com DONE.md</div></div>
+</div>
+
+<h2>Grafo</h2>
+<div class="graph">
+<svg viewBox="0 0 660 250" width="100%" height="250" role="img" aria-label="Grafo de relações entre os quatro bugs">
+  <defs>
+    <style>
+      .nd{fill:#1a1d26;stroke-width:1.5;rx:10}
+      .lb{font:600 13px ui-sans-serif,system-ui,sans-serif;fill:#e8e9ee}
+      .sb{font:11px ui-sans-serif,system-ui,sans-serif;fill:#9aa0ae}
+      .ed{stroke:#4a5163;stroke-width:1.5;stroke-dasharray:5 4;fill:none}
+      .et{font:10.5px ui-sans-serif,system-ui,sans-serif;fill:#6f7686}
+      .gt{font:600 11px ui-sans-serif,system-ui,sans-serif;fill:#6f7686;letter-spacing:.08em}
+    </style>
+  </defs>
+
+  <text class="gt" x="20" y="26">PAR DA REGRA 1 · TEMPO DO SLIDE</text>
+  <rect class="nd" x="20" y="38" width="250" height="58" stroke="#c8a02c"/>
+  <text class="lb" x="34" y="62">#19 T3RG</text>
+  <text class="sb" x="34" y="80">timers órfãos em 4 templates · medium · P2</text>
+
+  <rect class="nd" x="390" y="38" width="250" height="58" stroke="#5aa9e6"/>
+  <text class="lb" x="404" y="62">#22 V4LD</text>
+  <text class="sb" x="404" y="80">validador sem item de tempo · low · P3</text>
+
+  <path class="ed" d="M270 67 L390 67"/>
+  <text class="et" x="300" y="60">related-to (proposed)</text>
+
+  <text class="gt" x="20" y="152">PAR DA REGRA 2 · PASSAGEM DE SLIDE</text>
+  <rect class="nd" x="20" y="164" width="250" height="58" stroke="#c0392b"/>
+  <text class="lb" x="34" y="188">#20 R7MC</text>
+  <text class="sb" x="34" y="206">remoto navega sempre suave · high · P2</text>
+
+  <rect class="nd" x="390" y="164" width="250" height="58" stroke="#c0392b"/>
+  <text class="lb" x="404" y="188">#21 S5CT</text>
+  <text class="sb" x="404" y="206">glitch de um quadro na passagem · high · P1</text>
+
+  <path class="ed" d="M270 193 L390 193"/>
+  <text class="et" x="288" y="186">related-to (proposed)</text>
+</svg>
+</div>
+<p class="prose">Toda aresta é tracejada de propósito: as quatro estão em <code>proposed</code>, isto é, hipótese.
+Nenhuma liga um par ao outro. Eles compartilham o tema e nada mais: mecanismos diferentes,
+arquivos diferentes, correções independentes.</p>
+
+<h2>Bugs</h2>
+<table>
+<thead><tr><th>#</th><th>ID</th><th>sev</th><th>estado</th><th>título</th><th>causa raiz</th><th>testes</th><th>veredito</th></tr></thead>
+<tbody>
+<tr class="novo">
+  <td><strong>21</strong></td>
+  <td><a href="../bugs/BUG-20260818-S5CT-corte-seco-por-scrollto-nao-reproduzido/bug.md">S5CT</a></td>
+  <td><span class="pill high">high</span> P1</td>
+  <td><span class="pill open">open</span> triaging</td>
+  <td>Seta para baixo num deck sequencial dá um glitch de um quadro: aparece um frame adiantado e a cena volta para o começo</td>
+  <td>não investigada · 3 hipóteses</td>
+  <td>0 repro · 0 regr</td>
+  <td>spec-gap, mecanismo em disputa</td>
+</tr>
+<tr class="novo">
+  <td><strong>20</strong></td>
+  <td><a href="../bugs/BUG-20260818-R7MC-remoto-navega-sempre-suave/bug.md">R7MC</a></td>
+  <td><span class="pill high">high</span> P2</td>
+  <td><span class="pill open">open</span> triaging</td>
+  <td>O controle remoto tem navegação própria com <code>'smooth'</code> fixo e vaza frames mesmo em deck com corte seco</td>
+  <td>não investigada</td>
+  <td>0 repro · 0 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr class="novo">
+  <td><strong>19</strong></td>
+  <td><a href="../bugs/BUG-20260818-T3RG-timers-orfaos-em-templates-oficiais/bug.md">T3RG</a></td>
+  <td><span class="pill medium">medium</span> P2</td>
+  <td><span class="pill open">open</span> triaging</td>
+  <td>Quatro templates oficiais disparam <code>d3.timer</code> no load sem regente</td>
+  <td>não investigada</td>
+  <td>0 repro · 0 regr</td>
+  <td>spec-gap</td>
+</tr>
+<tr class="novo">
+  <td><strong>22</strong></td>
+  <td><a href="../bugs/BUG-20260818-V4LD-validador-sem-item-de-tempo/bug.md">V4LD</a></td>
+  <td><span class="pill low">low</span> P3</td>
+  <td><span class="pill open">open</span> triaging</td>
+  <td>O <code>/mira-validator</code> aprova deck com timer órfão: o checklist não tem item de tempo</td>
+  <td>não investigada</td>
+  <td>0 repro · 0 regr</td>
+  <td>spec-gap</td>
+</tr>
+</tbody>
+</table>
+
+<h2>De onde vieram</h2>
+<p class="prose">De um documento normativo que o autor colou no <code>/reversa-debugger</code> em 2026-08-18,
+copiado verbatim em <a href="../intake/spec-sincronia-determinista-proposta.md">intake/spec-sincronia-determinista-proposta.md</a>.
+O documento propõe cinco regras. A varredura de código registrada em
+<a href="../intake/relato-20260818-1211.md">intake/relato-20260818-1211.md</a> mostrou que
+<strong>quatro das cinco já existem</strong> no projeto: o regente de tempo está no
+<code>mira-default</code>, e a guarda <code>ms &gt; 0</code>, o portão do frame zero e o plano B
+já são regra escrita na <code>/mira-sequence</code>. O que falta é alcance e verificação.</p>
+
+<h2>O que este contexto não cobre</h2>
+<p class="prose"><code>templates/decks/mira-default/index.html:559</code> navega sempre com
+<code>scrollIntoView('smooth')</code> e não conhece <code>data-mira-seq</code>. Não virou bug:
+todo caminho interno do deck passa por esse <code>ir()</code> único, e a
+<code>/mira-sequence</code> patcheia esse ponto quando o deck vira sequencial. É desenho, não
+divergência. Corte seco de fábrica no template padrão é pedido de feature, não defeito.</p>
+
+<h2>Aviso para quem for corrigir o #21</h2>
+<p class="prose">O sintoma é real e reprodutível. O <strong>mecanismo</strong> é que não está fechado, e o
+documento de origem acusa o menos provável dos três candidatos. Suspeito principal:
+<code>scroll-snap-type: y proximity</code> no mesmo seletor <code>html</code>, que reajusta a
+posição <em>depois</em> do salto instantâneo, move a borda entre as seções e faz o
+<code>IntersectionObserver</code> piscar, o que zera o relógio do <code>reger</code>. Teste que
+decide em um minuto: <code>scroll-snap-type: none</code> e repetir a passagem.</p>
+<p class="prose">Se o culpado for o snap, trocar para <code>window.scrollTo</code> resolve por acidente e só
+num caminho: o botão, a barra, o celular e o <code>/mira-slide-to-video</code> param em posições
+ligeiramente diferentes e continuam com o defeito. E as duas chamadas não são equivalentes:
+<code>offsetTop</code> é relativo ao <code>offsetParent</code>, e nos formatos Studio o slide vive
+dentro de um <code>.fullscreen-wrapper</code>. Meça antes de trocar.</p>
+
+</div>
+</body>
+</html>

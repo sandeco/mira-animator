@@ -4,6 +4,31 @@ Mudanças de cada versão do `mira-animator`, em linguagem de quem usa.
 
 O histórico começa na 0.1.51. Para o que veio antes, veja o `git log`.
 
+## 0.1.62
+
+### Adicionado
+
+**`/mira-sequence-director`, o orquestrador acima do `/mira-sequence`.** Você descreve o que
+quer explicar e ele monta a corrente inteira: aplica um teste de forma com poder de recusa,
+escreve um roteiro de continuidade em `references/sequence-director-<id>.md` na pasta do deck
+declarando por cena quem atravessa o corte, quem entra, quem sai e onde a cena repousa, e
+depois constrói em série, a cena 1 pelo `/mira-animator` e cada elo seguinte pelo
+`/mira-sequence`.
+
+O teste de forma recusa de propósito: explicação que troca de mundo, de escala ou de sujeito
+no meio não é corrente, e forçar uma fica pior que slides comuns. Nesse caso ele diz o que
+troca e encaminha para o `/mira-animator` com deck comum, sem escrever arquivo nenhum.
+
+### Corrigido
+
+**A volta de um par do `/mira-sequence` agora retrocede.** Ao voltar da continuação, a cena
+percorre o movimento para trás por cerca de um segundo e a origem reaparece no repouso gravado,
+com o loop interno ativo, em vez de reiniciar a história. Deep link sem pose usa o repouso
+declarado sem inventar rewind; um novo comando durante a volta aborta e salta imediatamente.
+
+O exemplo de referência ganhou um verificador mecânico em Chrome real para a volta, o percurso
+sem teleporte, o retorno vindo de fora do par, o deep link e o aborto.
+
 ## 0.1.61
 
 ### Corrigido
